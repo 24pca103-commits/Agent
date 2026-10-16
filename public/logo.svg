@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <defs>
+    <!-- 3D Sphere Specular Radial Gradient -->
+    <radialGradient id="sphere3dGrad" cx="34%" cy="30%" r="66%" fx="28%" fy="24%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="16%" stop-color="#bae6fd" />
+      <stop offset="40%" stop-color="#6366f1" />
+      <stop offset="72%" stop-color="#3730a3" />
+      <stop offset="92%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#0a0a23" />
+    </radialGradient>
+
+    <!-- 3D Ring Chrome Gradient -->
+    <linearGradient id="ringChromeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="25%" stop-color="#818cf8" />
+      <stop offset="50%" stop-color="#ffffff" />
+      <stop offset="75%" stop-color="#c084fc" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+
+    <!-- Ambient Soft Glow -->
+    <radialGradient id="ambientAura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#818cf8" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- 1. Ambient Background Aura -->
+  <circle cx="50" cy="50" r="32" fill="url(#ambientAura)" />
+
+  <!-- 2. Group tilted in 3D Perspective (-26 deg) -->
+  <g transform="rotate(-26 50 50)">
+    <!-- Back half of 3D Ring (passes behind the 3D Sphere) -->
+    <path
+      d="M 10 50 A 40 13 0 0 1 90 50"
+      fill="none"
+      stroke="url(#ringChromeGrad)"
+      stroke-width="3.2"
+      opacity="0.45"
+      stroke-dasharray="4 2"
+    />
+
+    <!-- 3D Celestial Sphere Body (middle layer) -->
+    <circle cx="50" cy="50" r="21" fill="url(#sphere3dGrad)" />
+
+    <!-- 3D Inner Specular Glint -->
+    <circle cx="43" cy="42" r="3.5" fill="#ffffff" opacity="0.85" />
+
+    <!-- Front half of 3D Ring (passes OVER the Sphere for authentic 3D depth) -->
+    <path
+      d="M 90 50 A 40 13 0 0 1 10 50"
+      fill="none"
+      stroke="url(#ringChromeGrad)"
+      stroke-width="3.5"
+      stroke-linecap="round"
+    />
+
+    <!-- 3D Satellite Node sitting on front rim -->
+    <circle cx="85" cy="53" r="4" fill="#38bdf8" />
+    <circle cx="85" cy="53" r="1.8" fill="#ffffff" />
+  </g>
+</svg>
