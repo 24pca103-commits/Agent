@@ -16,11 +16,11 @@ npm start
 ```
 
 This single command automatically launches both:
-- **Backend API Server (Node.js/Express)** at `http://localhost:5000`
-- **Frontend Dashboard (React/TypeScript/Tailwind)** at `http://localhost:5173`
+- **Backend API Server (Node.js/Express)** at `http://localhost:5005`
+- **Frontend Dashboard (React/TypeScript/Tailwind)** at `http://localhost:5175`
 
 Open your web browser and navigate to:
-👉 **`http://localhost:5173`**
+👉 **`http://localhost:5175`**
 
 ---
 
