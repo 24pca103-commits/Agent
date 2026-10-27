@@ -29,7 +29,8 @@ import {
   User,
   Copy,
   Check,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Plus
 } from 'lucide-react';
 import { Lead, EmailDraft, EmailTone, FollowUpTask, ClientReply } from '../types';
 import { TARGET_COUNTRIES, DATAGALACTIC_COMPANY } from '../data/catalog';
@@ -176,8 +177,8 @@ export const ExportBuyerLeads: React.FC<ExportBuyerLeadsProps> = ({
     ? buyerLeads 
     : buyerLeads.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  // Live Agent Sourced Results (Mode B)
-  const currentLiveBuyers = agentSourcedResults.length > 0 ? agentSourcedResults : buyerLeads;
+  // Live Agent Sourced Results (STRICTLY Mode B Sourced Results in current session)
+  const currentLiveBuyers = agentSourcedResults;
   const filteredLiveBuyers = currentLiveBuyers.filter(lead => {
     if (!agentTableSearch.trim()) return true;
     const q = agentTableSearch.toLowerCase();
@@ -233,6 +234,23 @@ export const ExportBuyerLeads: React.FC<ExportBuyerLeadsProps> = ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Reset conversation and start a clean new chat session
+  const handleStartNewChat = () => {
+    setChatMessages([
+      {
+        id: `msg-exp-${Date.now()}`,
+        sender: 'agent',
+        text: `✨ **New Trade Consultation Session Initialized!**\n\nI am your AI Global Trade & Sourcing Consultant for **Mode B: International Export Buyers**.\n\nType your command below to source buyers (e.g. *"50 UAE food importers"*, *"100 USA distributors"*, *"50 Germany buyers"*), or click any suggestion pill above.\n\nAll verified buyers will be sourced live into the panel on the right.`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+    ]);
+    setChatInput('');
+    setAgentSourcedResults([]);
+    setAgentTablePage(1);
+    setAgentTableSearch('');
+    setIsAgentThinking(false);
   };
 
   // Handle Sourcing Search with 100 limit support
@@ -699,14 +717,20 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-bold">
-                    Mode B
-                  </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={handleStartNewChat}
+                    title="Start fresh conversation and clear live buyers"
+                    className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-xl bg-sky-600/30 hover:bg-sky-600 text-sky-200 hover:text-white border border-sky-500/40 font-semibold transition-all shadow-sm hover:scale-[1.02] cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>New Chat</span>
+                  </button>
+
                   <button
                     onClick={() => setActiveTab('products')}
                     title="Open Export Categories"
-                    className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+                    className="text-[10px] px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold border border-slate-700/60"
                   >
                     Categories
                   </button>
@@ -937,14 +961,20 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
               <div className="flex items-center gap-1.5 flex-wrap shrink-0">
                 <button
                   onClick={() => {
-                    const exportList = filteredLiveBuyers.length > 0 ? filteredLiveBuyers : buyerLeads;
-                    const savedName = exportLeadsToPdf(exportList, {
+                    if (filteredLiveBuyers.length === 0) return;
+                    const savedName = exportLeadsToPdf(filteredLiveBuyers, {
                       title: `International Export Buyer Intelligence Dossier (${chatSelectedCountry || targetCountry})`,
                       leadMode: 'export_buyers'
                     });
-                    setDownloadedFileNotice(`✓ Downloaded ${exportList.length} overseas buyers to This PC > Downloads (${savedName})`);
+                    setDownloadedFileNotice(`✓ Downloaded ${filteredLiveBuyers.length} overseas buyers to This PC > Downloads (${savedName})`);
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/30 transition-all hover:scale-[1.02]"
+                  disabled={filteredLiveBuyers.length === 0}
+                  className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
+                    filteredLiveBuyers.length > 0
+                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-600/30 hover:scale-[1.02] cursor-pointer'
+                      : 'bg-slate-800 text-slate-500 border border-slate-700/40 cursor-not-allowed opacity-50'
+                  }`}
+                  title={filteredLiveBuyers.length > 0 ? "Save PDF to PC" : "Source buyers via Agent first"}
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Save PDF to PC</span>
@@ -952,13 +982,18 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
 
                 <button
                   onClick={() => {
-                    const exportList = filteredLiveBuyers.length > 0 ? filteredLiveBuyers : buyerLeads;
-                    openPrintPdfView(exportList, {
+                    if (filteredLiveBuyers.length === 0) return;
+                    openPrintPdfView(filteredLiveBuyers, {
                       title: `International Export Buyer Intelligence Dossier (${chatSelectedCountry || targetCountry})`,
                       leadMode: 'export_buyers'
                     });
                   }}
-                  className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1 transition-all"
+                  disabled={filteredLiveBuyers.length === 0}
+                  className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all ${
+                    filteredLiveBuyers.length > 0
+                      ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer'
+                      : 'bg-slate-800 text-slate-600 border border-slate-700/40 cursor-not-allowed opacity-50'
+                  }`}
                   title="Open Print Dialog"
                 >
                   <Printer className="w-3.5 h-3.5" />
@@ -966,8 +1001,16 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
                 </button>
 
                 <button
-                  onClick={() => handleExportCsv(filteredLiveBuyers.length > 0 ? filteredLiveBuyers : buyerLeads)}
-                  className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1 transition-all"
+                  onClick={() => {
+                    if (filteredLiveBuyers.length === 0) return;
+                    handleExportCsv(filteredLiveBuyers);
+                  }}
+                  disabled={filteredLiveBuyers.length === 0}
+                  className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all ${
+                    filteredLiveBuyers.length > 0
+                      ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer'
+                      : 'bg-slate-800 text-slate-600 border border-slate-700/40 cursor-not-allowed opacity-50'
+                  }`}
                   title="Export CSV"
                 >
                   <Download className="w-3.5 h-3.5" />
@@ -1133,8 +1176,16 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={10} className="py-8 text-center text-slate-400">
-                          No overseas buyers match your filter criteria. Ask the agent on the left or select a country to source buyers!
+                        <td colSpan={10} className="py-24 text-center">
+                          <div className="max-w-md mx-auto space-y-3 px-4">
+                            <div className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 mx-auto">
+                              <Bot className="w-6 h-6" />
+                            </div>
+                            <h4 className="text-sm font-bold text-white">Agent Standby — No Buyers Sourced Yet</h4>
+                            <p className="text-xs text-slate-400 leading-relaxed">
+                              Type your command in the AI Consultant chat on the left (e.g. <span className="text-sky-300 font-semibold">"50 UAE buyers"</span> or <span className="text-sky-300 font-semibold">"50 Saudi buyers"</span>), or click any suggestion pill above to source verified buyers live into this table.
+                            </p>
+                          </div>
                         </td>
                       </tr>
                     )}
@@ -1142,46 +1193,60 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
                 </table>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3">
-                  {paginatedLiveBuyers.map((lead) => (
-                    <div key={lead.id} className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-sky-500/40 transition-all flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <h4 className="font-bold text-white text-xs">{lead.companyName}</h4>
-                            <span className="text-[10px] text-sky-300 capitalize">{lead.buyerType || 'Importer'} • {lead.country}</span>
+                  {paginatedLiveBuyers.length > 0 ? (
+                    paginatedLiveBuyers.map((lead) => (
+                      <div key={lead.id} className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-sky-500/40 transition-all flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <h4 className="font-bold text-white text-xs">{lead.companyName}</h4>
+                              <span className="text-[10px] text-sky-300 capitalize">{lead.buyerType || 'Importer'} • {lead.country}</span>
+                            </div>
+                            <span className="font-bold text-emerald-400 text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                              {lead.leadScore}/100
+                            </span>
                           </div>
-                          <span className="font-bold text-emerald-400 text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
-                            {lead.leadScore}/100
-                          </span>
+
+                          <div className="mt-2 space-y-1 text-[11px] text-slate-300">
+                            <div className="flex items-center gap-1.5">
+                              <User className="w-3 h-3 text-slate-400" />
+                              <span><strong>{lead.contactFullName}</strong> ({lead.jobTitle})</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Mail className="w-3 h-3 text-sky-400" />
+                              <span className="font-mono text-[10px] text-slate-200 truncate">{lead.businessEmail}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Package className="w-3 h-3 text-sky-400" />
+                              <span className="truncate">Category: <strong>{lead.targetProductCategory || productCategory}</strong></span>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="mt-2 space-y-1 text-[11px] text-slate-300">
-                          <div className="flex items-center gap-1.5">
-                            <User className="w-3 h-3 text-slate-400" />
-                            <span><strong>{lead.contactFullName}</strong> ({lead.jobTitle})</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Mail className="w-3 h-3 text-sky-400" />
-                            <span className="font-mono text-[10px] text-slate-200 truncate">{lead.businessEmail}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Package className="w-3 h-3 text-sky-400" />
-                            <span className="truncate">Category: <strong>{lead.targetProductCategory || productCategory}</strong></span>
-                          </div>
+                        <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                          <StatusBadge status={lead.leadStatus} />
+                          <button
+                            onClick={() => handleGeneratePitchForBuyer(lead)}
+                            className="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-semibold"
+                          >
+                            Write Pitch
+                          </button>
                         </div>
                       </div>
-
-                      <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between">
-                        <StatusBadge status={lead.leadStatus} />
-                        <button
-                          onClick={() => handleGeneratePitchForBuyer(lead)}
-                          className="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-semibold"
-                        >
-                          Write Pitch
-                        </button>
+                    ))
+                  ) : (
+                    <div className="col-span-2 py-24 text-center">
+                      <div className="max-w-md mx-auto space-y-3 px-4">
+                        <div className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 mx-auto">
+                          <Bot className="w-6 h-6" />
+                        </div>
+                        <h4 className="text-sm font-bold text-white">Agent Standby — No Buyers Sourced Yet</h4>
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                          Ask the AI Consultant on the left to source verified buyers into this view.
+                        </p>
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
             </div>

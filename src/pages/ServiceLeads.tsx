@@ -27,7 +27,9 @@ import {
   Table as TableIcon,
   LayoutGrid,
   ChevronLeft,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Plus,
+  RotateCcw
 } from 'lucide-react';
 import { Lead, EmailDraft, EmailTone, FollowUpTask, ClientReply } from '../types';
 import {
@@ -207,8 +209,8 @@ export const ServiceLeads: React.FC<ServiceLeadsProps> = ({
     ? filteredLeads 
     : filteredLeads.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  // Live Agent Sourced Results (defaults to existing service leads if agent hasn't sourced yet)
-  const currentLiveResults = agentSourcedResults.length > 0 ? agentSourcedResults : serviceLeads;
+  // Live Agent Sourced Results (STRICTLY shows leads sourced by Agent in current session)
+  const currentLiveResults = agentSourcedResults;
   const filteredLiveResults = currentLiveResults.filter(lead => {
     if (!agentTableSearch.trim()) return true;
     const q = agentTableSearch.toLowerCase();
@@ -263,6 +265,24 @@ export const ServiceLeads: React.FC<ServiceLeadsProps> = ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Reset conversation and start a clean new chat session
+  const handleStartNewChat = () => {
+    setChatMessages([
+      {
+        id: `msg-${Date.now()}`,
+        sender: 'agent',
+        text: `✨ **New Chat Session Initialized!**\n\nI am your dedicated DataGalactic AI Agent for **Mode A: B2B Services**.\n\nType your command below to source fresh leads (e.g. *"50 UK Hospitals & Clinics"*, *"100 UK Law Firms"*, *"50 USA Logistics"*), or click any quick suggestion pill above.\n\nAll verified leads will appear live in the panel on the right.`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+    ]);
+    setChatInput('');
+    setAgentSourcedResults([]);
+    setAgentTablePage(1);
+    setAgentTableSearch('');
+    setSourcingSuccessMsg(null);
+    setIsAgentThinking(false);
   };
 
   // Source up to 100 Clients via Agent with Natural Language Understanding
@@ -845,20 +865,20 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                     <p className="text-[11px] text-slate-400 truncate">Ask for 50 or 100 verified B2B clients</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {chatSelectedCountry ? (
-                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30">
-                      📍 {chatSelectedCountry}
-                    </span>
-                  ) : (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30 animate-pulse">
-                      Select Country
-                    </span>
-                  )}
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={handleStartNewChat}
+                    title="Start a fresh chat conversation and clear live leads"
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white border border-indigo-500/40 font-semibold transition-all shadow-sm hover:scale-[1.02] cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>New Chat</span>
+                  </button>
+
                   <button
                     onClick={() => setActiveTab('services')}
                     title="Open 10 Services Catalog"
-                    className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold"
+                    className="text-[10px] px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold border border-slate-700/60 transition-colors"
                   >
                     10 Services
                   </button>
@@ -1059,24 +1079,37 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                 <div className="flex items-center gap-2 flex-wrap shrink-0">
                   <button
                     onClick={() => {
-                      const exportList = filteredLiveResults.length > 0 ? filteredLiveResults : serviceLeads;
-                      const savedName = exportLeadsToPdf(exportList, {
+                      if (filteredLiveResults.length === 0) return;
+                      const savedName = exportLeadsToPdf(filteredLiveResults, {
                         title: `DataGalactic ${chatSelectedCountry || 'Corporate'} Client Intelligence Dossier`,
                         leadMode: 'service_leads'
                       });
-                      setDownloadedFileNotice(`✓ Downloaded ${exportList.length} clients to This PC > Downloads (${savedName})`);
+                      setDownloadedFileNotice(`✓ Downloaded ${filteredLiveResults.length} clients to This PC > Downloads (${savedName})`);
                     }}
-                    className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/30 transition-all hover:scale-[1.02]"
-                    title="Directly download .pdf file to your PC Downloads folder"
+                    disabled={filteredLiveResults.length === 0}
+                    className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
+                      filteredLiveResults.length > 0
+                        ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-600/30 hover:scale-[1.02] cursor-pointer'
+                        : 'bg-slate-800 text-slate-500 border border-slate-700/40 cursor-not-allowed opacity-50'
+                    }`}
+                    title={filteredLiveResults.length > 0 ? "Directly download .pdf file to your PC Downloads folder" : "Source leads via Agent first to download PDF"}
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>Download PDF to PC</span>
                   </button>
 
                   <button
-                    onClick={() => handleExportCsv(filteredLiveResults.length > 0 ? filteredLiveResults : serviceLeads)}
-                    className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1 transition-all"
-                    title="Export CSV spreadsheet"
+                    onClick={() => {
+                      if (filteredLiveResults.length === 0) return;
+                      handleExportCsv(filteredLiveResults);
+                    }}
+                    disabled={filteredLiveResults.length === 0}
+                    className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all ${
+                      filteredLiveResults.length > 0
+                        ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer'
+                        : 'bg-slate-800 text-slate-500 border border-slate-700/40 cursor-not-allowed opacity-50'
+                    }`}
+                    title={filteredLiveResults.length > 0 ? "Export CSV spreadsheet" : "Source leads via Agent first to export CSV"}
                   >
                     <FileText className="w-3 h-3" />
                     <span>CSV</span>
@@ -1084,14 +1117,19 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
 
                   <button
                     onClick={() => {
-                      const exportList = filteredLiveResults.length > 0 ? filteredLiveResults : serviceLeads;
-                      openPrintPdfView(exportList, {
+                      if (filteredLiveResults.length === 0) return;
+                      openPrintPdfView(filteredLiveResults, {
                         title: `DataGalactic ${chatSelectedCountry || 'Corporate'} Client Intelligence Dossier`,
                         leadMode: 'service_leads'
                       });
                     }}
-                    className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all"
-                    title="Print or view formatted print preview"
+                    disabled={filteredLiveResults.length === 0}
+                    className={`p-1.5 rounded-xl transition-all ${
+                      filteredLiveResults.length > 0
+                        ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer'
+                        : 'bg-slate-800 text-slate-600 border border-slate-700/40 cursor-not-allowed opacity-50'
+                    }`}
+                    title={filteredLiveResults.length > 0 ? "Print or view formatted print preview" : "Source leads via Agent first"}
                   >
                     <Printer className="w-3.5 h-3.5" />
                   </button>
@@ -1243,8 +1281,16 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={8} className="py-8 text-center text-slate-400">
-                            No clients match your filter. Ask the agent on the left to source 50 clients!
+                          <td colSpan={8} className="py-24 text-center">
+                            <div className="max-w-md mx-auto space-y-3 px-4">
+                              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mx-auto">
+                                <Bot className="w-6 h-6" />
+                              </div>
+                              <h4 className="text-sm font-bold text-white">Agent Standby — No Leads Sourced Yet</h4>
+                              <p className="text-xs text-slate-400 leading-relaxed">
+                                Type your command in the AI Agent chat on the left (e.g. <span className="text-indigo-300 font-semibold">"50 UK Hospitals & Clinics"</span> or <span className="text-indigo-300 font-semibold">"50 UK Law Firms"</span>), or click any suggestion pill above to source verified leads live into this table.
+                              </p>
+                            </div>
                           </td>
                         </tr>
                       )}
@@ -1256,31 +1302,45 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
               {/* Cards View */}
               {agentTableViewMode === 'grid' && (
                 <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-                  {paginatedLiveResults.map((lead) => (
-                    <div key={lead.id} className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-indigo-500/40 transition-all flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-white text-xs truncate">{lead.companyName}</h4>
-                          <span className="text-[10px] text-indigo-300 truncate">{lead.country}</span>
+                  {paginatedLiveResults.length > 0 ? (
+                    paginatedLiveResults.map((lead) => (
+                      <div key={lead.id} className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-indigo-500/40 transition-all flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-white text-xs truncate">{lead.companyName}</h4>
+                            <span className="text-[10px] text-indigo-300 truncate">{lead.country}</span>
+                          </div>
+                          <p className="text-[11px] text-slate-300 mt-0.5 truncate">
+                            {lead.contactFullName} ({lead.jobTitle}) • <span className="font-mono text-slate-400">{lead.businessEmail}</span>
+                          </p>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 mt-1 inline-block">
+                            {lead.recommendedService || 'Data Cleaning'}
+                          </span>
                         </div>
-                        <p className="text-[11px] text-slate-300 mt-0.5 truncate">
-                          {lead.contactFullName} ({lead.jobTitle}) • <span className="font-mono text-slate-400">{lead.businessEmail}</span>
-                        </p>
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 mt-1 inline-block">
-                          {lead.recommendedService || 'Data Cleaning'}
-                        </span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="font-bold text-emerald-400 text-xs">{lead.leadScore}/100</span>
+                          <button
+                            onClick={() => handleGeneratePitchForLead(lead)}
+                            className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold"
+                          >
+                            Pitch
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="font-bold text-emerald-400 text-xs">{lead.leadScore}/100</span>
-                        <button
-                          onClick={() => handleGeneratePitchForLead(lead)}
-                          className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold"
-                        >
-                          Pitch
-                        </button>
+                    ))
+                  ) : (
+                    <div className="py-24 text-center">
+                      <div className="max-w-md mx-auto space-y-3 px-4">
+                        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mx-auto">
+                          <Bot className="w-6 h-6" />
+                        </div>
+                        <h4 className="text-sm font-bold text-white">Agent Standby — No Leads Sourced Yet</h4>
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                          Ask the AI Agent on the left to source verified leads into this view.
+                        </p>
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
 
