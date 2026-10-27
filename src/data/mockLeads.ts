@@ -29,7 +29,8 @@ export const INITIAL_MOCK_LEADS: Lead[] = [
     leadScoreReason: 'Exact role match (Head of Ops), high-volume freight paperwork & customs manifests pain point, verified business domain, UK market leader.',
     potentialFit: 'High operational load from customs manifests and shipping documentation suitable for DataGalactic Back-Office & Data Entry.',
     recommendedService: 'Back-Office & Administrative Support',
-    leadStatus: 'Qualified',
+    leadStatus: 'Replied',
+    lastContactDate: '2026-10-15T09:30:00Z',
     notes: [
       'Verified active UK logistics and freight provider.',
       'Active expansion in Midlands and international logistics corridors.'
@@ -214,7 +215,8 @@ export const INITIAL_MOCK_LEADS: Lead[] = [
     buyerType: 'distributor',
     targetProductCategory: 'Organic Foods & Agro-Commodities',
     productCertifications: ['EU Organic', 'KRAV', 'ISO 22000', 'HACCP'],
-    leadStatus: 'Qualified',
+    leadStatus: 'Replied',
+    lastContactDate: '2026-10-15T11:00:00Z',
     notes: [
       'Pioneer in organic and biodynamic foods in Scandinavia since 1986.',
       'Active container imports from Asia and Mediterranean suppliers.'
@@ -274,6 +276,7 @@ export const INITIAL_MOCK_DRAFTS = [
     subject: 'High-precision candidate research & list-building for Michael Page UK',
     tone: 'Professional' as const,
     recommendedService: 'B2B Lead Generation',
+    leadMode: 'service_leads' as const,
     body: `Dear Charlotte,
 
 I noticed Michael Page's continued leadership in executive and specialist recruitment across the UK and EMEA sectors. In managing high-volume candidate databases, senior recruitment teams often expend substantial time on repetitive resume parsing, contact verification, and pipeline hygiene.
@@ -290,5 +293,139 @@ Founder, DataGalactic
 https://datagalactic.com`,
     status: 'Awaiting Approval' as const,
     createdAt: '2026-10-14T12:05:00Z'
+  },
+  {
+    id: 'draft-002',
+    leadId: 'lead-dg-001',
+    recipientEmail: 'a.vance@europa-worldwide.com',
+    recipientName: 'Alistair Vance',
+    companyName: 'Europa Worldwide Group Ltd',
+    jobTitle: 'Head of Operations & Logistics',
+    subject: 'Scalable back-office data support for UK freight manifests',
+    tone: 'Concise' as const,
+    recommendedService: 'Back-Office & Administrative Support',
+    leadMode: 'service_leads' as const,
+    body: `Hi Alistair,
+
+Europa Worldwide's cross-border logistics network handles tremendous volumes of shipping manifests and customs records daily.
+
+DataGalactic operates a dedicated high-precision back-office support team that handles repetitive shipping data entry, document digitization, and database reconciliation with 99.9% accuracy and guaranteed overnight turnaround.
+
+Could we coordinate a brief 10-minute discovery call to discuss offloading shipping manifest processing?
+
+Warm regards,
+Risona
+DataGalactic`,
+    status: 'Sent' as const,
+    sentAt: '2026-10-15T09:30:00Z',
+    createdAt: '2026-10-15T09:15:00Z'
+  },
+  {
+    id: 'draft-003',
+    leadId: 'lead-dg-006',
+    recipientEmail: 'erik.l@biofood.se',
+    recipientName: 'Erik Lindqvist',
+    companyName: 'Biofood-Biolivs AB',
+    jobTitle: 'Head of International Organic Sourcing',
+    subject: 'Export Inquiry: Certified Organic Agro-Commodities & Spices for Nordic Distribution',
+    tone: 'Professional' as const,
+    recommendedService: 'Export Sourcing',
+    leadMode: 'export_buyers' as const,
+    body: `Hej Erik,
+
+I hope this message finds you well at Biofood-Biolivs.
+
+We represent certified organic agriculture producers supplying wholesale whole black pepper, turmeric, and ginger with ISO 22000, HACCP, and EU Organic compliance. We noticed Biofood's ongoing procurement of bulk certified organic foods across Scandinavia.
+
+We can supply 1 x 20ft FCL container loads with full lab certificates and third-party inspection reports.
+
+Would you like us to dispatch our 2026 export catalog along with initial sample packets to your Stockholm office?
+
+Best regards,
+Risona
+Global Trade Operations`,
+    status: 'Sent' as const,
+    sentAt: '2026-10-15T11:00:00Z',
+    createdAt: '2026-10-15T10:45:00Z'
+  },
+  {
+    id: 'draft-004',
+    leadId: 'lead-dg-007',
+    recipientEmail: 'tariq.h@truebell.org',
+    recipientName: 'Tariq Al-Hashimi',
+    companyName: 'Truebell Marketing & Trading LLC',
+    jobTitle: 'Procurement Director - Food & Commodities',
+    subject: 'Direct Container Sourcing: Premium Food & Agro Commodities for UAE Distribution',
+    tone: 'Formal' as const,
+    recommendedService: 'Export Sourcing',
+    leadMode: 'export_buyers' as const,
+    body: `Dear Mr. Tariq Al-Hashimi,
+
+Truebell Marketing has built an exceptional distribution footprint across the UAE and Gulf region.
+
+We are direct exporters specializing in bulk shipments of food commodities and agricultural produce with mandatory Halal, HACCP, and ISO 9001 certifications. We have immediate container availability for Jebel Ali port delivery.
+
+We would be pleased to share our CIF Dubai price schedules and product specification sheets for your review.
+
+Respectfully yours,
+Risona
+Export Division`,
+    status: 'Awaiting Approval' as const,
+    createdAt: '2026-10-16T14:00:00Z'
+  }
+];
+
+export const INITIAL_MOCK_CLIENT_REPLIES = [
+  {
+    id: 'reply-001',
+    leadId: 'lead-dg-001',
+    leadName: 'Alistair Vance',
+    companyName: 'Europa Worldwide Group Ltd',
+    businessEmail: 'a.vance@europa-worldwide.com',
+    leadMode: 'service_leads' as const,
+    replySubject: 'Re: Scalable back-office data support for UK freight manifests',
+    replySnippet: 'Hi Risona, thank you for reaching out. We process around 1,400 customs documents weekly across our Dartford hub. Can you share your pricing and turnaround SLA for data entry?',
+    replyDate: 'Today, 10:45 AM',
+    sentiment: 'Pricing Inquiry' as const,
+    status: 'Needs Action' as const
+  },
+  {
+    id: 'reply-002',
+    leadId: 'lead-dg-002',
+    leadName: 'Sarah Jenkins',
+    companyName: 'Klaviyo Inc',
+    businessEmail: 's.jenkins@klaviyo.com',
+    leadMode: 'service_leads' as const,
+    replySubject: 'Re: High-precision CRM deduplication & list hygiene for Klaviyo',
+    replySnippet: 'Hi Risona, this is very timely as we are preparing our Q4 data cleanup. Let\'s schedule a 15-minute intro call this Thursday at 4 PM EST.',
+    replyDate: 'Yesterday, 04:15 PM',
+    sentiment: 'Meeting Requested' as const,
+    status: 'In Discussion' as const
+  },
+  {
+    id: 'reply-003',
+    leadId: 'lead-dg-006',
+    leadName: 'Erik Lindqvist',
+    companyName: 'Biofood-Biolivs AB',
+    businessEmail: 'erik.l@biofood.se',
+    leadMode: 'export_buyers' as const,
+    replySubject: 'Re: Export Inquiry: Certified Organic Agro-Commodities & Spices for Nordic Distribution',
+    replySnippet: 'Hej Risona, we reviewed your product sheet. We are interested in a 20ft container load of organic black pepper and turmeric. Could you dispatch lab test reports and sample packets?',
+    replyDate: 'Today, 02:15 PM',
+    sentiment: 'Sample Request' as const,
+    status: 'Needs Action' as const
+  },
+  {
+    id: 'reply-004',
+    leadId: 'lead-dg-007',
+    leadName: 'Tariq Al-Hashimi',
+    companyName: 'Truebell Marketing & Trading LLC',
+    businessEmail: 'tariq.h@truebell.org',
+    leadMode: 'export_buyers' as const,
+    replySubject: 'Re: Direct Container Sourcing: Premium Food & Agro Commodities for UAE Distribution',
+    replySnippet: 'Greetings Risona, please send the CIF Jebel Ali / Dubai port quote along with Halal certificate copies. We have approved your initial supplier questionnaire.',
+    replyDate: '2 days ago',
+    sentiment: 'Interested' as const,
+    status: 'In Discussion' as const
   }
 ];

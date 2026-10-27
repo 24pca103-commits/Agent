@@ -59,6 +59,8 @@ export interface Lead {
   buyerType?: 'importer' | 'distributor' | 'wholesaler' | 'retailer' | 'sourcing_company' | 'manufacturer';
   targetProductCategory?: string;
   productCertifications?: string[];
+  minOrderQuantity?: string;
+  requiredCertifications?: string;
 }
 
 export type EmailTone = 'Professional' | 'Friendly' | 'Concise' | 'Formal';
@@ -74,12 +76,32 @@ export interface EmailDraft {
   body: string;
   tone: EmailTone;
   recommendedService: string;
+  leadMode?: LeadMode;
+  senderEmail?: string;
+  senderName?: string;
   status: 'Draft' | 'Awaiting Approval' | 'Approved' | 'Sent' | 'Rejected';
   createdAt: string;
   approvedAt?: string;
   sentAt?: string;
   messageId?: string;
   errorMessage?: string;
+}
+
+export type ReplySentiment = 'Interested' | 'Meeting Requested' | 'Pricing Inquiry' | 'Sample Request' | 'Follow-up Needed';
+export type ClientReplyStatus = 'Needs Action' | 'In Discussion' | 'Converted' | 'Closed';
+
+export interface ClientReply {
+  id: string;
+  leadId: string;
+  leadName: string;
+  companyName: string;
+  businessEmail: string;
+  leadMode: LeadMode;
+  replySubject: string;
+  replySnippet: string;
+  replyDate: string;
+  sentiment: ReplySentiment;
+  status: ClientReplyStatus;
 }
 
 export interface FollowUpTask {

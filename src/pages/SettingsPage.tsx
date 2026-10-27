@@ -8,18 +8,39 @@ import {
   Save,
   CheckCircle2,
   Copy,
-  Check
+  Check,
+  Mail,
+  Globe2,
+  Briefcase
 } from 'lucide-react';
 import { DATAGALACTIC_COMPANY } from '../data/catalog';
+import { useCompanySettings } from '../utils/settingsStorage';
 
-export const SettingsPage: React.FC = () => {
-  const [companyName, setCompanyName] = useState(DATAGALACTIC_COMPANY.name);
-  const [founder, setFounder] = useState(DATAGALACTIC_COMPANY.founder);
-  const [tagline, setTagline] = useState(DATAGALACTIC_COMPANY.tagline);
-  const [dailySendLimit, setDailySendLimit] = useState(50);
-  const [delayBetweenSends, setDelayBetweenSends] = useState(15);
+interface SettingsPageProps {
+  mode?: 'mode_a' | 'mode_b';
+}
+
+export const SettingsPage: React.FC<SettingsPageProps> = ({ mode = 'mode_a' }) => {
+  const isModeB = mode === 'mode_b';
+  const { settings, updateSettings } = useCompanySettings(mode);
+
+  const [companyName, setCompanyName] = useState(settings.companyName);
+  const [companyEmail, setCompanyEmail] = useState(settings.companyEmail);
+  const [founder, setFounder] = useState(settings.founder);
+  const [tagline, setTagline] = useState(settings.tagline);
+  const [dailySendLimit, setDailySendLimit] = useState(settings.dailySendLimit);
+  const [delayBetweenSends, setDelayBetweenSends] = useState(settings.delayBetweenSends);
   const [saved, setSaved] = useState(false);
   const [copiedSql, setCopiedSql] = useState(false);
+
+  React.useEffect(() => {
+    setCompanyName(settings.companyName);
+    setCompanyEmail(settings.companyEmail);
+    setFounder(settings.founder);
+    setTagline(settings.tagline);
+    setDailySendLimit(settings.dailySendLimit);
+    setDelayBetweenSends(settings.delayBetweenSends);
+  }, [settings]);
 
   const supabaseSqlSchema = `-- DataGalactic LeadPilot AI - Supabase PostgreSQL Schema
 -- Run this in your Supabase SQL Editor to enable persistent cloud multi-session CRM!
@@ -97,8 +118,16 @@ ALTER TABLE public.suppression_records ENABLE ROW LEVEL SECURITY;
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    updateSettings({
+      companyName,
+      companyEmail,
+      founder,
+      tagline,
+      dailySendLimit,
+      delayBetweenSends,
+    });
     setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    setTimeout(() => setSaved(false), 3000);
   };
 
   return (
@@ -117,9 +146,11 @@ ALTER TABLE public.suppression_records ENABLE ROW LEVEL SECURITY;
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Company Settings */}
         <form onSubmit={handleSave} className="galaxy-card p-6 rounded-2xl border border-slate-800 space-y-4">
-          <div className="flex items-center gap-2 text-indigo-400 font-semibold text-sm">
-            <Building className="w-4 h-4" />
-            <span>Company & Sender Profile</span>
+          <div className="flex items-center gap-2 font-semibold text-sm">
+            {isModeB ? <Globe2 className="w-4 h-4 text-sky-400" /> : <Building className="w-4 h-4 text-indigo-400" />}
+            <span className={isModeB ? "text-sky-300" : "text-indigo-300"}>
+              {isModeB ? 'Mode B: Export Trade & Sender Profile' : 'Mode A: DataGalactic B2B Company & Sender Profile'}
+            </span>
           </div>
 
           <div>
@@ -130,6 +161,29 @@ ALTER TABLE public.suppression_records ENABLE ROW LEVEL SECURITY;
               onChange={(e) => setCompanyName(e.target.value)}
               className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white"
             />
+          </div>
+
+          <div>
+            <label className="text-[11px] font-semibold text-slate-300 block mb-1 flex items-center justify-between">
+              <span>{isModeB ? 'Export Company Mail ID *' : 'Official Company Mail ID *'}</span>
+              <span className="text-[9px] text-emerald-400 font-normal">Primary Sender Email</span>
+            </label>
+            <div className="relative">
+              <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="email"
+                required
+                value={companyEmail}
+                onChange={(e) => setCompanyEmail(e.target.value)}
+                placeholder={isModeB ? "export@datagalactic.com" : "contact@datagalactic.com"}
+                className={`w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none ${
+                  isModeB ? 'focus:border-sky-500' : 'focus:border-indigo-500'
+                }`}
+              />
+            </div>
+            <p className="text-[10px] text-slate-400 mt-1">
+              Official sender & reply-to email address used when approving and sending pitches to clients.
+            </p>
           </div>
 
           <div>
@@ -183,9 +237,11 @@ ALTER TABLE public.suppression_records ENABLE ROW LEVEL SECURITY;
 
           <div className="pt-4 flex items-center justify-between">
             {saved && (
-              <span className="text-xs text-emerald-400 flex items-center gap-1 font-medium">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Settings Saved Successfully!
+              <span className="text-xs text-emerald-400 flex items-center gap-1 font-medium animate-in fade-in">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                <span>
+                  Settings Saved! Outgoing emails will now be sent from: <strong className="text-white underline">{companyEmail}</strong> ({founder})
+                </span>
               </span>
             )}
             <button
@@ -219,7 +275,7 @@ ALTER TABLE public.suppression_records ENABLE ROW LEVEL SECURITY;
             For persistent cloud storage across multiple sessions, paste this SQL into your free <strong>Supabase SQL Editor</strong> (at supabase.com), then add your <code className="text-indigo-300 font-mono">SUPABASE_URL</code> to <code className="text-indigo-300 font-mono">.env</code>.
           </p>
 
-          <pre className="p-3 bg-slate-950 rounded-xl border border-slate-800/80 font-mono text-[10px] text-slate-300 overflow-x-auto max-h-64 overflow-y-auto leading-relaxed">
+          <pre className="p-3 bg-slate-950 rounded-xl border border-slate-800/80 font-mono text-[10px] text-slate-300 max-h-64 overflow-y-auto overflow-x-auto min-w-0 max-w-full leading-relaxed whitespace-pre-wrap break-all">
             {supabaseSqlSchema}
           </pre>
         </div>

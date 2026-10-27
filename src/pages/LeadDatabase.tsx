@@ -17,11 +17,13 @@ import {
   Sparkles,
   ExternalLink,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Printer
 } from 'lucide-react';
 import { Lead, LeadStatus } from '../types';
 import { StatusBadge } from '../components/Badge';
 import { Modal } from '../components/Modal';
+import { exportLeadsToPdf } from '../utils/exportPdf';
 
 interface LeadDatabaseProps {
   leads: Lead[];
@@ -43,7 +45,7 @@ export const LeadDatabase: React.FC<LeadDatabaseProps> = ({
   const [countryFilter, setCountryFilter] = useState<string>('All');
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 8;
+  const [pageSize, setPageSize] = useState<number>(25);
 
   // Modal States
   const [inspectingLead, setInspectingLead] = useState<Lead | null>(null);
@@ -97,8 +99,11 @@ export const LeadDatabase: React.FC<LeadDatabaseProps> = ({
   }, [leads]);
 
   // Pagination
-  const totalPages = Math.ceil(filteredLeads.length / pageSize) || 1;
-  const paginatedLeads = filteredLeads.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const effectivePageSize = pageSize === 0 ? (filteredLeads.length || 1) : pageSize;
+  const totalPages = Math.ceil(filteredLeads.length / effectivePageSize) || 1;
+  const paginatedLeads = pageSize === 0 
+    ? filteredLeads 
+    : filteredLeads.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   // Multi-select handlers
   const handleSelectAll = () => {
@@ -148,7 +153,19 @@ export const LeadDatabase: React.FC<LeadDatabaseProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Download PDF Button */}
+          <button
+            onClick={() => {
+              const exportTargets = selectedLeadIds.length > 0 ? leads.filter(l => selectedLeadIds.includes(l.id)) : filteredLeads;
+              exportLeadsToPdf(exportTargets, { title: 'DataGalactic CRM Lead Intelligence Dossier', leadMode: 'all' });
+            }}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-md shadow-emerald-600/30 transition-all"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>Export PDF ({selectedLeadIds.length > 0 ? selectedLeadIds.length : filteredLeads.length})</span>
+          </button>
+
           <button
             onClick={() => onExportCsv(selectedLeadIds.length > 0 ? leads.filter(l => selectedLeadIds.includes(l.id)) : filteredLeads)}
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
@@ -156,6 +173,22 @@ export const LeadDatabase: React.FC<LeadDatabaseProps> = ({
             <Download className="w-3.5 h-3.5 text-indigo-400" />
             <span>Export CSV ({selectedLeadIds.length > 0 ? selectedLeadIds.length : filteredLeads.length})</span>
           </button>
+
+          {/* Page Size Selector */}
+          <select
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="px-2.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white"
+          >
+            <option value={10}>10 / page</option>
+            <option value={25}>25 / page</option>
+            <option value={50}>50 / page</option>
+            <option value={100}>100 / page</option>
+            <option value={0}>Show All ({filteredLeads.length})</option>
+          </select>
         </div>
       </div>
 
@@ -204,8 +237,8 @@ export const LeadDatabase: React.FC<LeadDatabaseProps> = ({
       </div>
 
       {/* CRM Main Table */}
-      <div className="galaxy-card rounded-2xl border border-slate-800 overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="galaxy-card rounded-2xl border border-slate-800 overflow-hidden min-w-0 max-w-full">
+        <div className="overflow-x-auto min-w-0 max-w-full">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="bg-slate-950/70 border-b border-slate-800 text-slate-400 text-[10px] uppercase tracking-wider">

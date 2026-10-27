@@ -10,7 +10,9 @@ import {
   Building2,
   MapPin,
   Users2,
-  Briefcase
+  Briefcase,
+  Bot,
+  Globe2
 } from 'lucide-react';
 import { ParsedSearchFilters, Lead } from '../types';
 import { TARGET_COUNTRIES, TARGET_CLIENT_INDUSTRIES } from '../data/catalog';
@@ -18,11 +20,13 @@ import { TARGET_COUNTRIES, TARGET_CLIENT_INDUSTRIES } from '../data/catalog';
 interface AiLeadFinderProps {
   onSearchComplete: (leads: Lead[]) => void;
   isDemoMode: boolean;
+  onNavigate?: (page: any) => void;
 }
 
 export const AiLeadFinder: React.FC<AiLeadFinderProps> = ({
   onSearchComplete,
   isDemoMode,
+  onNavigate
 }) => {
   const [prompt, setPrompt] = useState(
     'Find 100 UK logistics companies with 50-500 employees. Identify founders, COOs, heads of operations, and procurement managers. Collect company names, domains, websites, professional contact names, job titles, available business emails, LinkedIn profile URLs when provided by an authorized source, company LinkedIn URLs, and source links.'
@@ -98,6 +102,38 @@ export const AiLeadFinder: React.FC<AiLeadFinderProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Mode A & Mode B Quick Agent Navigation Banner */}
+      <div className="galaxy-card p-4 rounded-2xl border border-indigo-500/30 bg-gradient-to-r from-galaxy-900 via-indigo-950/30 to-galaxy-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center">
+            <Bot className="w-4 h-4" />
+          </div>
+          <div>
+            <h3 className="text-xs font-bold text-white">Dedicated AI Lead Agents</h3>
+            <p className="text-[11px] text-slate-400">Launch specialized workspaces with dedicated Agent chat, sourcing, mail, and follow-ups</p>
+          </div>
+        </div>
+
+        {onNavigate && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onNavigate('service_leads')}
+              className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-indigo-600/30 transition-all"
+            >
+              <Briefcase className="w-3.5 h-3.5" />
+              <span>Agent: Mode A (DataGalactic)</span>
+            </button>
+            <button
+              onClick={() => onNavigate('export_buyer_leads')}
+              className="px-3.5 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-sky-600/30 transition-all"
+            >
+              <Globe2 className="w-3.5 h-3.5" />
+              <span>Agent: Mode B (Export Hub)</span>
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Header */}
       <div>
         <div className="flex items-center gap-2">
