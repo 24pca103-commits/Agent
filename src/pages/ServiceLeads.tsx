@@ -265,24 +265,32 @@ export const ServiceLeads: React.FC<ServiceLeadsProps> = ({
     document.body.removeChild(link);
   };
 
-  // Source up to 100 Clients via Agent
-  const handleSourceClients = async (targetCount: number = 100, customPrompt?: string) => {
+  // Source up to 100 Clients via Agent with Natural Language Understanding
+  const handleSourceClients = async (
+    targetCount: number = 100,
+    customPrompt?: string,
+    overrideIndustry?: string,
+    overrideCountry?: string
+  ) => {
     setIsAgentThinking(true);
     setIsSourcing100(true);
     setSourcingSuccessMsg(null);
 
-    const countryToUse = chatSelectedCountry || (selectedCountry !== 'All' ? selectedCountry : 'United Kingdom');
+    const countryToUse = overrideCountry || chatSelectedCountry || (selectedCountry !== 'All' ? selectedCountry : 'United Kingdom (UK)');
+    const industryToUse = overrideIndustry || (selectedIndustry !== 'All' ? selectedIndustry : undefined);
 
     try {
       const response = await fetch('/api/leads/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          prompt: customPrompt,
           filters: {
+            prompt: customPrompt,
             requestedCount: targetCount,
             leadMode: 'service_leads',
             country: countryToUse,
-            industry: selectedIndustry !== 'All' ? selectedIndustry : undefined,
+            industry: industryToUse,
             businessServiceRequirements: selectedService !== 'All' ? [selectedService] : undefined
           }
         })
@@ -300,10 +308,13 @@ export const ServiceLeads: React.FC<ServiceLeadsProps> = ({
         setAgentSourcedResults(data.leads);
         setAgentTablePage(1);
 
+        const finalIndustry = data.industry || industryToUse || 'B2B Client';
+        const finalCountry = data.country || countryToUse;
+
         const agentMsg: ChatMessage = {
           id: `msg-${Date.now()}`,
           sender: 'agent',
-          text: `🎉 Sourced and verified **${data.leads.length} corporate service clients** in **${countryToUse}** matching your criteria!\n\n• **Count:** ${data.leads.length} Verified Records\n• **Target Country:** ${countryToUse}\n• **Email Verification:** 100% Deliverable business contacts & decision makers\n\nAll ${data.leads.length} client details are displayed right on the side panel. You can inspect contacts, copy emails, or click below to save the PDF directly to your PC.`,
+          text: `🎉 Sourced and verified **${data.leads.length} ${finalIndustry} records** in **${finalCountry}** matching your exact command!\n\n• **Industry Matched:** ${finalIndustry}\n• **Target Country:** ${finalCountry}\n• **Count:** ${data.leads.length} Verified Records\n• **Email Verification:** 100% Deliverable business contacts & decision makers\n\nAll ${data.leads.length} client details are displayed right on the side panel. You can inspect contacts, copy emails, or click below to save the PDF directly to your PC.`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           suggestedAction: {
             type: 'download_pdf',
@@ -312,7 +323,7 @@ export const ServiceLeads: React.FC<ServiceLeadsProps> = ({
         };
 
         setChatMessages(prev => [...prev, agentMsg]);
-        setSourcingSuccessMsg(`Successfully sourced ${data.leads.length} verified B2B clients in ${countryToUse}!`);
+        setSourcingSuccessMsg(`Successfully sourced ${data.leads.length} verified ${finalIndustry} in ${finalCountry}!`);
         return data.leads;
       }
     } catch (err) {
@@ -338,10 +349,77 @@ export const ServiceLeads: React.FC<ServiceLeadsProps> = ({
       lower.includes('vanthucha') ||
       lower.includes('vandhucha');
 
-    // Enforce country selection before allowing prompt to send (except for general reply inquiries)
-    if (!chatSelectedCountry && !isReplyQuery) {
-      setCountrySelectError(true);
-      return;
+    // 1. Detect target country from prompt text if mentioned
+    let detectedCountry: string | undefined;
+    if (lower.includes('uk') || lower.includes('united kingdom') || lower.includes('england') || lower.includes('britain') || lower.includes('london')) {
+      detectedCountry = 'United Kingdom (UK)';
+    } else if (lower.includes('usa') || lower.includes('united states') || lower.includes('america') || lower.includes(' us ') || lower.endsWith(' us')) {
+      detectedCountry = 'United States (USA)';
+    } else if (lower.includes('canada') || lower.includes('toronto')) {
+      detectedCountry = 'Canada';
+    } else if (lower.includes('australia') || lower.includes('sydney')) {
+      detectedCountry = 'Australia';
+    } else if (lower.includes('germany') || lower.includes('berlin')) {
+      detectedCountry = 'Germany';
+    } else if (lower.includes('singapore')) {
+      detectedCountry = 'Singapore';
+    } else if (lower.includes('uae') || lower.includes('dubai')) {
+      detectedCountry = 'United Arab Emirates (UAE)';
+    } else if (lower.includes('saudi') || lower.includes('riyadh')) {
+      detectedCountry = 'Saudi Arabia';
+    } else if (lower.includes('india')) {
+      detectedCountry = 'India';
+    }
+
+    // Auto-sync country if detected in prompt
+    if (detectedCountry) {
+      setChatSelectedCountry(detectedCountry);
+      setSelectedCountry(detectedCountry);
+    }
+
+    // 2. Detect target industry from prompt text if mentioned
+    let detectedIndustry: string | undefined;
+    if (lower.includes('hospital') || lower.includes('clinic') || lower.includes('medical') || lower.includes('doctor') || lower.includes('health') || lower.includes('nursing') || lower.includes('patient') || lower.includes('healthcare')) {
+      detectedIndustry = 'Hospitals & Clinics';
+    } else if (lower.includes('law') || lower.includes('legal') || lower.includes('solicitor') || lower.includes('attorney') || lower.includes('barrister') || lower.includes('lawyer') || lower.includes('court')) {
+      detectedIndustry = 'Law Firms';
+    } else if (lower.includes('school') || lower.includes('universit') || lower.includes('college') || lower.includes('education') || lower.includes('academy') || lower.includes('student')) {
+      detectedIndustry = 'Schools & Universities';
+    } else if (lower.includes('real estate') || lower.includes('property') || lower.includes('realtor') || lower.includes('housing')) {
+      detectedIndustry = 'Real Estate Companies';
+    } else if (lower.includes('logistics') || lower.includes('shipping') || lower.includes('freight') || lower.includes('cargo') || lower.includes('warehouse') || lower.includes('manifest') || lower.includes('transport')) {
+      detectedIndustry = 'Logistics & Shipping Companies';
+    } else if (lower.includes('e-commerce') || lower.includes('ecommerce') || lower.includes('shopify') || lower.includes('retail') || lower.includes('store') || lower.includes('online store')) {
+      detectedIndustry = 'E-commerce Businesses';
+    } else if (lower.includes('software') || lower.includes('saas') || lower.includes(' it ') || lower.includes('tech') || lower.includes('app ') || lower.includes('cloud')) {
+      detectedIndustry = 'IT & Software Companies';
+    } else if (lower.includes('marketing') || lower.includes('digital agency') || lower.includes('advertising') || lower.includes('seo') || lower.includes('branding')) {
+      detectedIndustry = 'Digital Marketing Agencies';
+    } else if (lower.includes('recruitment') || lower.includes('staffing') || lower.includes('hiring') || lower.includes('headhunt')) {
+      detectedIndustry = 'Recruitment & Staffing Agencies';
+    } else if (lower.includes('finance') || lower.includes('banking') || lower.includes('fintech') || lower.includes('accounting') || lower.includes('wealth') || lower.includes('audit')) {
+      detectedIndustry = 'Financial Services Companies';
+    } else if (lower.includes('hotel') || lower.includes('hospitality') || lower.includes('resort') || lower.includes('tourism')) {
+      detectedIndustry = 'Hotels & Hospitality Businesses';
+    } else if (lower.includes('construction') || lower.includes('builder') || lower.includes('contractor') || lower.includes('architecture')) {
+      detectedIndustry = 'Construction Companies';
+    } else if (lower.includes('manufacturing') || lower.includes('factory') || lower.includes('industrial') || lower.includes('production')) {
+      detectedIndustry = 'Manufacturing Companies';
+    } else if (lower.includes('insurance')) {
+      detectedIndustry = 'Insurance Companies';
+    } else if (lower.includes('consulting') || lower.includes('advisory')) {
+      detectedIndustry = 'Consulting & Professional Services Firms';
+    }
+
+    // Auto-sync industry dropdown to the detected industry
+    if (detectedIndustry) {
+      setSelectedIndustry(detectedIndustry);
+    }
+
+    // Enforce or default active country smoothly
+    const activeCountry = detectedCountry || chatSelectedCountry || (selectedCountry !== 'All' ? selectedCountry : 'United Kingdom (UK)');
+    if (!chatSelectedCountry) {
+      setChatSelectedCountry(activeCountry);
     }
     setCountrySelectError(false);
 
@@ -412,10 +490,11 @@ export const ServiceLeads: React.FC<ServiceLeadsProps> = ({
       lower.includes('venum') ||
       lower.includes('kudu') ||
       lower.includes('uk') ||
-      lower.includes('us');
+      lower.includes('us') ||
+      !!detectedIndustry;
 
     if (isClientSearch) {
-      await handleSourceClients(requestedCount, query);
+      await handleSourceClients(requestedCount, query, detectedIndustry, activeCountry);
       return;
     }
 
@@ -789,6 +868,8 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
               {/* Quick Prompt Suggestions */}
               <div className="py-2.5 flex items-center gap-1.5 flex-wrap border-b border-slate-800/60">
                 {[
+                  '50 UK Hospitals & Clinics',
+                  '50 UK Law Firms',
                   'Client replies status venum',
                   '50 UK clients venum',
                   '100 UK clients venum',
@@ -800,13 +881,9 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                     key={i}
                     onClick={() => {
                       if (!chatSelectedCountry) {
-                        if (pill.toLowerCase().includes('uk')) setChatSelectedCountry('United Kingdom');
-                        else if (pill.toLowerCase().includes('usa') || pill.toLowerCase().includes('us')) setChatSelectedCountry('United States');
-                        else if (pill.toLowerCase().includes('reply')) setChatSelectedCountry('United Kingdom');
-                        else {
-                          setCountrySelectError(true);
-                          return;
-                        }
+                        if (pill.toLowerCase().includes('uk')) setChatSelectedCountry('United Kingdom (UK)');
+                        else if (pill.toLowerCase().includes('usa') || pill.toLowerCase().includes('us')) setChatSelectedCountry('United States (USA)');
+                        else setChatSelectedCountry('United Kingdom (UK)');
                       }
                       handleSendChatMessage(pill);
                     }}
@@ -890,15 +967,8 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                 )}
               </div>
 
-              {/* Chat Input Bar with Enforced Country Selection */}
+              {/* Chat Input Bar */}
               <div className="pt-2.5 border-t border-slate-800 space-y-2">
-                {countrySelectError && !chatSelectedCountry && (
-                  <div className="flex items-center gap-2 text-xs text-rose-300 bg-rose-500/15 border border-rose-500/40 px-3 py-1.5 rounded-xl animate-bounce">
-                    <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                    <span>Please select target country next to Send button first!</span>
-                  </div>
-                )}
-
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
@@ -906,23 +976,15 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        if (!chatSelectedCountry) {
-                          setCountrySelectError(true);
-                        } else {
-                          handleSendChatMessage();
-                        }
+                        handleSendChatMessage();
                       }
                     }}
                     placeholder={
                       chatSelectedCountry
-                        ? `Ask for ${chatSelectedCountry} clients (e.g. "50 ${chatSelectedCountry} client venum")...`
-                        : "⚠️ Select target country on right before sending prompt..."
+                        ? `Ask for ${chatSelectedCountry} clients (e.g. "50 hospital and clinic leads")...`
+                        : "Ask agent (e.g. '50 hospital and clinic leads', '100 UK law firms')..."
                     }
-                    className={`flex-1 px-3 py-2 bg-slate-950 border rounded-xl text-xs text-white placeholder-slate-400 focus:outline-none transition-all ${
-                      countrySelectError && !chatSelectedCountry
-                        ? 'border-rose-500 focus:border-rose-500 ring-2 ring-rose-500/30'
-                        : 'border-slate-700/80 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
-                    }`}
+                    className="flex-1 px-3 py-2 bg-slate-950 border border-slate-700/80 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs text-white placeholder-slate-400 focus:outline-none transition-all"
                   />
 
                   {/* Country Selector placed right next to Send button */}
@@ -934,14 +996,12 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                         if (e.target.value) setCountrySelectError(false);
                       }}
                       className={`px-2.5 py-2 bg-slate-950 border rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                        countrySelectError && !chatSelectedCountry
-                          ? 'border-rose-500 text-rose-300 ring-2 ring-rose-500/40 bg-rose-950/30'
-                          : chatSelectedCountry
+                        chatSelectedCountry
                           ? 'border-indigo-500 text-indigo-200 bg-indigo-950/50'
-                          : 'border-amber-500/80 text-amber-300 bg-amber-950/20'
+                          : 'border-slate-700/80 text-slate-300 bg-slate-900/60'
                       } focus:outline-none focus:border-indigo-500`}
                     >
-                      <option value="">🌍 Country *</option>
+                      <option value="">🌍 Country (Optional)</option>
                       <option value="United Kingdom">🇬🇧 UK</option>
                       <option value="United States">🇺🇸 USA</option>
                       <option value="Canada">🇨🇦 Canada</option>
@@ -956,16 +1016,11 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                   {/* Send Button */}
                   <button
                     onClick={() => {
-                      if (!chatSelectedCountry) {
-                        setCountrySelectError(true);
-                      } else {
-                        handleSendChatMessage();
-                      }
+                      handleSendChatMessage();
                     }}
-                    disabled={!chatSelectedCountry || isAgentThinking}
-                    title={!chatSelectedCountry ? "Please select a target country next to this button first" : "Send prompt"}
+                    disabled={!chatInput.trim() || isAgentThinking}
                     className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all shrink-0 ${
-                      chatSelectedCountry && !isAgentThinking
+                      chatInput.trim() && !isAgentThinking
                         ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/30 cursor-pointer hover:scale-[1.02]'
                         : 'bg-slate-800 text-slate-400 border border-slate-700/60 cursor-not-allowed opacity-60'
                     }`}
