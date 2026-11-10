@@ -121,8 +121,8 @@ export const Integrations: React.FC = () => {
           const isError = item.status === 'error';
 
           return (
-            <div key={item.id} className="galaxy-card p-6 rounded-2xl border border-slate-800 space-y-4">
-              <div className="flex items-start justify-between">
+            <div key={item.id} className="galaxy-card p-4 sm:p-6 rounded-2xl border border-slate-800 space-y-4 min-w-0">
+              <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <h3 className="text-base font-bold text-white">{item.name}</h3>
                   <p className="text-xs text-slate-400 mt-0.5">{item.creditsRemaining}</p>

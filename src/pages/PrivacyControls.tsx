@@ -55,37 +55,37 @@ export const PrivacyControls: React.FC = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-w-0">
         {/* Do Not Contact List */}
-        <div className="galaxy-card p-6 rounded-2xl border border-slate-800 space-y-4">
-          <div className="flex items-center justify-between">
+        <div className="galaxy-card p-4 sm:p-6 rounded-2xl border border-slate-800 space-y-4 min-w-0">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-white">Do-Not-Contact (DNC) & Opt-Out Registry</h3>
             <span className="text-xs text-slate-400">{suppressedEntries.length} Suppressed</span>
           </div>
 
-          <form onSubmit={handleAddSuppression} className="flex gap-2">
+          <form onSubmit={handleAddSuppression} className="flex flex-col sm:flex-row gap-2">
             <input
               type="text"
               value={newEntry}
               onChange={(e) => setNewEntry(e.target.value)}
               placeholder="Enter email or domain (e.g. acme.com)..."
-              className="flex-1 px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white"
+              className="flex-1 min-w-0 px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white"
             />
             <button
               type="submit"
-              className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold"
+              className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shrink-0"
             >
               Add to DNC
             </button>
           </form>
 
-          <div className="space-y-2 max-h-60 overflow-y-auto">
+          <div className="space-y-2 max-h-60 overflow-y-auto overflow-x-hidden">
             {suppressedEntries.map((entry) => (
               <div
                 key={entry}
-                className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 text-xs"
+                className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 text-xs min-w-0"
               >
-                <span className="font-mono text-slate-300">{entry}</span>
+                <span className="font-mono text-slate-300 truncate min-w-0">{entry}</span>
                 <button
                   onClick={() => handleRemoveSuppression(entry)}
                   className="text-slate-500 hover:text-rose-400 p-1"

@@ -285,7 +285,7 @@ export function App() {
   const activeModeBSession = chatSessions.find(s => s.id === activeModeBSessionId);
 
   return (
-    <div className="flex min-h-screen bg-white dark:bg-[#212121] text-neutral-900 dark:text-[#ececec] font-sans relative selection:bg-[#10a37f]/25 w-full max-w-full overflow-x-hidden">
+    <div className="flex min-h-screen min-h-[100dvh] bg-white dark:bg-[#212121] text-neutral-900 dark:text-[#ececec] font-sans relative selection:bg-[#10a37f]/25 w-full max-w-full overflow-x-hidden">
       {/* Removed starfield background */}
       <GalaxyBackground />
 
@@ -314,7 +314,7 @@ export function App() {
 
       {/* Main Content Area */}
       <div
-        className={`flex-1 flex flex-col min-h-screen relative z-10 w-full min-w-0 max-w-full transition-all duration-200 ease-out overflow-x-hidden ${
+        className={`flex-1 flex flex-col min-h-screen min-h-[100dvh] relative z-10 w-full min-w-0 max-w-full transition-all duration-200 ease-out overflow-x-hidden ${
           isDesktopSidebarOpen ? 'lg:ml-[260px] lg:w-[calc(100%-260px)] lg:max-w-[calc(100%-260px)]' : 'lg:ml-0 lg:w-full lg:max-w-full'
         }`}
       >

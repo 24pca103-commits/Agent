@@ -135,11 +135,11 @@ https://datagalactic.com`);
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-w-0">
         {/* Left Column: Lead Context & Controls */}
-        <div className="space-y-4">
+        <div className="space-y-4 min-w-0">
           {/* Lead Selector Card */}
-          <div className="galaxy-card p-5 rounded-2xl border border-slate-800">
+          <div className="galaxy-card p-5 rounded-2xl border border-slate-800 min-w-0">
             <label className="text-xs font-semibold text-slate-300 block mb-2">
               Select Target Prospect:
             </label>
@@ -153,7 +153,7 @@ https://datagalactic.com`);
                   setService(target.recommendedService || 'Data Cleaning & Formatting');
                 }
               }}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white"
+              className="w-full max-w-full min-w-0 truncate px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white"
             >
               {leads.map(l => (
                 <option key={l.id} value={l.id}>
@@ -175,7 +175,7 @@ https://datagalactic.com`);
                 </div>
                 <div>
                   <span className="text-slate-400 text-[11px] block">Verified Email:</span>
-                  <span className="text-slate-300 font-mono text-[11px]">{activeLead.businessEmail}</span>
+                  <span className="text-slate-300 font-mono text-[11px] break-all">{activeLead.businessEmail}</span>
                 </div>
               </div>
             )}
@@ -211,7 +211,7 @@ https://datagalactic.com`);
               <select
                 value={service}
                 onChange={(e) => setService(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white"
+                className="w-full max-w-full min-w-0 truncate px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white"
               >
                 {DATAGALACTIC_SERVICES.map(s => (
                   <option key={s.name} value={s.name}>{s.name}</option>
@@ -231,9 +231,9 @@ https://datagalactic.com`);
         </div>
 
         {/* Right Column: Email Editor & Action Buttons */}
-        <div className="lg:col-span-2 galaxy-card p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="lg:col-span-2 galaxy-card p-4 sm:p-6 rounded-2xl border border-slate-800 flex flex-col justify-between min-w-0">
+          <div className="space-y-4 min-w-0">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800">
               <span className="text-xs font-semibold text-white">Email Draft Preview</span>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-500/20">

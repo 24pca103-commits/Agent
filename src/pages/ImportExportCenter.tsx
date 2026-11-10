@@ -163,7 +163,7 @@ export const ImportExportCenter: React.FC<ImportExportCenterProps> = ({
               type="file"
               accept=".csv"
               onChange={handleFileUpload}
-              className="mt-3 text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-indigo-300 hover:file:bg-slate-700 cursor-pointer"
+              className="mt-3 w-full max-w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-indigo-300 hover:file:bg-slate-700 cursor-pointer"
             />
           </div>
 

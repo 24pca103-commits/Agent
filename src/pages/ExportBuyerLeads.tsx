@@ -628,7 +628,7 @@ Email: ${settings.companyEmail}`;
   // Reusable ChatGPT Pill Composer for Mode B
   const renderChatComposer = (centered: boolean) => (
     <div
-      className={`w-full ${centered ? 'max-w-2xl' : 'max-w-3xl'} mx-auto rounded-[26px] bg-[#f4f4f4] dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 px-4 py-3 shadow-sm transition-colors`}
+      className={`w-full ${centered ? 'max-w-2xl' : 'max-w-3xl'} mx-auto rounded-[22px] sm:rounded-[26px] bg-[#f4f4f4] dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 px-3 sm:px-4 py-2.5 sm:py-3 shadow-sm transition-colors`}
     >
       <textarea
         rows={centered ? 2 : 1}
@@ -644,15 +644,15 @@ Email: ${settings.companyEmail}`;
         className="chatgpt-pill-input w-full bg-transparent border-0 resize-none text-sm text-neutral-900 dark:text-[#ececec] placeholder-neutral-500 dark:placeholder-[#9e9e9e] focus:outline-none leading-relaxed max-h-36"
       />
 
-      <div className="flex items-center justify-between gap-2 pt-2 mt-1 border-t border-neutral-200/70 dark:border-white/10 flex-wrap">
-        <div className="flex items-center gap-1.5 flex-wrap">
+      <div className="flex items-center justify-between gap-2 pt-2 mt-1 border-t border-neutral-200/70 dark:border-white/10 min-w-0">
+        <div className="flex items-center gap-1.5 flex-wrap min-w-0 flex-1">
           <select
             value={chatSelectedCountry}
             onChange={(e) => {
               setChatSelectedCountry(e.target.value);
               setTargetCountry(e.target.value);
             }}
-            className="chatgpt-pill-select px-2.5 py-1.5 rounded-full bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs font-medium text-neutral-800 dark:text-[#ececec] cursor-pointer focus:outline-none"
+            className="chatgpt-pill-select px-2.5 py-1.5 rounded-full bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs font-medium text-neutral-800 dark:text-[#ececec] cursor-pointer focus:outline-none max-w-[132px] min-[400px]:max-w-[165px] sm:max-w-[180px] truncate"
           >
             <option value="United Arab Emirates (UAE)">🇦🇪 UAE (Dubai)</option>
             <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
@@ -667,7 +667,7 @@ Email: ${settings.companyEmail}`;
           <select
             value={productCategory}
             onChange={(e) => setProductCategory(e.target.value)}
-            className="chatgpt-pill-select px-2.5 py-1.5 rounded-full bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs font-medium text-neutral-800 dark:text-[#ececec] cursor-pointer focus:outline-none max-w-[175px] truncate"
+            className="chatgpt-pill-select px-2.5 py-1.5 rounded-full bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs font-medium text-neutral-800 dark:text-[#ececec] cursor-pointer focus:outline-none max-w-[120px] min-[400px]:max-w-[155px] sm:max-w-[175px] truncate"
           >
             <option value="Agro-Commodities & Spices">Agro & Spices</option>
             <option value="Processed Food & Beverages">Processed Food</option>
@@ -691,7 +691,7 @@ Email: ${settings.companyEmail}`;
           {!centered && chatMessages.length > 0 && (
             <button
               onClick={handleStartNewChat}
-              className="px-2.5 py-1.5 rounded-full text-xs font-medium text-neutral-600 dark:text-[#b4b4b4] hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/70 dark:hover:bg-[#383838] flex items-center gap-1 transition-colors"
+              className="px-2 sm:px-2.5 py-1.5 rounded-full text-xs font-medium text-neutral-600 dark:text-[#b4b4b4] hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/70 dark:hover:bg-[#383838] flex items-center gap-1 transition-colors shrink-0"
               title="Start new chat"
             >
               <SquarePen className="w-3.5 h-3.5" />
@@ -719,7 +719,7 @@ Email: ${settings.companyEmail}`;
     <div className={`flex flex-col flex-1 w-full ${activeTab === 'agent' ? 'space-y-3' : 'space-y-5'}`}>
       {/* Header visible on structured workspace tabs 2-6 */}
       {activeTab !== 'agent' && (
-        <div className="chatgpt-card p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="chatgpt-card p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-neutral-100 dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 text-neutral-700 dark:text-[#d4d4d4] text-[11px] font-medium mb-2">
               <Globe2 className="w-3.5 h-3.5" />
@@ -823,18 +823,18 @@ Email: ${settings.companyEmail}`;
           TAB 1: CHATGPT SINGLE-COLUMN EXPORT AI AGENT
          ======================================================== */}
       {activeTab === 'agent' && (
-        <div className="flex-1 flex flex-col w-full min-h-[calc(100vh-11rem)]">
+        <div className="flex-1 flex flex-col w-full min-h-[calc(100vh-10rem)] min-h-[calc(100dvh-10rem)] [@media(max-height:480px)]:min-h-0">
           {chatMessages.length === 0 ? (
             /* STANDBY VIEW (Vertically Centered ChatGPT Screen) */
-            <div className="flex-1 flex flex-col items-center justify-center py-8 px-2 max-w-3xl mx-auto w-full">
-              <div className="w-11 h-11 rounded-2xl bg-neutral-100 dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 flex items-center justify-center mb-4">
-                <Ship className="w-6 h-6 text-neutral-800 dark:text-white" />
+            <div className="flex-1 flex flex-col items-center justify-center py-4 sm:py-8 [@media(max-height:480px)]:py-2 px-1 sm:px-2 max-w-3xl mx-auto w-full">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-neutral-100 dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 flex items-center justify-center mb-3 sm:mb-4">
+                <Ship className="w-5 h-5 sm:w-6 sm:h-6 text-neutral-800 dark:text-white" />
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-semibold text-neutral-900 dark:text-white text-center tracking-tight">
+              <h1 className="text-xl sm:text-3xl font-semibold text-neutral-900 dark:text-white text-center tracking-tight px-2">
                 Which export buyers are we sourcing?
               </h1>
-              <p className="text-xs sm:text-sm text-neutral-500 dark:text-[#9e9e9e] mt-1.5 mb-6 text-center">
+              <p className="text-xs sm:text-sm text-neutral-500 dark:text-[#9e9e9e] mt-1.5 mb-5 sm:mb-6 text-center px-2">
                 Mode B Global Trade AI • Overseas Importers, Distributors & Wholesalers
               </p>
 
@@ -842,7 +842,7 @@ Email: ${settings.companyEmail}`;
               {renderChatComposer(true)}
 
               {/* Subtle Suggestion Chips */}
-              <div className="flex flex-wrap items-center justify-center gap-2 mt-5 max-w-2xl">
+              <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-4 sm:mt-5 max-w-2xl">
                 {[
                   '50 UAE agro spice buyers',
                   '100 UAE buyers venum',
@@ -854,7 +854,7 @@ Email: ${settings.companyEmail}`;
                   <button
                     key={idx}
                     onClick={() => handleSendChatMessage(chip)}
-                    className="px-3.5 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#2a2a2a] hover:bg-neutral-100 dark:hover:bg-[#383838] text-neutral-700 dark:text-[#d4d4d4] border border-neutral-200 dark:border-white/10 transition-colors"
+                    className="px-3 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-medium bg-white dark:bg-[#2a2a2a] hover:bg-neutral-100 dark:hover:bg-[#383838] text-neutral-700 dark:text-[#d4d4d4] border border-neutral-200 dark:border-white/10 transition-colors"
                   >
                     {chip}
                   </button>
@@ -864,23 +864,28 @@ Email: ${settings.companyEmail}`;
           ) : (
             /* ACTIVE CONVERSATION SINGLE-COLUMN FEED */
             <>
-              <div className="flex-1 w-full max-w-4xl mx-auto space-y-6 pb-8 pt-2">
+              <div className="flex-1 w-full max-w-4xl mx-auto space-y-5 sm:space-y-6 pb-6 sm:pb-8 pt-2">
                 {chatMessages.map(msg => (
                   <div
                     key={msg.id}
                     className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     {msg.sender === 'user' ? (
-                      <div className="max-w-[85%] sm:max-w-[75%] rounded-3xl px-4 py-2.5 bg-[#f4f4f4] dark:bg-[#2f2f2f] text-neutral-900 dark:text-[#ececec] text-sm leading-relaxed">
+                      <div className="max-w-[88%] sm:max-w-[75%] rounded-2xl sm:rounded-3xl px-3.5 sm:px-4 py-2 sm:py-2.5 bg-[#f4f4f4] dark:bg-[#2f2f2f] text-neutral-900 dark:text-[#ececec] text-sm leading-relaxed break-words [overflow-wrap:anywhere] min-w-0">
                         {msg.text}
                       </div>
                     ) : (
-                      <div className="flex items-start gap-3 w-full max-w-full min-w-0">
-                        <div className="w-7 h-7 rounded-full bg-neutral-100 dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 flex items-center justify-center text-neutral-800 dark:text-white shrink-0 mt-0.5">
-                          <Ship className="w-3.5 h-3.5" />
+                      <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 w-full max-w-full min-w-0">
+                        <div className="flex items-center gap-2 sm:block shrink-0 sm:mt-0.5">
+                          <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-neutral-100 dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 flex items-center justify-center text-neutral-800 dark:text-white shrink-0">
+                            <Ship className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="sm:hidden text-xs font-semibold text-neutral-700 dark:text-[#d4d4d4]">
+                            Export AI Hub
+                          </span>
                         </div>
 
-                        <div className="flex-1 min-w-0 space-y-2 text-sm text-neutral-800 dark:text-[#ececec] leading-relaxed">
+                        <div className="flex-1 min-w-0 space-y-2 text-sm text-neutral-800 dark:text-[#ececec] leading-relaxed break-words [overflow-wrap:anywhere]">
                           <div>{renderFormattedChatText(msg.text)}</div>
 
                           {/* Inline Sourced Buyers Table rendered inside Agent Message */}
@@ -918,9 +923,9 @@ Email: ${settings.companyEmail}`;
               </div>
 
               {/* Sticky Bottom Pill Composer */}
-              <div className="sticky bottom-0 z-20 pt-3 pb-1 bg-gradient-to-t from-white via-white/95 dark:from-[#212121] dark:via-[#212121]/95 to-transparent w-full">
+              <div className="sticky bottom-0 z-20 pt-2.5 sm:pt-3 pb-1 bg-gradient-to-t from-white via-white/95 dark:from-[#212121] dark:via-[#212121]/95 to-transparent w-full">
                 {renderChatComposer(false)}
-                <p className="text-[10px] text-center text-neutral-400 dark:text-[#8e8e8e] mt-1.5">
+                <p className="text-[10px] text-center text-neutral-400 dark:text-[#8e8e8e] mt-1.5 [@media(max-height:480px)]:hidden">
                   Export Hub AI • Importers & distributors synced to Saved Buyers List
                 </p>
               </div>
@@ -1018,23 +1023,23 @@ Email: ${settings.companyEmail}`;
                 <table className="w-full text-left text-xs table-fixed">
                   <thead>
                     <tr className="bg-neutral-50 dark:bg-[#1e1e1e] border-b border-neutral-200 dark:border-white/10 text-neutral-500 dark:text-[#9e9e9e] text-[10px] uppercase tracking-wider">
-                      <th className="py-3 px-2 text-center w-[4%]">#</th>
-                      <th className="py-3 px-3 font-semibold w-[22%]">Buyer & Port</th>
-                      <th className="py-3 px-3 font-semibold w-[16%]">Procurement Lead</th>
-                      <th className="py-3 px-3 font-semibold w-[22%]">Direct Email</th>
-                      <th className="py-3 px-3 font-semibold w-[15%]">Products & MOQ</th>
-                      <th className="py-3 px-2 font-semibold text-center w-[6%]">Score</th>
-                      <th className="py-3 px-2 font-semibold text-center w-[7%]">Status</th>
-                      <th className="py-3 px-3 font-semibold text-right w-[8%]">Email</th>
+                      <th className="py-3 px-1.5 text-center w-[34px]">#</th>
+                      <th className="py-3 px-2.5 font-semibold">Buyer & Port</th>
+                      <th className="py-3 px-2.5 font-semibold w-[19%] xl:w-[16%]">Procurement Lead</th>
+                      <th className="py-3 px-2.5 font-semibold w-[23%] xl:w-[20%]">Direct Email</th>
+                      <th className="py-3 px-2.5 font-semibold hidden xl:table-cell w-[16%]">Products & MOQ</th>
+                      <th className="py-3 px-1.5 font-semibold text-center hidden xl:table-cell w-[54px]">Score</th>
+                      <th className="py-3 px-1.5 font-semibold text-center w-[136px]">Status</th>
+                      <th className="py-3 px-2.5 font-semibold text-right w-[98px]">Email</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100 dark:divide-white/5">
                     {paginatedLeads.map((buyer, idx) => (
                       <tr key={buyer.id} className="hover:bg-neutral-50 dark:hover:bg-[#212121] transition-colors">
-                        <td className="py-3 px-2 text-center font-mono text-neutral-400 text-[11px]">
+                        <td className="py-3 px-1.5 text-center font-mono text-neutral-400 text-[11px]">
                           {(currentPage - 1) * (pageSize || 1) + idx + 1}
                         </td>
-                        <td className="py-3 px-3 min-w-0">
+                        <td className="py-3 px-2.5 min-w-0">
                           <div className="font-semibold text-neutral-900 dark:text-white text-xs flex items-center gap-1 min-w-0">
                             <span className="truncate">{buyer.companyName}</span>
                             <a
@@ -1050,11 +1055,11 @@ Email: ${settings.companyEmail}`;
                             {buyer.buyerType?.toUpperCase() || 'IMPORTER'} • {buyer.regionCity || buyer.country}
                           </div>
                         </td>
-                        <td className="py-3 px-3 min-w-0">
+                        <td className="py-3 px-2.5 min-w-0">
                           <div className="font-medium text-neutral-800 dark:text-[#ececec] truncate">{buyer.contactFullName}</div>
                           <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] truncate">{buyer.jobTitle}</div>
                         </td>
-                        <td className="py-3 px-3 min-w-0">
+                        <td className="py-3 px-2.5 min-w-0">
                           <div className="font-mono text-neutral-800 dark:text-[#d4d4d4] text-[11px] flex items-center gap-1 min-w-0">
                             <span className="truncate">{buyer.businessEmail}</span>
                             <ShieldCheck className="w-3 h-3 text-[#10a37f] shrink-0" />
@@ -1065,7 +1070,7 @@ Email: ${settings.companyEmail}`;
                             </div>
                           )}
                         </td>
-                        <td className="py-3 px-3 min-w-0">
+                        <td className="py-3 px-2.5 min-w-0 hidden xl:table-cell">
                           <div className="text-xs font-medium text-neutral-900 dark:text-white truncate">
                             {buyer.targetProductCategory || 'Agro-Commodities'}
                           </div>
@@ -1073,16 +1078,16 @@ Email: ${settings.companyEmail}`;
                             MOQ: {buyer.minOrderQuantity || '1 x 20ft FCL'}
                           </div>
                         </td>
-                        <td className="py-3 px-2 text-center">
+                        <td className="py-3 px-1.5 text-center hidden xl:table-cell">
                           <span className="font-semibold text-[#10a37f] text-xs">{buyer.leadScore}</span>
                         </td>
-                        <td className="py-3 px-2 text-center">
+                        <td className="py-3 px-1.5 text-center">
                           <StatusBadge status={buyer.leadStatus} />
                         </td>
-                        <td className="py-3 px-3 text-right">
+                        <td className="py-3 px-2.5 text-right">
                           <button
                             onClick={() => handleGeneratePitchForBuyer(buyer)}
-                            className="px-2 py-1 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] hover:opacity-85 text-[11px] font-semibold transition-opacity"
+                            className="px-2 py-1 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] hover:opacity-85 text-[11px] font-semibold transition-opacity whitespace-nowrap"
                           >
                             Write Email
                           </button>
@@ -1128,40 +1133,40 @@ Email: ${settings.companyEmail}`;
           {viewMode === 'grid' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {paginatedLeads.map((buyer) => (
-                <div key={buyer.id} className="chatgpt-card p-5 rounded-2xl flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-base font-semibold text-neutral-900 dark:text-white">{buyer.companyName}</h3>
+                <div key={buyer.id} className="chatgpt-card p-4 sm:p-5 rounded-2xl flex flex-col justify-between min-w-0">
+                  <div className="min-w-0">
+                    <div className="flex items-start justify-between gap-3 min-w-0">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <h3 className="text-base font-semibold text-neutral-900 dark:text-white truncate">{buyer.companyName}</h3>
                           <a
                             href={buyer.companyWebsite}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
+                            className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white shrink-0"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
                         </div>
-                        <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] font-medium">
+                        <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] font-medium truncate">
                           {buyer.regionCity || buyer.country} • {buyer.buyerType?.toUpperCase() || 'IMPORTER'}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right shrink-0">
                         <div className="text-sm font-bold text-[#10a37f]">{buyer.leadScore}/100</div>
                         <span className="text-[10px] text-neutral-400">Trade Score</span>
                       </div>
                     </div>
 
-                    <div className="mt-4 p-3.5 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-neutral-900 dark:text-white">{buyer.contactFullName}</span>
-                        <span className="text-xs px-2.5 py-0.5 rounded-md bg-neutral-200/70 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#d4d4d4] font-medium">
+                    <div className="mt-4 p-3.5 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 min-w-0">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="text-sm font-semibold text-neutral-900 dark:text-white truncate">{buyer.contactFullName}</span>
+                        <span className="text-xs px-2.5 py-0.5 rounded-md bg-neutral-200/70 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#d4d4d4] font-medium shrink-0">
                           {buyer.jobTitle}
                         </span>
                       </div>
 
-                      <div className="mt-2.5 flex items-center justify-between gap-2 text-xs pt-2.5 border-t border-neutral-200 dark:border-white/10 min-w-0">
+                      <div className="mt-2.5 flex items-center justify-between gap-2 text-xs pt-2.5 border-t border-neutral-200 dark:border-white/10 min-w-0 flex-wrap">
                         <span className="text-neutral-700 dark:text-[#d4d4d4] font-mono text-xs truncate min-w-0">{buyer.businessEmail}</span>
                         <span className="text-xs text-[#10a37f] font-semibold flex items-center gap-1 shrink-0">
                           <ShieldCheck className="w-3.5 h-3.5" />
@@ -1171,13 +1176,13 @@ Email: ${settings.companyEmail}`;
                     </div>
 
                     <div className="mt-3.5 space-y-2 text-xs">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
                         <span className="text-neutral-500 dark:text-[#9e9e9e]">Product Category:</span>
                         <span className="font-semibold text-neutral-900 dark:text-white">
                           {buyer.targetProductCategory || 'Agro-Commodities'}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
                         <span className="text-neutral-500 dark:text-[#9e9e9e]">MOQ:</span>
                         <span className="text-neutral-700 dark:text-[#d4d4d4]">
                           {buyer.minOrderQuantity || '1 x 20ft FCL'}
@@ -1186,7 +1191,7 @@ Email: ${settings.companyEmail}`;
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-neutral-200 dark:border-white/10 flex items-center justify-between">
+                  <div className="mt-4 pt-3 border-t border-neutral-200 dark:border-white/10 flex items-center justify-between gap-2 flex-wrap">
                     <StatusBadge status={buyer.leadStatus} />
                     <button
                       onClick={() => handleGeneratePitchForBuyer(buyer)}
@@ -1203,7 +1208,7 @@ Email: ${settings.companyEmail}`;
           )}
 
           {buyerLeads.length > 0 && pageSize > 0 && totalPages > 1 && (
-            <div className="flex items-center justify-between pt-3 border-t border-neutral-200 dark:border-white/10 text-xs text-neutral-500 dark:text-[#9e9e9e]">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-neutral-200 dark:border-white/10 text-xs text-neutral-500 dark:text-[#9e9e9e]">
               <span>
                 Showing {Math.min((currentPage - 1) * pageSize + 1, buyerLeads.length)} to{' '}
                 {Math.min(currentPage * pageSize, buyerLeads.length)} of {buyerLeads.length} buyers
@@ -1253,8 +1258,8 @@ Email: ${settings.companyEmail}`;
           TAB 3: EXPORT MAIL PROCESSING
          ======================================================== */}
       {activeTab === 'email' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2 chatgpt-card p-5 rounded-2xl space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 min-w-0">
+          <div className="lg:col-span-2 chatgpt-card p-4 sm:p-5 rounded-2xl space-y-4 min-w-0">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-white/10 flex-wrap gap-2">
               <div>
                 <h3 className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2">
@@ -1274,24 +1279,24 @@ Email: ${settings.companyEmail}`;
             </div>
 
             {/* Sender Profile synced with Mode B Settings */}
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#10a37f]" />
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs flex-wrap gap-2 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap min-w-0">
+                <div className="w-2 h-2 rounded-full bg-[#10a37f] shrink-0" />
                 <span className="text-[11px] text-neutral-500 dark:text-[#9e9e9e]">Sending Export Mail From:</span>
-                <span className="font-semibold text-neutral-900 dark:text-white underline">{settings.companyEmail}</span>
+                <span className="font-semibold text-neutral-900 dark:text-white underline break-all">{settings.companyEmail}</span>
                 <span className="text-neutral-500 dark:text-[#9e9e9e]">({settings.founder})</span>
               </div>
               <button
                 onClick={() => setActiveTab('settings')}
-                className="text-[11px] text-neutral-700 dark:text-[#ececec] hover:underline font-semibold ml-auto flex items-center gap-1"
+                className="text-[11px] text-neutral-700 dark:text-[#ececec] hover:underline font-semibold ml-auto flex items-center gap-1 shrink-0"
               >
                 <span>Edit in Settings</span>
                 <ChevronRight className="w-3 h-3" />
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
+              <div className="min-w-0">
                 <label className="text-[11px] font-semibold text-neutral-500 dark:text-[#9e9e9e] block mb-1">
                   Target Overseas Buyer
                 </label>
@@ -1303,7 +1308,7 @@ Email: ${settings.companyEmail}`;
                     const found = leads.find(l => l.id === id);
                     if (found) generateExportEmailContent(found, composerTone);
                   }}
-                  className="w-full px-3 py-2 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-white"
+                  className="w-full max-w-full min-w-0 truncate px-3 py-2 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-white"
                 >
                   {buyerLeads.map(b => (
                     <option key={b.id} value={b.id}>
@@ -1313,7 +1318,7 @@ Email: ${settings.companyEmail}`;
                 </select>
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <label className="text-[11px] font-semibold text-neutral-500 dark:text-[#9e9e9e] block mb-1">
                   Email Tone
                 </label>
@@ -1325,7 +1330,7 @@ Email: ${settings.companyEmail}`;
                     const found = leads.find(l => l.id === composerLeadId);
                     if (found) generateExportEmailContent(found, tone);
                   }}
-                  className="w-full px-3 py-2 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-white"
+                  className="w-full max-w-full min-w-0 truncate px-3 py-2 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-white"
                 >
                   <option value="Formal">Formal (Standard International Trade)</option>
                   <option value="Professional">Professional (Consultative)</option>
@@ -1381,7 +1386,7 @@ Email: ${settings.companyEmail}`;
                 <span>Regenerate Export Pitch</span>
               </button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={handleSaveCurrentDraft}
                   className="px-4 py-2 rounded-xl bg-neutral-100 dark:bg-[#2f2f2f] hover:bg-neutral-200 dark:hover:bg-[#383838] text-neutral-900 dark:text-white text-xs font-semibold border border-neutral-200 dark:border-white/10 transition-colors"
@@ -1399,30 +1404,30 @@ Email: ${settings.companyEmail}`;
             </div>
           </div>
 
-          <div className="chatgpt-card p-5 rounded-2xl flex flex-col h-[600px]">
-            <div className="pb-3 border-b border-neutral-200 dark:border-white/10 flex items-center justify-between">
-              <div>
+          <div className="chatgpt-card p-4 sm:p-5 rounded-2xl flex flex-col h-[380px] sm:h-[460px] lg:h-[600px] min-w-0">
+            <div className="pb-3 border-b border-neutral-200 dark:border-white/10 flex items-center justify-between gap-2">
+              <div className="min-w-0">
                 <h3 className="text-sm font-bold text-neutral-900 dark:text-white">Mode B Export Outbox</h3>
                 <p className="text-[11px] text-neutral-500 dark:text-[#9e9e9e]">Trade inquiries & approvals</p>
               </div>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#ececec] font-semibold border border-neutral-200 dark:border-white/10">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#ececec] font-semibold border border-neutral-200 dark:border-white/10 shrink-0">
                 {exportDrafts.length} Total
               </span>
             </div>
 
-            <div className="flex-1 overflow-y-auto py-3 space-y-2.5 pr-1">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden py-3 space-y-2.5 pr-1">
               {exportDrafts.map((d) => (
                 <div
                   key={d.id}
-                  className="p-3.5 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs space-y-2"
+                  className="p-3.5 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs space-y-2 min-w-0"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <span className="font-semibold text-neutral-900 dark:text-white block">{d.recipientName}</span>
-                      <span className="text-[11px] text-neutral-500 dark:text-[#9e9e9e]">{d.companyName}</span>
+                  <div className="flex items-start justify-between gap-2 min-w-0">
+                    <div className="min-w-0">
+                      <span className="font-semibold text-neutral-900 dark:text-white block truncate">{d.recipientName}</span>
+                      <span className="text-[11px] text-neutral-500 dark:text-[#9e9e9e] block truncate">{d.companyName}</span>
                     </div>
                     <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0 ${
                         d.status === 'Sent'
                           ? 'bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] border border-[#10a37f]/30'
                           : d.status === 'Awaiting Approval'
@@ -1472,11 +1477,11 @@ Email: ${settings.companyEmail}`;
           TAB 4: EXPORT FOLLOW-UP CADENCE
          ======================================================== */}
       {activeTab === 'followup' && (
-        <div className="chatgpt-card p-5 rounded-2xl">
+        <div className="chatgpt-card p-4 sm:p-5 rounded-2xl">
           <div className="flex items-center justify-between flex-wrap gap-3 pb-4 border-b border-neutral-200 dark:border-white/10">
             <div>
               <h3 className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-                <CalendarClock className="w-4 h-4" />
+                <CalendarClock className="w-4 h-4 shrink-0" />
                 <span>Mode B Trade Cadence & Sample Follow-ups</span>
               </h3>
               <p className="text-[11px] text-neutral-500 dark:text-[#9e9e9e]">
@@ -1484,12 +1489,12 @@ Email: ${settings.companyEmail}`;
               </p>
             </div>
 
-            <div className="flex items-center gap-1 bg-neutral-100 dark:bg-[#212121] p-1 rounded-xl border border-neutral-200 dark:border-white/10">
+            <div className="flex items-center flex-wrap gap-1 bg-neutral-100 dark:bg-[#212121] p-1 rounded-xl border border-neutral-200 dark:border-white/10 w-full sm:w-auto">
               {(['All', 'Due Today', 'Overdue', 'Upcoming'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setFollowUpTab(tab)}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
                     followUpTab === tab
                       ? 'bg-neutral-900 dark:bg-[#2f2f2f] text-white'
                       : 'text-neutral-600 dark:text-[#9e9e9e] hover:text-neutral-900 dark:hover:text-white'
@@ -1505,7 +1510,7 @@ Email: ${settings.companyEmail}`;
             <div className="pt-4 pb-3 border-b border-neutral-200 dark:border-white/10">
               <div className="flex items-center justify-between mb-2.5">
                 <span className="text-xs font-bold text-[#10a37f] flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                   <span>
                     Inbound Buyer Replies Received ({clientReplies.filter(r => r.leadMode === 'export_buyers').length})
                   </span>
@@ -1517,17 +1522,17 @@ Email: ${settings.companyEmail}`;
                   .map(reply => (
                     <div
                       key={reply.id}
-                      className="p-3 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-[#10a37f]/30 space-y-1.5"
+                      className="p-3 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-[#10a37f]/30 space-y-1.5 min-w-0"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-neutral-900 dark:text-white">
+                      <div className="flex items-center justify-between gap-2 flex-wrap min-w-0">
+                        <span className="text-xs font-semibold text-neutral-900 dark:text-white truncate">
                           {reply.leadName} ({reply.companyName})
                         </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] font-semibold">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] font-semibold shrink-0">
                           {reply.sentiment}
                         </span>
                       </div>
-                      <p className="text-[11px] text-neutral-600 dark:text-[#b4b4b4] italic line-clamp-2">
+                      <p className="text-[11px] text-neutral-600 dark:text-[#b4b4b4] italic line-clamp-2 break-words">
                         "{reply.replySnippet}"
                       </p>
                       <div className="flex items-center justify-between text-[10px] text-neutral-500 dark:text-[#8e8e8e] pt-1 border-t border-neutral-200 dark:border-white/10">
@@ -1546,16 +1551,16 @@ Email: ${settings.companyEmail}`;
               .map(task => (
                 <div
                   key={task.id}
-                  className="p-4 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  className="p-4 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4 min-w-0"
                 >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2.5 flex-wrap">
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-neutral-900 dark:text-white text-sm">{task.leadName}</span>
-                      <span className="px-2.5 py-0.5 rounded-lg bg-white dark:bg-[#2f2f2f] text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 text-xs font-semibold">
+                      <span className="px-2.5 py-0.5 rounded-lg bg-white dark:bg-[#2f2f2f] text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 text-xs font-semibold max-w-full truncate">
                         Company: {task.companyName}
                       </span>
                       <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                        className={`text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0 ${
                           task.status === 'Due Today'
                             ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30'
                             : task.status === 'Overdue'
@@ -1566,17 +1571,17 @@ Email: ${settings.companyEmail}`;
                         {task.status} (Day {task.cadenceDay})
                       </span>
                     </div>
-                    <p className="text-xs text-neutral-500 dark:text-[#9e9e9e]">
+                    <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] break-all">
                       {task.email} • Due: {task.dueDate}
                     </p>
                     {task.suggestedDraftSubject && (
-                      <p className="text-xs text-neutral-700 dark:text-[#d4d4d4] mt-1 font-medium bg-white dark:bg-[#171717] p-2 rounded-lg border border-neutral-200 dark:border-white/10">
+                      <p className="text-xs text-neutral-700 dark:text-[#d4d4d4] mt-1 font-medium bg-white dark:bg-[#171717] p-2 rounded-lg border border-neutral-200 dark:border-white/10 break-words">
                         Follow-up for {task.companyName}: "{task.suggestedDraftSubject}"
                       </p>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center flex-wrap gap-2 shrink-0">
                     <button
                       onClick={() => {
                         setComposedSubject(task.suggestedDraftSubject || 'Following up on our export proposal');
@@ -1618,9 +1623,9 @@ Email: ${settings.companyEmail}`;
          ======================================================== */}
       {activeTab === 'products' && (
         <div className="space-y-5">
-          <div className="chatgpt-card p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-bold text-neutral-900 dark:text-white tracking-tight">
+          <div className="chatgpt-card p-4 sm:p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white tracking-tight">
                 Export Product Categories, MOQ & Certifications
               </h2>
               <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] mt-1 max-w-2xl">
@@ -1630,14 +1635,14 @@ Email: ${settings.companyEmail}`;
 
             <button
               onClick={() => setActiveTab('agent')}
-              className="px-4 py-2 rounded-xl bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] text-xs font-semibold flex items-center gap-2 hover:opacity-85 transition-opacity shrink-0"
+              className="px-4 py-2 rounded-xl bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] text-xs font-semibold flex items-center gap-2 hover:opacity-85 transition-opacity shrink-0 w-fit"
             >
               <Bot className="w-4 h-4" />
               <span>Ask Export AI Agent</span>
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 min-w-0">
             {[
               {
                 id: 'agro',
@@ -1700,9 +1705,9 @@ Email: ${settings.companyEmail}`;
                 prompt: '50 Saudi Arabia ceramic tile buyers venum'
               }
             ].map(cat => (
-              <div key={cat.id} className="chatgpt-card p-5 rounded-2xl flex flex-col justify-between">
-                <div>
-                  <div className="flex items-start justify-between gap-2 mb-2">
+              <div key={cat.id} className="chatgpt-card p-4 sm:p-5 rounded-2xl flex flex-col justify-between min-w-0">
+                <div className="min-w-0">
+                  <div className="flex items-start justify-between gap-2 flex-wrap mb-2">
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] font-semibold">
                       {cat.badge}
                     </span>

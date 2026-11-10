@@ -52,14 +52,15 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   }, []);
 
   return (
-    <header className="h-14 bg-white/90 dark:bg-[#212121]/90 backdrop-blur-md sticky top-0 z-20 flex items-center justify-between px-3 sm:px-5 w-full min-w-0 border-b border-neutral-200/70 dark:border-white/5">
+    <header className="h-14 bg-white/90 dark:bg-[#212121]/90 backdrop-blur-md sticky top-0 z-20 flex items-center justify-between px-2.5 sm:px-5 gap-1.5 sm:gap-2 w-full min-w-0 border-b border-neutral-200/70 dark:border-white/5">
       {/* Left: Sidebar Toggle + New Chat + ChatGPT Model/Mode Switcher */}
-      <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+      <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
         {onToggleMobileSidebar && (
           <button
             onClick={onToggleMobileSidebar}
-            className="lg:hidden p-2 rounded-lg text-neutral-600 dark:text-[#b4b4b4] hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2f2f2f] transition-colors shrink-0"
+            className="lg:hidden p-1.5 sm:p-2 rounded-lg text-neutral-600 dark:text-[#b4b4b4] hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2f2f2f] transition-colors shrink-0"
             title="Open navigation"
+            aria-label="Open navigation"
           >
             <Menu className="w-4 h-4" />
           </button>
@@ -70,38 +71,40 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             onClick={onToggleDesktopSidebar}
             className="hidden lg:flex p-2 rounded-lg text-neutral-600 dark:text-[#b4b4b4] hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2f2f2f] transition-colors shrink-0"
             title="Open sidebar"
+            aria-label="Open sidebar"
           >
             <PanelLeft className="w-4 h-4" />
           </button>
         )}
 
-        {onNewChat && (!isDesktopSidebarOpen || typeof window !== 'undefined') && (
+        {onNewChat && (
           <button
             onClick={() => onNewChat(activeMode)}
-            className={`${!isDesktopSidebarOpen ? 'flex' : 'flex lg:hidden'} p-2 rounded-lg text-neutral-600 dark:text-[#b4b4b4] hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2f2f2f] transition-colors shrink-0`}
+            className={`${!isDesktopSidebarOpen ? 'flex' : 'flex lg:hidden'} sm:hidden p-1.5 sm:p-2 rounded-lg text-neutral-600 dark:text-[#b4b4b4] hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2f2f2f] transition-colors shrink-0`}
             title="New chat"
+            aria-label="New chat"
           >
             <SquarePen className="w-4 h-4" />
           </button>
         )}
 
         {/* ChatGPT Model/Agent Switcher Dropdown */}
-        <div className="relative" ref={dropdownRef}>
+        <div className="relative min-w-0" ref={dropdownRef}>
           <button
             onClick={() => setIsAgentsOpen(prev => !prev)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-semibold text-neutral-900 dark:text-[#ececec] hover:bg-neutral-100 dark:hover:bg-[#2f2f2f] transition-colors"
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-neutral-900 dark:text-[#ececec] hover:bg-neutral-100 dark:hover:bg-[#2f2f2f] transition-colors max-w-full min-w-0"
           >
             <span className="truncate">
               {isModeB ? 'Export Hub' : 'DataGalactic'}
             </span>
-            <span className="text-xs font-medium text-neutral-500 dark:text-[#9e9e9e]">
+            <span className="hidden min-[380px]:inline text-[11px] sm:text-xs font-medium text-neutral-500 dark:text-[#9e9e9e] shrink-0">
               {isModeB ? 'Mode B' : 'Mode A'}
             </span>
-            <ChevronDown className={`w-4 h-4 text-neutral-400 transition-transform ${isAgentsOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-400 shrink-0 transition-transform ${isAgentsOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {isAgentsOpen && (
-            <div className="absolute left-0 mt-1.5 w-72 rounded-2xl bg-white dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 shadow-xl p-1.5 z-50">
+            <div className="fixed sm:absolute left-3 right-3 sm:left-0 sm:right-auto top-14 sm:top-auto sm:mt-1.5 w-auto sm:w-72 max-w-[calc(100vw-1.5rem)] rounded-2xl bg-white dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 shadow-xl p-1.5 z-50">
               <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-[#9e9e9e]">
                 Select AI Agent Mode
               </div>
@@ -161,7 +164,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
       </div>
 
       {/* Right Navigation Controls */}
-      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
         {onNewChat && (
           <button
             onClick={() => onNewChat(activeMode)}
@@ -175,21 +178,23 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
 
         <button
           onClick={() => onNavigate('dashboard')}
-          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+          className={`flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-medium transition-colors ${
             activePage === 'dashboard'
               ? 'bg-neutral-900 dark:bg-white text-white dark:text-[#212121]'
               : 'text-neutral-700 dark:text-[#d4d4d4] hover:bg-neutral-100 dark:hover:bg-[#2f2f2f]'
           }`}
           title="Dashboard & Sent Mails"
+          aria-label="Dashboard & Sent Mails"
         >
-          <LayoutDashboard className="w-3.5 h-3.5" />
+          <LayoutDashboard className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
           <span className="hidden sm:inline">Dashboard</span>
         </button>
 
         <button
           onClick={() => onNavigate('settings')}
           title="Company & Mail Settings"
-          className="p-2 rounded-lg text-neutral-600 dark:text-[#b4b4b4] hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2f2f2f] transition-colors"
+          aria-label="Company & Mail Settings"
+          className="p-1.5 sm:p-2 rounded-lg text-neutral-600 dark:text-[#b4b4b4] hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2f2f2f] transition-colors"
         >
           <Settings className="w-4 h-4" />
         </button>
@@ -198,16 +203,17 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           <button
             onClick={onToggleTheme}
             title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-neutral-700 dark:text-[#d4d4d4] hover:bg-neutral-100 dark:hover:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 transition-colors"
+            aria-label={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            className="flex items-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-medium text-neutral-700 dark:text-[#d4d4d4] hover:bg-neutral-100 dark:hover:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 transition-colors"
           >
             {theme === 'light' ? (
               <>
-                <Moon className="w-3.5 h-3.5" />
+                <Moon className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                 <span className="hidden sm:inline">Dark</span>
               </>
             ) : (
               <>
-                <Sun className="w-3.5 h-3.5 text-amber-400" />
+                <Sun className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-amber-400" />
                 <span className="hidden sm:inline">Light</span>
               </>
             )}

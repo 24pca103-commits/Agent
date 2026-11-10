@@ -709,7 +709,7 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
   // Reusable Pill Composer JSX (rendered centered on standby, or pinned at bottom during chat)
   const renderChatComposer = (centered: boolean) => (
     <div
-      className={`w-full ${centered ? 'max-w-2xl' : 'max-w-3xl'} mx-auto rounded-[26px] bg-[#f4f4f4] dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 px-4 py-3 shadow-sm transition-colors`}
+      className={`w-full ${centered ? 'max-w-2xl' : 'max-w-3xl'} mx-auto rounded-[22px] sm:rounded-[26px] bg-[#f4f4f4] dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 px-3 sm:px-4 py-2.5 sm:py-3 shadow-sm transition-colors`}
     >
       <textarea
         rows={centered ? 2 : 1}
@@ -729,12 +729,12 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
         className="chatgpt-pill-input w-full bg-transparent border-0 resize-none text-sm text-neutral-900 dark:text-[#ececec] placeholder-neutral-500 dark:placeholder-[#9e9e9e] focus:outline-none leading-relaxed max-h-36"
       />
 
-      <div className="flex items-center justify-between gap-2 pt-2 mt-1 border-t border-neutral-200/70 dark:border-white/10">
-        <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center justify-between gap-2 pt-2 mt-1 border-t border-neutral-200/70 dark:border-white/10 min-w-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0 flex-1">
           <select
             value={chatSelectedCountry}
             onChange={(e) => setChatSelectedCountry(e.target.value)}
-            className="chatgpt-pill-select px-3 py-1.5 rounded-full bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs font-medium text-neutral-800 dark:text-[#ececec] cursor-pointer focus:outline-none"
+            className="chatgpt-pill-select px-2.5 sm:px-3 py-1.5 rounded-full bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs font-medium text-neutral-800 dark:text-[#ececec] cursor-pointer focus:outline-none max-w-full min-w-0 truncate"
           >
             <option value="">🌍 Country (Auto)</option>
             <option value="United Kingdom (UK)">🇬🇧 United Kingdom</option>
@@ -752,7 +752,7 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
           {!centered && chatMessages.length > 0 && (
             <button
               onClick={handleStartNewChat}
-              className="px-2.5 py-1.5 rounded-full text-xs font-medium text-neutral-600 dark:text-[#b4b4b4] hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/70 dark:hover:bg-[#383838] flex items-center gap-1 transition-colors"
+              className="px-2 sm:px-2.5 py-1.5 rounded-full text-xs font-medium text-neutral-600 dark:text-[#b4b4b4] hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/70 dark:hover:bg-[#383838] flex items-center gap-1 transition-colors shrink-0"
               title="Start new chat"
             >
               <SquarePen className="w-3.5 h-3.5" />
@@ -781,7 +781,7 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
     <div className={`flex flex-col flex-1 w-full ${activeTab === 'agent' ? 'space-y-3' : 'space-y-5'}`}>
       {/* Workspace Header shown ONLY on structured workspace tabs 2-6 */}
       {activeTab !== 'agent' && (
-        <div className="chatgpt-card p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="chatgpt-card p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-neutral-100 dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 text-neutral-700 dark:text-[#d4d4d4] text-[11px] font-medium mb-2">
               <Briefcase className="w-3.5 h-3.5" />
@@ -885,18 +885,18 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
           TAB 1: CHATGPT SINGLE-COLUMN AI AGENT INTERFACE
          ======================================================== */}
       {activeTab === 'agent' && (
-        <div className="flex-1 flex flex-col w-full min-h-[calc(100vh-11rem)]">
+        <div className="flex-1 flex flex-col w-full min-h-[calc(100vh-10rem)] min-h-[calc(100dvh-10rem)] [@media(max-height:480px)]:min-h-0">
           {chatMessages.length === 0 ? (
             /* STANDBY / NEW CHAT VIEW (Vertically Centered ChatGPT Screen) */
-            <div className="flex-1 flex flex-col items-center justify-center py-8 px-2 max-w-3xl mx-auto w-full">
-              <div className="w-11 h-11 rounded-2xl bg-neutral-100 dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 flex items-center justify-center mb-4">
-                <Bot className="w-6 h-6 text-neutral-800 dark:text-white" />
+            <div className="flex-1 flex flex-col items-center justify-center py-4 sm:py-8 [@media(max-height:480px)]:py-2 px-1 sm:px-2 max-w-3xl mx-auto w-full">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-neutral-100 dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 flex items-center justify-center mb-3 sm:mb-4">
+                <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-neutral-800 dark:text-white" />
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-semibold text-neutral-900 dark:text-white text-center tracking-tight">
+              <h1 className="text-xl sm:text-3xl font-semibold text-neutral-900 dark:text-white text-center tracking-tight px-2">
                 What B2B leads can I find for you?
               </h1>
-              <p className="text-xs sm:text-sm text-neutral-500 dark:text-[#9e9e9e] mt-1.5 mb-6 text-center">
+              <p className="text-xs sm:text-sm text-neutral-500 dark:text-[#9e9e9e] mt-1.5 mb-5 sm:mb-6 text-center px-2">
                 DataGalactic AI Agent • Mode A Services • Verified Emails & 1-Click PDF
               </p>
 
@@ -904,7 +904,7 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
               {renderChatComposer(true)}
 
               {/* Subtle Suggestion Chips */}
-              <div className="flex flex-wrap items-center justify-center gap-2 mt-5 max-w-2xl">
+              <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-4 sm:mt-5 max-w-2xl">
                 {[
                   '50 UK Hospitals & Clinics',
                   '50 UK Law Firms',
@@ -916,7 +916,7 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                   <button
                     key={idx}
                     onClick={() => handleSendChatMessage(chip)}
-                    className="px-3.5 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#2a2a2a] hover:bg-neutral-100 dark:hover:bg-[#383838] text-neutral-700 dark:text-[#d4d4d4] border border-neutral-200 dark:border-white/10 transition-colors"
+                    className="px-3 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-medium bg-white dark:bg-[#2a2a2a] hover:bg-neutral-100 dark:hover:bg-[#383838] text-neutral-700 dark:text-[#d4d4d4] border border-neutral-200 dark:border-white/10 transition-colors"
                   >
                     {chip}
                   </button>
@@ -926,23 +926,28 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
           ) : (
             /* ACTIVE CONVERSATION SINGLE-COLUMN FEED */
             <>
-              <div className="flex-1 w-full max-w-4xl mx-auto space-y-6 pb-8 pt-2">
+              <div className="flex-1 w-full max-w-4xl mx-auto space-y-5 sm:space-y-6 pb-6 sm:pb-8 pt-2">
                 {chatMessages.map(msg => (
                   <div
                     key={msg.id}
                     className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     {msg.sender === 'user' ? (
-                      <div className="max-w-[85%] sm:max-w-[75%] rounded-3xl px-4 py-2.5 bg-[#f4f4f4] dark:bg-[#2f2f2f] text-neutral-900 dark:text-[#ececec] text-sm leading-relaxed">
+                      <div className="max-w-[88%] sm:max-w-[75%] rounded-2xl sm:rounded-3xl px-3.5 sm:px-4 py-2 sm:py-2.5 bg-[#f4f4f4] dark:bg-[#2f2f2f] text-neutral-900 dark:text-[#ececec] text-sm leading-relaxed break-words [overflow-wrap:anywhere] min-w-0">
                         {msg.text}
                       </div>
                     ) : (
-                      <div className="flex items-start gap-3 w-full max-w-full min-w-0">
-                        <div className="w-7 h-7 rounded-full bg-neutral-100 dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 flex items-center justify-center text-neutral-800 dark:text-white shrink-0 mt-0.5">
-                          <Bot className="w-4 h-4" />
+                      <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 w-full max-w-full min-w-0">
+                        <div className="flex items-center gap-2 sm:block shrink-0 sm:mt-0.5">
+                          <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-neutral-100 dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 flex items-center justify-center text-neutral-800 dark:text-white shrink-0">
+                            <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          </div>
+                          <span className="sm:hidden text-xs font-semibold text-neutral-700 dark:text-[#d4d4d4]">
+                            DataGalactic AI
+                          </span>
                         </div>
 
-                        <div className="flex-1 min-w-0 space-y-2 text-sm text-neutral-800 dark:text-[#ececec] leading-relaxed">
+                        <div className="flex-1 min-w-0 space-y-2 text-sm text-neutral-800 dark:text-[#ececec] leading-relaxed break-words [overflow-wrap:anywhere]">
                           <div>{renderFormattedChatText(msg.text)}</div>
 
                           {/* Inline Sourced Leads Table rendered inside Agent Message */}
@@ -998,9 +1003,9 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
               </div>
 
               {/* Sticky Bottom Pill Composer */}
-              <div className="sticky bottom-0 z-20 pt-3 pb-1 bg-gradient-to-t from-white via-white/95 dark:from-[#212121] dark:via-[#212121]/95 to-transparent w-full">
+              <div className="sticky bottom-0 z-20 pt-2.5 sm:pt-3 pb-1 bg-gradient-to-t from-white via-white/95 dark:from-[#212121] dark:via-[#212121]/95 to-transparent w-full">
                 {renderChatComposer(false)}
-                <p className="text-[10px] text-center text-neutral-400 dark:text-[#8e8e8e] mt-1.5">
+                <p className="text-[10px] text-center text-neutral-400 dark:text-[#8e8e8e] mt-1.5 [@media(max-height:480px)]:hidden">
                   DataGalactic LeadPilot AI • Results auto-sync to Saved Clients List
                 </p>
               </div>
@@ -1184,23 +1189,23 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                 <table className="w-full text-left text-xs table-fixed">
                   <thead>
                     <tr className="bg-neutral-50 dark:bg-[#1e1e1e] border-b border-neutral-200 dark:border-white/10 text-neutral-500 dark:text-[#9e9e9e] text-[10px] uppercase tracking-wider">
-                      <th className="py-3 px-2 text-center w-[4%]">#</th>
-                      <th className="py-3 px-3 font-semibold w-[22%]">Company & Location</th>
-                      <th className="py-3 px-3 font-semibold w-[16%]">Decision Maker</th>
-                      <th className="py-3 px-3 font-semibold w-[22%]">Business Email / Phone</th>
-                      <th className="py-3 px-3 font-semibold w-[15%]">Service Fit</th>
-                      <th className="py-3 px-2 font-semibold text-center w-[6%]">Score</th>
-                      <th className="py-3 px-2 font-semibold text-center w-[7%]">Status</th>
-                      <th className="py-3 px-3 font-semibold text-right w-[8%]">Email</th>
+                      <th className="py-3 px-1.5 text-center w-[34px]">#</th>
+                      <th className="py-3 px-2.5 font-semibold">Company & Location</th>
+                      <th className="py-3 px-2.5 font-semibold w-[19%] xl:w-[16%]">Decision Maker</th>
+                      <th className="py-3 px-2.5 font-semibold w-[23%] xl:w-[20%]">Business Email / Phone</th>
+                      <th className="py-3 px-2.5 font-semibold hidden xl:table-cell w-[16%]">Service Fit</th>
+                      <th className="py-3 px-1.5 font-semibold text-center hidden xl:table-cell w-[54px]">Score</th>
+                      <th className="py-3 px-1.5 font-semibold text-center w-[136px]">Status</th>
+                      <th className="py-3 px-2.5 font-semibold text-right w-[98px]">Email</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100 dark:divide-white/5">
                     {paginatedLeads.map((lead, idx) => (
                       <tr key={lead.id} className="hover:bg-neutral-50 dark:hover:bg-[#212121] transition-colors">
-                        <td className="py-3 px-2 text-center font-mono text-neutral-400 text-[11px]">
+                        <td className="py-3 px-1.5 text-center font-mono text-neutral-400 text-[11px]">
                           {(currentPage - 1) * (pageSize || 1) + idx + 1}
                         </td>
-                        <td className="py-3 px-3 min-w-0">
+                        <td className="py-3 px-2.5 min-w-0">
                           <div className="font-semibold text-neutral-900 dark:text-white text-xs flex items-center gap-1 min-w-0">
                             <span className="truncate">{lead.companyName}</span>
                             <a
@@ -1216,11 +1221,11 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                             {lead.industry} • {lead.regionCity || lead.country}
                           </div>
                         </td>
-                        <td className="py-3 px-3 min-w-0">
+                        <td className="py-3 px-2.5 min-w-0">
                           <div className="font-medium text-neutral-800 dark:text-[#ececec] truncate">{lead.contactFullName}</div>
                           <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] truncate">{lead.jobTitle}</div>
                         </td>
-                        <td className="py-3 px-3 min-w-0">
+                        <td className="py-3 px-2.5 min-w-0">
                           <div className="font-mono text-neutral-800 dark:text-[#d4d4d4] text-[11px] flex items-center gap-1 min-w-0">
                             <span className="truncate">{lead.businessEmail}</span>
                             <ShieldCheck className="w-3 h-3 text-[#10a37f] shrink-0" />
@@ -1231,7 +1236,7 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                             </div>
                           )}
                         </td>
-                        <td className="py-3 px-3 min-w-0">
+                        <td className="py-3 px-2.5 min-w-0 hidden xl:table-cell">
                           <span
                             title={lead.recommendedService || 'Data Cleaning & Formatting'}
                             className="text-[10px] px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#d4d4d4] border border-neutral-200 dark:border-white/10 font-medium block truncate"
@@ -1239,16 +1244,16 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                             {lead.recommendedService || 'Data Cleaning & Formatting'}
                           </span>
                         </td>
-                        <td className="py-3 px-2 text-center">
+                        <td className="py-3 px-1.5 text-center hidden xl:table-cell">
                           <span className="font-semibold text-[#10a37f] text-xs">{lead.leadScore}</span>
                         </td>
-                        <td className="py-3 px-2 text-center">
+                        <td className="py-3 px-1.5 text-center">
                           <StatusBadge status={lead.leadStatus} />
                         </td>
-                        <td className="py-3 px-3 text-right">
+                        <td className="py-3 px-2.5 text-right">
                           <button
                             onClick={() => handleGeneratePitchForLead(lead)}
-                            className="px-2 py-1 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] hover:opacity-85 text-[11px] font-semibold transition-opacity"
+                            className="px-2 py-1 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] hover:opacity-85 text-[11px] font-semibold transition-opacity whitespace-nowrap"
                           >
                             Write Email
                           </button>
@@ -1298,41 +1303,41 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
           {viewMode === 'grid' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {paginatedLeads.map((lead) => (
-                <div key={lead.id} className="chatgpt-card p-5 rounded-2xl flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-base font-semibold text-neutral-900 dark:text-white">{lead.companyName}</h3>
+                <div key={lead.id} className="chatgpt-card p-4 sm:p-5 rounded-2xl flex flex-col justify-between min-w-0">
+                  <div className="min-w-0">
+                    <div className="flex items-start justify-between gap-3 min-w-0">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <h3 className="text-base font-semibold text-neutral-900 dark:text-white truncate">{lead.companyName}</h3>
                           <a
                             href={lead.companyWebsite}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
+                            className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white shrink-0"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
                         </div>
-                        <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] font-medium">
+                        <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] font-medium truncate">
                           {lead.industry} • {lead.country}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right shrink-0">
                         <div className="text-sm font-bold text-[#10a37f]">{lead.leadScore}/100</div>
                         <span className="text-[10px] text-neutral-400">Quality Score</span>
                       </div>
                     </div>
 
-                    <div className="mt-4 p-3.5 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-neutral-900 dark:text-white">{lead.contactFullName}</span>
-                        <span className="text-xs px-2.5 py-0.5 rounded-md bg-neutral-200/70 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#d4d4d4] font-medium">
+                    <div className="mt-4 p-3.5 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 min-w-0">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="text-sm font-semibold text-neutral-900 dark:text-white truncate">{lead.contactFullName}</span>
+                        <span className="text-xs px-2.5 py-0.5 rounded-md bg-neutral-200/70 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#d4d4d4] font-medium shrink-0">
                           {lead.department}
                         </span>
                       </div>
-                      <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] mt-1">{lead.jobTitle}</p>
+                      <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] mt-1 truncate">{lead.jobTitle}</p>
 
-                      <div className="mt-2.5 flex items-center justify-between gap-2 text-xs pt-2.5 border-t border-neutral-200 dark:border-white/10 min-w-0">
+                      <div className="mt-2.5 flex items-center justify-between gap-2 text-xs pt-2.5 border-t border-neutral-200 dark:border-white/10 min-w-0 flex-wrap">
                         <span className="text-neutral-700 dark:text-[#d4d4d4] font-mono text-xs truncate min-w-0">{lead.businessEmail}</span>
                         <span className="text-xs text-[#10a37f] font-semibold flex items-center gap-1 shrink-0">
                           <ShieldCheck className="w-3.5 h-3.5" />
@@ -1342,21 +1347,21 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                     </div>
 
                     <div className="mt-3.5 space-y-2">
-                      <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
                         <span className="text-neutral-500 dark:text-[#9e9e9e]">Recommended Service:</span>
                         <span className="font-semibold text-neutral-900 dark:text-white">{lead.recommendedService}</span>
                       </div>
-                      <p className="text-xs text-neutral-600 dark:text-[#b4b4b4] bg-neutral-50 dark:bg-[#212121] p-3 rounded-xl border border-neutral-200 dark:border-white/10 leading-relaxed">
+                      <p className="text-xs text-neutral-600 dark:text-[#b4b4b4] bg-neutral-50 dark:bg-[#212121] p-3 rounded-xl border border-neutral-200 dark:border-white/10 leading-relaxed break-words">
                         <strong className="text-neutral-900 dark:text-white">Evidence of Fit:</strong> {lead.leadScoreReason}
                       </p>
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-neutral-200 dark:border-white/10 flex items-center justify-between">
+                  <div className="mt-4 pt-3 border-t border-neutral-200 dark:border-white/10 flex items-center justify-between gap-2 flex-wrap">
                     <StatusBadge status={lead.leadStatus} />
                     <button
                       onClick={() => handleGeneratePitchForLead(lead)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] text-xs font-semibold hover:opacity-85 transition-opacity"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] text-xs font-semibold hover:opacity-85 transition-opacity shrink-0"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>Write AI Cold Email</span>
@@ -1370,7 +1375,7 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
 
           {/* Pagination */}
           {filteredLeads.length > 0 && pageSize > 0 && totalPages > 1 && (
-            <div className="flex items-center justify-between pt-3 border-t border-neutral-200 dark:border-white/10 text-xs text-neutral-500 dark:text-[#9e9e9e]">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-neutral-200 dark:border-white/10 text-xs text-neutral-500 dark:text-[#9e9e9e]">
               <span>
                 Showing {Math.min((currentPage - 1) * pageSize + 1, filteredLeads.length)} to{' '}
                 {Math.min(currentPage * pageSize, filteredLeads.length)} of {filteredLeads.length} clients
@@ -1420,9 +1425,9 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
           TAB 3: MAIL PROCESSING HUB
          ======================================================== */}
       {activeTab === 'email' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 min-w-0">
           {/* Email Composer */}
-          <div className="lg:col-span-2 chatgpt-card p-5 rounded-2xl space-y-4">
+          <div className="lg:col-span-2 chatgpt-card p-4 sm:p-5 rounded-2xl space-y-4 min-w-0">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-white/10 flex-wrap gap-2">
               <div>
                 <h3 className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2">
@@ -1487,11 +1492,11 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-[11px] text-neutral-500 dark:text-[#9e9e9e]">
+              <div className="flex items-center justify-between flex-wrap gap-2 p-2.5 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-[11px] text-neutral-500 dark:text-[#9e9e9e]">
                 <span>Showing all {filteredLeads.length} saved clients. Filter them anytime in Saved Clients List.</span>
                 <button
                   onClick={() => setActiveTab('leads')}
-                  className="text-neutral-900 dark:text-white font-semibold underline"
+                  className="text-neutral-900 dark:text-white font-semibold underline shrink-0"
                 >
                   Open Filter Ribbon
                 </button>
@@ -1499,16 +1504,16 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
             )}
 
             {/* Sender Profile synced with Settings */}
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#10a37f]" />
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs flex-wrap gap-2 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap min-w-0">
+                <div className="w-2 h-2 rounded-full bg-[#10a37f] shrink-0" />
                 <span className="text-[11px] text-neutral-500 dark:text-[#9e9e9e]">Sending Email From:</span>
-                <span className="font-semibold text-neutral-900 dark:text-white underline">{settings.companyEmail}</span>
+                <span className="font-semibold text-neutral-900 dark:text-white underline break-all">{settings.companyEmail}</span>
                 <span className="text-neutral-500 dark:text-[#9e9e9e]">({settings.founder})</span>
               </div>
               <button
                 onClick={() => setActiveTab('settings')}
-                className="text-[11px] text-neutral-700 dark:text-[#ececec] hover:underline font-semibold ml-auto flex items-center gap-1"
+                className="text-[11px] text-neutral-700 dark:text-[#ececec] hover:underline font-semibold ml-auto flex items-center gap-1 shrink-0"
               >
                 <span>Edit in Settings</span>
                 <ChevronRight className="w-3 h-3" />
@@ -1516,9 +1521,9 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
             </div>
 
             {/* Controls Ribbon */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <div className="flex items-center justify-between mb-1">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 min-w-0">
+              <div className="min-w-0">
+                <div className="flex items-center justify-between gap-1 mb-1">
                   <label className="text-[11px] font-semibold text-neutral-500 dark:text-[#9e9e9e]">
                     Target Prospect
                   </label>
@@ -1538,7 +1543,7 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                       generateEmailContent(found, composerTone, srv);
                     }
                   }}
-                  className="w-full px-3 py-2 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-white focus:outline-none"
+                  className="w-full max-w-full min-w-0 truncate px-3 py-2 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-white focus:outline-none"
                 >
                   {filteredLeads.length > 0 ? (
                     filteredLeads.map(l => (
@@ -1554,7 +1559,7 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                 </select>
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <label className="text-[11px] font-semibold text-neutral-500 dark:text-[#9e9e9e] block mb-1">
                   Email Tone
                 </label>
@@ -1566,7 +1571,7 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                     const found = filteredLeads.find(l => l.id === composerLeadId) || leads.find(l => l.id === composerLeadId);
                     if (found) generateEmailContent(found, tone, composerService);
                   }}
-                  className="w-full px-3 py-2 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-white focus:outline-none"
+                  className="w-full max-w-full min-w-0 truncate px-3 py-2 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-white focus:outline-none"
                 >
                   <option value="Professional">Professional (Consultative)</option>
                   <option value="Friendly">Friendly & Approachable</option>
@@ -1575,8 +1580,8 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                 </select>
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-1">
+              <div className="min-w-0">
+                <div className="flex items-center justify-between gap-1 mb-1">
                   <label className="text-[11px] font-semibold text-neutral-500 dark:text-[#9e9e9e]">
                     Pitched Service
                   </label>
@@ -1592,7 +1597,7 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                     const found = filteredLeads.find(l => l.id === composerLeadId) || leads.find(l => l.id === composerLeadId);
                     if (found) generateEmailContent(found, composerTone, srv);
                   }}
-                  className="w-full px-3 py-2 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-white focus:outline-none"
+                  className="w-full max-w-full min-w-0 truncate px-3 py-2 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-white focus:outline-none"
                 >
                   {pitchedServiceOptions.map(s => (
                     <option key={s} value={s}>{s}</option>
@@ -1645,7 +1650,7 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                 <span>Regenerate Draft</span>
               </button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={handleSaveCurrentDraft}
                   disabled={!composerLeadId || filteredLeads.length === 0}
@@ -1666,30 +1671,30 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
           </div>
 
           {/* Right Column: Outbound Sent History & Drafts */}
-          <div className="chatgpt-card p-5 rounded-2xl flex flex-col h-[600px]">
-            <div className="pb-3 border-b border-neutral-200 dark:border-white/10 flex items-center justify-between">
-              <div>
+          <div className="chatgpt-card p-4 sm:p-5 rounded-2xl flex flex-col h-[380px] sm:h-[460px] lg:h-[600px] min-w-0">
+            <div className="pb-3 border-b border-neutral-200 dark:border-white/10 flex items-center justify-between gap-2">
+              <div className="min-w-0">
                 <h3 className="text-sm font-bold text-neutral-900 dark:text-white">Mode A Outreach History</h3>
                 <p className="text-[11px] text-neutral-500 dark:text-[#9e9e9e]">Campaign drafts & sent records</p>
               </div>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#ececec] font-semibold border border-neutral-200 dark:border-white/10">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#ececec] font-semibold border border-neutral-200 dark:border-white/10 shrink-0">
                 {serviceDrafts.length} Total
               </span>
             </div>
 
-            <div className="flex-1 overflow-y-auto py-3 space-y-2.5 pr-1">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden py-3 space-y-2.5 pr-1">
               {serviceDrafts.map((d) => (
                 <div
                   key={d.id}
-                  className="p-3.5 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs space-y-2"
+                  className="p-3.5 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs space-y-2 min-w-0"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <span className="font-semibold text-neutral-900 dark:text-white block">{d.recipientName}</span>
-                      <span className="text-[11px] text-neutral-500 dark:text-[#9e9e9e]">{d.companyName}</span>
+                  <div className="flex items-start justify-between gap-2 min-w-0">
+                    <div className="min-w-0">
+                      <span className="font-semibold text-neutral-900 dark:text-white block truncate">{d.recipientName}</span>
+                      <span className="text-[11px] text-neutral-500 dark:text-[#9e9e9e] block truncate">{d.companyName}</span>
                     </div>
                     <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0 ${
                         d.status === 'Sent'
                           ? 'bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] border border-[#10a37f]/30'
                           : d.status === 'Awaiting Approval'
@@ -1739,11 +1744,11 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
           TAB 4: FOLLOW-UP CADENCE
          ======================================================== */}
       {activeTab === 'followup' && (
-        <div className="chatgpt-card p-5 rounded-2xl">
+        <div className="chatgpt-card p-4 sm:p-5 rounded-2xl">
           <div className="flex items-center justify-between flex-wrap gap-3 pb-4 border-b border-neutral-200 dark:border-white/10">
             <div>
               <h3 className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-                <CalendarClock className="w-4 h-4" />
+                <CalendarClock className="w-4 h-4 shrink-0" />
                 <span>Mode A Follow-up Cadence (Day 3 & Day 7)</span>
               </h3>
               <p className="text-[11px] text-neutral-500 dark:text-[#9e9e9e]">
@@ -1751,12 +1756,12 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
               </p>
             </div>
 
-            <div className="flex items-center gap-1 bg-neutral-100 dark:bg-[#212121] p-1 rounded-xl border border-neutral-200 dark:border-white/10">
+            <div className="flex items-center flex-wrap gap-1 bg-neutral-100 dark:bg-[#212121] p-1 rounded-xl border border-neutral-200 dark:border-white/10 w-full sm:w-auto">
               {(['All', 'Due Today', 'Overdue', 'Upcoming'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setFollowUpTab(tab)}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
                     followUpTab === tab
                       ? 'bg-neutral-900 dark:bg-[#2f2f2f] text-white'
                       : 'text-neutral-600 dark:text-[#9e9e9e] hover:text-neutral-900 dark:hover:text-white'
@@ -1771,9 +1776,9 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
           {/* Inbound Client Replies */}
           {clientReplies.filter(r => r.leadMode === 'service_leads').length > 0 && (
             <div className="pt-4 pb-3 border-b border-neutral-200 dark:border-white/10">
-              <div className="flex items-center justify-between mb-2.5">
+              <div className="flex items-center justify-between flex-wrap gap-1.5 mb-2.5">
                 <span className="text-xs font-bold text-[#10a37f] flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                   <span>
                     Inbound Client Replies Received ({clientReplies.filter(r => r.leadMode === 'service_leads').length})
                   </span>
@@ -1788,17 +1793,17 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                   .map(reply => (
                     <div
                       key={reply.id}
-                      className="p-3 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-[#10a37f]/30 space-y-1.5"
+                      className="p-3 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-[#10a37f]/30 space-y-1.5 min-w-0"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-neutral-900 dark:text-white">
+                      <div className="flex items-center justify-between gap-2 flex-wrap min-w-0">
+                        <span className="text-xs font-semibold text-neutral-900 dark:text-white truncate">
                           {reply.leadName} ({reply.companyName})
                         </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] font-semibold">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] font-semibold shrink-0">
                           {reply.sentiment}
                         </span>
                       </div>
-                      <p className="text-[11px] text-neutral-600 dark:text-[#b4b4b4] italic line-clamp-2">
+                      <p className="text-[11px] text-neutral-600 dark:text-[#b4b4b4] italic line-clamp-2 break-words">
                         "{reply.replySnippet}"
                       </p>
                       <div className="flex items-center justify-between text-[10px] text-neutral-500 dark:text-[#8e8e8e] pt-1 border-t border-neutral-200 dark:border-white/10">
@@ -1818,17 +1823,17 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
               .map(task => (
                 <div
                   key={task.id}
-                  className="p-4 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  className="p-4 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4 min-w-0"
                 >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2.5 flex-wrap">
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-neutral-900 dark:text-white text-sm">{task.leadName}</span>
-                      <span className="px-2.5 py-0.5 rounded-lg bg-white dark:bg-[#2f2f2f] text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 text-xs font-semibold flex items-center gap-1.5">
-                        <Building className="w-3.5 h-3.5 text-[#10a37f]" />
-                        <span>Company: {task.companyName}</span>
+                      <span className="px-2.5 py-0.5 rounded-lg bg-white dark:bg-[#2f2f2f] text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 text-xs font-semibold flex items-center gap-1.5 max-w-full">
+                        <Building className="w-3.5 h-3.5 text-[#10a37f] shrink-0" />
+                        <span className="truncate">Company: {task.companyName}</span>
                       </span>
                       <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                        className={`text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0 ${
                           task.status === 'Due Today'
                             ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30'
                             : task.status === 'Overdue'
@@ -1839,20 +1844,20 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                         {task.status} (Day {task.cadenceDay})
                       </span>
                     </div>
-                    <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] flex items-center gap-1.5 pt-0.5">
-                      <Mail className="w-3 h-3" />
-                      <span>{task.email}</span>
+                    <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] flex items-center gap-1.5 flex-wrap pt-0.5">
+                      <Mail className="w-3 h-3 shrink-0" />
+                      <span className="break-all">{task.email}</span>
                       <span>•</span>
                       <span>Due: {task.dueDate}</span>
                     </p>
                     {task.suggestedDraftSubject && (
-                      <p className="text-xs text-neutral-700 dark:text-[#d4d4d4] mt-1 font-medium bg-white dark:bg-[#171717] p-2 rounded-lg border border-neutral-200 dark:border-white/10">
+                      <p className="text-xs text-neutral-700 dark:text-[#d4d4d4] mt-1 font-medium bg-white dark:bg-[#171717] p-2 rounded-lg border border-neutral-200 dark:border-white/10 break-words">
                         Follow-up for {task.companyName}: "{task.suggestedDraftSubject}"
                       </p>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center flex-wrap gap-2 shrink-0">
                     <button
                       onClick={() => {
                         setComposedSubject(task.suggestedDraftSubject || 'Following up on our exchange');
@@ -1893,11 +1898,11 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
           TAB 5: 10 CORE SERVICES CATALOG
          ======================================================== */}
       {activeTab === 'services' && (
-        <div className="chatgpt-card p-6 rounded-2xl">
+        <div className="chatgpt-card p-4 sm:p-6 rounded-2xl">
           <div className="flex items-center justify-between pb-4 border-b border-neutral-200 dark:border-white/10 mb-5 flex-wrap gap-3">
             <div>
-              <h3 className="text-lg font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-[#10a37f]" />
+              <h3 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-[#10a37f] shrink-0" />
                 <span>DataGalactic 10 Core Services Catalog</span>
               </h3>
               <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] mt-1">
@@ -1917,10 +1922,10 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
             {DATAGALACTIC_SERVICES.map((srv, idx) => (
               <div
                 key={srv.id}
-                className="p-4 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 space-y-2.5"
+                className="p-4 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 space-y-2.5 min-w-0"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-neutral-900 dark:text-white text-sm flex items-center gap-2">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="font-semibold text-neutral-900 dark:text-white text-sm flex items-center gap-2 min-w-0">
                     <span className="w-5 h-5 rounded-md bg-neutral-200 dark:bg-[#2f2f2f] text-neutral-800 dark:text-white flex items-center justify-center font-bold text-xs shrink-0">
                       {idx + 1}
                     </span>

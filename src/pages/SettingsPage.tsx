@@ -140,10 +140,10 @@ ALTER TABLE public.suppression_records ENABLE ROW LEVEL SECURITY;
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <form onSubmit={handleSave} className="chatgpt-card p-6 rounded-2xl space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 min-w-0">
+        <form onSubmit={handleSave} className="chatgpt-card p-4 sm:p-6 rounded-2xl space-y-4 min-w-0">
           <div className="flex items-center gap-2 font-semibold text-sm text-neutral-900 dark:text-white">
-            {isModeB ? <Globe2 className="w-4 h-4 text-[#10a37f]" /> : <Building className="w-4 h-4 text-[#10a37f]" />}
+            {isModeB ? <Globe2 className="w-4 h-4 text-[#10a37f] shrink-0" /> : <Building className="w-4 h-4 text-[#10a37f] shrink-0" />}
             <span>
               {isModeB ? 'Mode B: Export Trade & Sender Profile' : 'Mode A: DataGalactic Company & Sender Profile'}
             </span>
@@ -162,7 +162,7 @@ ALTER TABLE public.suppression_records ENABLE ROW LEVEL SECURITY;
           </div>
 
           <div>
-            <label className="text-[11px] font-semibold text-neutral-600 dark:text-[#b4b4b4] mb-1 flex items-center justify-between">
+            <label className="text-[11px] font-semibold text-neutral-600 dark:text-[#b4b4b4] mb-1 flex items-center justify-between flex-wrap gap-1">
               <span>{isModeB ? 'Export Company Mail ID *' : 'Official Company Mail ID *'}</span>
               <span className="text-[10px] text-[#10a37f] font-medium">Primary Sender Email</span>
             </label>
@@ -212,7 +212,7 @@ ALTER TABLE public.suppression_records ENABLE ROW LEVEL SECURITY;
               <span>Safety & Sending Limits</span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-[11px] text-neutral-500 dark:text-[#9e9e9e] block mb-1">Max Daily Emails</label>
                 <input
@@ -256,16 +256,16 @@ ALTER TABLE public.suppression_records ENABLE ROW LEVEL SECURITY;
           </div>
         </form>
 
-        <div className="chatgpt-card p-6 rounded-2xl space-y-4">
-          <div className="flex items-center justify-between">
+        <div className="chatgpt-card p-4 sm:p-6 rounded-2xl space-y-4 min-w-0">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2 text-[#10a37f] font-semibold text-sm">
-              <Database className="w-4 h-4" />
+              <Database className="w-4 h-4 shrink-0" />
               <span>Persistent Database Setup (Supabase PostgreSQL)</span>
             </div>
 
             <button
               onClick={handleCopySql}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-[#2f2f2f] hover:bg-neutral-200 dark:hover:bg-[#383838] text-neutral-700 dark:text-[#ececec] text-xs font-medium border border-neutral-200 dark:border-white/10 transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-[#2f2f2f] hover:bg-neutral-200 dark:hover:bg-[#383838] text-neutral-700 dark:text-[#ececec] text-xs font-medium border border-neutral-200 dark:border-white/10 transition-colors shrink-0"
             >
               {copiedSql ? <Check className="w-3 h-3 text-[#10a37f]" /> : <Copy className="w-3 h-3" />}
               <span>{copiedSql ? 'Copied SQL!' : 'Copy Schema SQL'}</span>
@@ -278,7 +278,7 @@ ALTER TABLE public.suppression_records ENABLE ROW LEVEL SECURITY;
             <code className="font-mono">.env</code>.
           </p>
 
-          <pre className="p-3 bg-neutral-50 dark:bg-[#212121] rounded-xl border border-neutral-200 dark:border-white/10 font-mono text-[10px] text-neutral-700 dark:text-[#d4d4d4] max-h-64 overflow-y-auto overflow-x-hidden min-w-0 max-w-full leading-relaxed whitespace-pre-wrap break-all">
+          <pre className="p-3 bg-neutral-50 dark:bg-[#212121] rounded-xl border border-neutral-200 dark:border-white/10 font-mono text-[10px] text-neutral-700 dark:text-[#d4d4d4] max-h-64 overflow-y-auto overflow-x-hidden min-w-0 max-w-full leading-relaxed whitespace-pre-wrap break-words">
             {supabaseSqlSchema}
           </pre>
         </div>

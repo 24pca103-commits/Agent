@@ -126,7 +126,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       <aside
-        className={`w-[260px] bg-[#f9f9f9] dark:bg-[#171717] border-r border-neutral-200 dark:border-white/10 flex flex-col h-screen fixed left-0 top-0 z-40 select-none transition-transform duration-200 ease-out ${
+        className={`w-[260px] max-w-[82vw] bg-[#f9f9f9] dark:bg-[#171717] border-r border-neutral-200 dark:border-white/10 flex flex-col h-screen h-[100dvh] fixed left-0 top-0 z-40 select-none transition-transform duration-200 ease-out ${
           isMobileOpen
             ? 'translate-x-0'
             : isDesktopOpen
@@ -316,9 +316,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             onDeleteChatSession(session.id);
                           }}
                           title="Delete chat"
-                          className="opacity-0 group-hover:opacity-100 p-1 rounded text-neutral-400 hover:text-rose-500 transition-opacity shrink-0"
+                          aria-label="Delete chat"
+                          className="opacity-75 lg:opacity-0 lg:group-hover:opacity-100 p-1 rounded text-neutral-400 hover:text-rose-500 transition-opacity shrink-0"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <Trash2 className="w-3.5 h-3.5 lg:w-3 lg:h-3" />
                         </button>
                       )}
                     </div>

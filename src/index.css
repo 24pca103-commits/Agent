@@ -24,11 +24,16 @@
     width: 100%;
     max-width: 100%;
     min-height: 100vh;
+    min-height: 100dvh;
   }
 
-  /* Prevent font clipping */
+  /* Prevent font clipping and long unbroken strings breaking mobile grid/flex layouts */
   button, input, select, textarea, span, p, h1, h2, h3, h4, h5, h6 {
     line-height: inherit;
+  }
+
+  select {
+    max-width: 100%;
   }
 }
 

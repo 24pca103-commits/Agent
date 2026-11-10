@@ -137,7 +137,7 @@ export const AiLeadFinder: React.FC<AiLeadFinderProps> = ({
         </div>
 
         {onNavigate && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => onNavigate('service_leads')}
               className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-indigo-600/30 transition-all"
@@ -190,7 +190,7 @@ export const AiLeadFinder: React.FC<AiLeadFinderProps> = ({
               <button
                 key={idx}
                 onClick={() => setPrompt(s)}
-                className="text-[11px] px-3 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/60 transition-colors text-left truncate max-w-md"
+                className="text-[11px] px-3 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/60 transition-colors text-left truncate max-w-full sm:max-w-md"
               >
                 "{s.substring(0, 60)}..."
               </button>
@@ -222,7 +222,7 @@ export const AiLeadFinder: React.FC<AiLeadFinderProps> = ({
       {/* Parsed Filters Review & Edit Panel */}
       {parsedFilters && (
         <div className="galaxy-card p-6 rounded-2xl border border-emerald-500/30 animate-in fade-in duration-300">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-800">
             <div className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-emerald-400" />
               <div>
@@ -323,7 +323,7 @@ export const AiLeadFinder: React.FC<AiLeadFinderProps> = ({
           </div>
 
           {/* Minimum Lead Quality Score */}
-          <div className="mt-4 pt-4 border-t border-slate-800 flex items-center justify-between">
+          <div className="mt-4 pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="text-xs text-slate-300 font-medium">Minimum Lead Quality Threshold:</span>
               <span className="text-sm font-bold text-emerald-400">{parsedFilters.minimumQualityScore}/100</span>

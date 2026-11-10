@@ -87,7 +87,7 @@ export const InlineLeadsTable: React.FC<InlineLeadsTableProps> = ({
   return (
     <div className="mt-3 rounded-2xl border border-neutral-200 dark:border-white/10 bg-neutral-50/70 dark:bg-[#171717] overflow-hidden w-full">
       {/* Header Bar */}
-      <div className="px-4 py-3 border-b border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white dark:bg-[#1a1a1a]">
+      <div className="px-3 sm:px-4 py-3 border-b border-neutral-200 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white dark:bg-[#1a1a1a]">
         <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
           <div className="w-7 h-7 rounded-lg bg-neutral-100 dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 flex items-center justify-center text-neutral-700 dark:text-[#ececec] shrink-0">
             {isExport ? <Ship className="w-3.5 h-3.5" /> : <Building className="w-3.5 h-3.5" />}
@@ -226,13 +226,13 @@ export const InlineLeadsTable: React.FC<InlineLeadsTableProps> = ({
                 <table className="w-full text-left text-xs table-fixed">
                   <thead className="sticky top-0 z-10 bg-neutral-50 dark:bg-[#1e1e1e] border-b border-neutral-200 dark:border-white/10 text-neutral-500 dark:text-[#9e9e9e] text-[10px] uppercase tracking-wider">
                     <tr>
-                      <th className="py-2.5 px-2 text-center w-[5%]">#</th>
-                      <th className="py-2.5 px-2.5 font-semibold w-[23%]">Company</th>
-                      <th className="py-2.5 px-2.5 font-semibold w-[18%]">{isExport ? 'Buyer Lead' : 'Contact'}</th>
-                      <th className="py-2.5 px-2.5 font-semibold w-[24%]">Business Email</th>
-                      <th className="py-2.5 px-2.5 font-semibold w-[14%]">{isExport ? 'Product / MOQ' : 'Service Fit'}</th>
-                      <th className="py-2.5 px-1.5 font-semibold text-center w-[6%]">Score</th>
-                      <th className="py-2.5 px-2.5 font-semibold text-right w-[10%]">Email</th>
+                      <th className="py-2.5 px-2 text-center w-[36px]">#</th>
+                      <th className="py-2.5 px-2.5 font-semibold">Company</th>
+                      <th className="py-2.5 px-2.5 font-semibold w-[21%]">{isExport ? 'Buyer Lead' : 'Contact'}</th>
+                      <th className="py-2.5 px-2.5 font-semibold w-[25%]">Business Email</th>
+                      <th className="py-2.5 px-2.5 font-semibold hidden xl:table-cell w-[17%]">{isExport ? 'Product / MOQ' : 'Service Fit'}</th>
+                      <th className="py-2.5 px-1.5 font-semibold text-center w-[52px]">Score</th>
+                      <th className="py-2.5 px-2.5 font-semibold text-right w-[102px]">Email</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100 dark:divide-white/5">
@@ -291,7 +291,7 @@ export const InlineLeadsTable: React.FC<InlineLeadsTableProps> = ({
                             </button>
                           </div>
                         </td>
-                        <td className="py-2.5 px-2.5 min-w-0">
+                        <td className="py-2.5 px-2.5 min-w-0 hidden xl:table-cell">
                           {isExport ? (
                             <div className="min-w-0">
                               <div className="text-[11px] font-medium text-neutral-800 dark:text-[#ececec] truncate">
@@ -319,7 +319,7 @@ export const InlineLeadsTable: React.FC<InlineLeadsTableProps> = ({
                           <button
                             onClick={() => onPitchLead(lead)}
                             title="Draft & Send Outreach Email (Pitch)"
-                            className="px-2 py-1 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] hover:opacity-85 text-[11px] font-semibold transition-opacity"
+                            className="px-2.5 py-1 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] hover:opacity-85 text-[11px] font-semibold transition-opacity whitespace-nowrap"
                           >
                             Write Email
                           </button>
@@ -434,7 +434,7 @@ export const InlineLeadsTable: React.FC<InlineLeadsTableProps> = ({
 
           {/* Pagination Footer */}
           {filtered.length > 0 && pageSize !== 0 && totalPages > 1 && (
-            <div className="px-4 py-2 border-t border-neutral-200 dark:border-white/10 flex items-center justify-between text-[11px] text-neutral-500 dark:text-[#9e9e9e] bg-neutral-50/70 dark:bg-[#1a1a1a]">
+            <div className="px-3 sm:px-4 py-2 border-t border-neutral-200 dark:border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px] text-neutral-500 dark:text-[#9e9e9e] bg-neutral-50/70 dark:bg-[#1a1a1a]">
               <div>
                 Showing <strong className="text-neutral-900 dark:text-white">{(safePage - 1) * pageSize + 1}</strong> –{' '}
                 <strong className="text-neutral-900 dark:text-white">{Math.min(safePage * pageSize, filtered.length)}</strong> of{' '}

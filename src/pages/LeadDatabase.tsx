@@ -238,11 +238,11 @@ export const LeadDatabase: React.FC<LeadDatabaseProps> = ({
 
       {/* CRM Main Table */}
       <div className="galaxy-card rounded-2xl border border-slate-800 overflow-hidden min-w-0 max-w-full">
-        <div className="overflow-x-hidden min-w-0 max-w-full">
+        <div className="hidden md:block overflow-x-hidden min-w-0 max-w-full">
           <table className="w-full text-left text-xs table-fixed">
             <thead>
               <tr className="bg-slate-950/70 border-b border-slate-800 text-slate-400 text-[10px] uppercase tracking-wider">
-                <th className="py-3 px-2 w-[4%]">
+                <th className="py-3 px-2 w-[36px]">
                   <button onClick={handleSelectAll} className="text-slate-400 hover:text-white">
                     {selectedLeadIds.length > 0 && selectedLeadIds.length === paginatedLeads.length ? (
                       <CheckSquare className="w-4 h-4 text-indigo-400" />
@@ -251,13 +251,13 @@ export const LeadDatabase: React.FC<LeadDatabaseProps> = ({
                     )}
                   </button>
                 </th>
-                <th className="py-3 px-3 font-semibold w-[20%]">Company & Domain</th>
-                <th className="py-3 px-3 font-semibold w-[22%]">Primary Contact</th>
-                <th className="py-3 px-3 font-semibold hidden md:table-cell w-[13%]">Country</th>
-                <th className="py-3 px-3 font-semibold hidden lg:table-cell w-[16%]">Service Fit</th>
-                <th className="py-3 px-2 font-semibold w-[8%]">Score</th>
-                <th className="py-3 px-2 font-semibold hidden sm:table-cell w-[9%]">Status</th>
-                <th className="py-3 px-3 font-semibold text-right w-[10%]">Actions</th>
+                <th className="py-3 px-3 font-semibold">Company & Domain</th>
+                <th className="py-3 px-3 font-semibold w-[20%]">Primary Contact</th>
+                <th className="py-3 px-3 font-semibold hidden lg:table-cell w-[13%]">Country</th>
+                <th className="py-3 px-3 font-semibold hidden xl:table-cell w-[16%]">Service Fit</th>
+                <th className="py-3 px-2 font-semibold hidden xl:table-cell w-[56px]">Score</th>
+                <th className="py-3 px-1.5 font-semibold w-[136px]">Status</th>
+                <th className="py-3 px-3 font-semibold text-right w-[104px]">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
@@ -316,18 +316,18 @@ export const LeadDatabase: React.FC<LeadDatabaseProps> = ({
                       <div className="text-xs text-slate-500 font-mono mt-0.5 truncate">{lead.businessEmail}</div>
                     </td>
 
-                    <td className="py-3 px-3 hidden md:table-cell min-w-0">
+                    <td className="py-3 px-3 hidden lg:table-cell min-w-0">
                       <span className="text-slate-300 text-xs truncate block">{lead.country}</span>
                       <div className="text-xs text-slate-500 mt-0.5 truncate">{lead.regionCity}</div>
                     </td>
 
-                    <td className="py-3 px-3 hidden lg:table-cell min-w-0">
+                    <td className="py-3 px-3 hidden xl:table-cell min-w-0">
                       <span className="inline-block max-w-full truncate px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/90 text-indigo-700 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-500/35 text-xs font-semibold tracking-normal shadow-sm">
                         {lead.recommendedService || 'Data Cleaning & Formatting'}
                       </span>
                     </td>
 
-                    <td className="py-3 px-2 min-w-0">
+                    <td className="py-3 px-2 min-w-0 hidden xl:table-cell">
                       <div className="flex items-baseline gap-1">
                         <span className="font-bold text-emerald-400 text-sm">{lead.leadScore}</span>
                         <span className="text-xs text-slate-500">/100</span>
@@ -337,7 +337,7 @@ export const LeadDatabase: React.FC<LeadDatabaseProps> = ({
                       </span>
                     </td>
 
-                    <td className="py-3 px-2 hidden sm:table-cell">
+                    <td className="py-3 px-1.5">
                       <StatusBadge status={lead.leadStatus} />
                     </td>
 
@@ -375,8 +375,44 @@ export const LeadDatabase: React.FC<LeadDatabaseProps> = ({
           </table>
         </div>
 
+        {/* Mobile Card Stack (Zero Horizontal Scroll) */}
+        <div className="md:hidden divide-y divide-slate-800/60">
+          {paginatedLeads.map((lead) => (
+            <div key={lead.id} className="p-3.5 space-y-2 min-w-0">
+              <div className="flex items-start justify-between gap-2 min-w-0">
+                <div className="min-w-0">
+                  <div className="font-semibold text-white text-xs truncate">{lead.companyName}</div>
+                  <div className="text-[11px] text-slate-400 truncate">
+                    {lead.contactFullName} • {lead.country}
+                  </div>
+                </div>
+                <StatusBadge status={lead.leadStatus} />
+              </div>
+              <div className="flex items-center justify-between gap-2 min-w-0">
+                <span className="font-mono text-[11px] text-slate-300 truncate min-w-0">{lead.businessEmail}</span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    onClick={() => onSelectLeadForPitch(lead)}
+                    className="p-1.5 rounded-lg bg-indigo-600 text-white"
+                    title="Generate AI Cold Email"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setInspectingLead(lead)}
+                    className="p-1.5 rounded-lg bg-slate-800 text-slate-200"
+                    title="Inspect Lead"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
         {/* Pagination Bar */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between text-xs text-slate-400">
+        <div className="p-3.5 sm:p-4 border-t border-slate-800 bg-slate-950/60 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
           <span>
             Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, filteredLeads.length)} of {filteredLeads.length} leads
           </span>
@@ -412,14 +448,14 @@ export const LeadDatabase: React.FC<LeadDatabaseProps> = ({
           subtitle={`Lead ID: ${inspectingLead.id} • ${inspectingLead.industry}`}
         >
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3 text-xs bg-slate-950 p-4 rounded-xl border border-slate-800">
-              <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-slate-950 p-4 rounded-xl border border-slate-800 min-w-0">
+              <div className="min-w-0">
                 <span className="text-slate-400 block">Contact Person:</span>
-                <span className="text-white font-semibold">{inspectingLead.contactFullName} ({inspectingLead.jobTitle})</span>
+                <span className="text-white font-semibold break-words">{inspectingLead.contactFullName} ({inspectingLead.jobTitle})</span>
               </div>
-              <div>
+              <div className="min-w-0">
                 <span className="text-slate-400 block">Business Email:</span>
-                <span className="text-white font-mono">{inspectingLead.businessEmail}</span>
+                <span className="text-white font-mono break-all">{inspectingLead.businessEmail}</span>
               </div>
               <div>
                 <span className="text-slate-400 block">Country / City:</span>
@@ -449,7 +485,7 @@ export const LeadDatabase: React.FC<LeadDatabaseProps> = ({
               </div>
             </div>
 
-            <div className="flex justify-between items-center pt-3 border-t border-slate-800">
+            <div className="flex flex-wrap justify-between items-center gap-2 pt-3 border-t border-slate-800">
               <button
                 onClick={() => {
                   onUpdateLead({

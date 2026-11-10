@@ -198,8 +198,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center bg-neutral-100 dark:bg-[#212121] p-1 rounded-xl border border-neutral-200 dark:border-white/10">
+          <div className="flex items-center gap-2 flex-wrap w-full md:w-auto">
+            <div className="flex items-center flex-wrap gap-1 bg-neutral-100 dark:bg-[#212121] p-1 rounded-xl border border-neutral-200 dark:border-white/10">
               <button
                 onClick={() => setEmailModeFilter('all')}
                 className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
@@ -250,14 +250,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <table className="w-full text-left text-xs table-fixed">
               <thead className="bg-neutral-50 dark:bg-[#212121] text-neutral-500 dark:text-[#9e9e9e] text-[10px] uppercase tracking-wider border-b border-neutral-200 dark:border-white/10">
                 <tr>
-                  <th className="py-2.5 px-2 text-center w-[4%]">#</th>
-                  <th className="py-2.5 px-3 font-semibold w-[19%]">Company Name</th>
-                  <th className="py-2.5 px-3 font-semibold w-[15%]">Decision Maker</th>
-                  <th className="py-2.5 px-3 font-semibold w-[19%]">Business Email</th>
-                  <th className="py-2.5 px-3 font-semibold w-[19%]">Service / Subject</th>
-                  <th className="py-2.5 px-2 font-semibold w-[9%]">Date Sent</th>
-                  <th className="py-2.5 px-2 font-semibold text-center w-[7%]">Status</th>
-                  <th className="py-2.5 px-3 font-semibold text-right w-[8%]">Action</th>
+                  <th className="py-2.5 px-2 text-center w-[34px]">#</th>
+                  <th className="py-2.5 px-2.5 font-semibold">Company Name</th>
+                  <th className="py-2.5 px-2.5 font-semibold w-[19%] xl:w-[16%]">Decision Maker</th>
+                  <th className="py-2.5 px-2.5 font-semibold w-[23%] xl:w-[19%]">Business Email</th>
+                  <th className="py-2.5 px-2.5 font-semibold hidden xl:table-cell w-[20%]">Service / Subject</th>
+                  <th className="py-2.5 px-2 font-semibold hidden xl:table-cell w-[96px]">Date Sent</th>
+                  <th className="py-2.5 px-2 font-semibold text-center w-[78px]">Status</th>
+                  <th className="py-2.5 px-2.5 font-semibold text-right w-[72px]">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100 dark:divide-white/5">
@@ -268,7 +268,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         {idx + 1}
                       </td>
 
-                      <td className="py-2.5 px-3 min-w-0">
+                      <td className="py-2.5 px-2.5 min-w-0">
                         <div className="font-semibold text-neutral-900 dark:text-white text-xs flex items-center gap-1.5 min-w-0">
                           <Building className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
                           <span className="truncate">{draft.companyName}</span>
@@ -278,7 +278,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         </span>
                       </td>
 
-                      <td className="py-2.5 px-3 min-w-0">
+                      <td className="py-2.5 px-2.5 min-w-0">
                         <div className="font-medium text-neutral-800 dark:text-[#ececec] text-xs truncate">
                           {draft.recipientName}
                         </div>
@@ -287,7 +287,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         </div>
                       </td>
 
-                      <td className="py-2.5 px-3 min-w-0">
+                      <td className="py-2.5 px-2.5 min-w-0">
                         <div className="flex items-center gap-1 min-w-0">
                           <span className="font-mono text-neutral-700 dark:text-[#d4d4d4] text-[11px] truncate">
                             {draft.recipientEmail}
@@ -306,7 +306,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         </div>
                       </td>
 
-                      <td className="py-2.5 px-3 min-w-0">
+                      <td className="py-2.5 px-2.5 min-w-0 hidden xl:table-cell">
                         <div className="font-medium text-neutral-900 dark:text-white text-xs truncate">
                           {draft.subject}
                         </div>
@@ -315,7 +315,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         </span>
                       </td>
 
-                      <td className="py-2.5 px-2 text-neutral-500 dark:text-[#9e9e9e] text-[11px] truncate">
+                      <td className="py-2.5 px-2 text-neutral-500 dark:text-[#9e9e9e] text-[11px] hidden xl:table-cell whitespace-nowrap">
                         {draft.sentAt
                           ? new Date(draft.sentAt).toLocaleDateString([], {
                               day: 'numeric',
@@ -326,16 +326,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </td>
 
                       <td className="py-2.5 px-2 text-center">
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] border border-[#10a37f]/30 text-[10px] font-semibold">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] border border-[#10a37f]/30 text-[10px] font-semibold whitespace-nowrap">
                           <CheckCircle2 className="w-3 h-3 shrink-0" />
                           <span>Sent</span>
                         </span>
                       </td>
 
-                      <td className="py-2.5 px-3 text-right">
+                      <td className="py-2.5 px-2.5 text-right">
                         <button
                           onClick={() => setViewingDraft(draft)}
-                          className="px-2 py-1 rounded-lg bg-neutral-100 dark:bg-[#2f2f2f] hover:bg-neutral-200 dark:hover:bg-[#383838] text-neutral-800 dark:text-white text-[11px] font-semibold border border-neutral-200 dark:border-white/10 transition-colors"
+                          className="px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-[#2f2f2f] hover:bg-neutral-200 dark:hover:bg-[#383838] text-neutral-800 dark:text-white text-[11px] font-semibold border border-neutral-200 dark:border-white/10 transition-colors whitespace-nowrap"
                         >
                           View
                         </button>
@@ -418,7 +418,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-1 bg-neutral-100 dark:bg-[#212121] p-1 rounded-xl border border-neutral-200 dark:border-white/10">
+          <div className="flex items-center flex-wrap gap-1 bg-neutral-100 dark:bg-[#212121] p-1 rounded-xl border border-neutral-200 dark:border-white/10 w-full sm:w-auto">
             <button
               onClick={() => setReplyFilter('all')}
               className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
@@ -507,56 +507,56 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* VIEW SENT EMAIL MODAL */}
       {viewingDraft && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#1e1e1e] border border-neutral-200 dark:border-white/15 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
-            <div className="p-4 sm:p-5 border-b border-neutral-200 dark:border-white/10 flex items-center justify-between">
-              <div>
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white dark:bg-[#1e1e1e] border border-neutral-200 dark:border-white/15 rounded-2xl max-w-2xl w-full max-h-[88vh] max-h-[88dvh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="p-4 sm:p-5 border-b border-neutral-200 dark:border-white/10 flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] uppercase">
                   ✓ Sent Outbound Email
                 </span>
-                <h3 className="text-base font-bold text-neutral-900 dark:text-white mt-1">
+                <h3 className="text-base font-bold text-neutral-900 dark:text-white mt-1 break-words">
                   {viewingDraft.companyName}
                 </h3>
               </div>
               <button
                 onClick={() => setViewingDraft(null)}
-                className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2f2f2f] transition-colors"
+                className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2f2f2f] transition-colors shrink-0"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-4 bg-neutral-50 dark:bg-[#171717] border-b border-neutral-200 dark:border-white/10 space-y-1.5 text-xs">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-neutral-500 dark:text-[#9e9e9e] w-16">To:</span>
+            <div className="p-3.5 sm:p-4 bg-neutral-50 dark:bg-[#171717] border-b border-neutral-200 dark:border-white/10 space-y-1.5 text-xs">
+              <div className="flex items-center gap-x-2 gap-y-0.5 flex-wrap min-w-0">
+                <span className="text-neutral-500 dark:text-[#9e9e9e] w-14 shrink-0">To:</span>
                 <span className="font-semibold text-neutral-900 dark:text-white">{viewingDraft.recipientName}</span>
                 <span className="text-neutral-500 dark:text-[#9e9e9e]">({viewingDraft.jobTitle})</span>
-                <span className="font-mono text-neutral-700 dark:text-[#d4d4d4] ml-auto">
+                <span className="font-mono text-neutral-700 dark:text-[#d4d4d4] sm:ml-auto break-all">
                   {viewingDraft.recipientEmail}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-neutral-500 dark:text-[#9e9e9e] w-16">Subject:</span>
-                <span className="font-semibold text-neutral-900 dark:text-white">{viewingDraft.subject}</span>
+              <div className="flex items-start gap-2 flex-wrap min-w-0">
+                <span className="text-neutral-500 dark:text-[#9e9e9e] w-14 shrink-0">Subject:</span>
+                <span className="font-semibold text-neutral-900 dark:text-white min-w-0 break-words flex-1">{viewingDraft.subject}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-neutral-500 dark:text-[#9e9e9e] w-16">Service:</span>
+              <div className="flex items-center gap-x-2 gap-y-1 flex-wrap min-w-0">
+                <span className="text-neutral-500 dark:text-[#9e9e9e] w-14 shrink-0">Service:</span>
                 <span className="text-[#10a37f] font-medium">{viewingDraft.recommendedService || 'Direct Pitch'}</span>
                 {viewingDraft.sentAt && (
-                  <span className="text-neutral-500 dark:text-[#9e9e9e] ml-auto">
+                  <span className="text-neutral-500 dark:text-[#9e9e9e] sm:ml-auto text-[11px]">
                     Sent: {new Date(viewingDraft.sentAt).toLocaleString()}
                   </span>
                 )}
               </div>
             </div>
 
-            <div className="p-5 flex-1 overflow-y-auto">
-              <div className="whitespace-pre-wrap text-xs text-neutral-800 dark:text-[#ececec] leading-relaxed font-sans bg-neutral-50 dark:bg-[#171717] p-4 rounded-xl border border-neutral-200 dark:border-white/10">
+            <div className="p-4 sm:p-5 flex-1 overflow-y-auto overflow-x-hidden">
+              <div className="whitespace-pre-wrap break-words text-xs text-neutral-800 dark:text-[#ececec] leading-relaxed font-sans bg-neutral-50 dark:bg-[#171717] p-3.5 sm:p-4 rounded-xl border border-neutral-200 dark:border-white/10">
                 {viewingDraft.body}
               </div>
             </div>
 
-            <div className="p-4 border-t border-neutral-200 dark:border-white/10 flex items-center justify-between">
+            <div className="p-3.5 sm:p-4 border-t border-neutral-200 dark:border-white/10 flex flex-wrap items-center justify-between gap-2">
               <button
                 onClick={() => handleCopy(viewingDraft.body)}
                 className="px-3 py-1.5 rounded-lg bg-neutral-100 dark:bg-[#2f2f2f] hover:bg-neutral-200 dark:hover:bg-[#383838] text-neutral-800 dark:text-[#ececec] text-xs font-semibold flex items-center gap-1.5 transition-colors"

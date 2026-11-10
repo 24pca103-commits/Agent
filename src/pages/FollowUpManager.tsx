@@ -100,7 +100,7 @@ export const FollowUpManager: React.FC<FollowUpManagerProps> = ({
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-2">
         {(['All', 'Due Today', 'Overdue', 'Upcoming'] as const).map(tab => (
           <button
             key={tab}
@@ -134,7 +134,7 @@ export const FollowUpManager: React.FC<FollowUpManagerProps> = ({
               }`}
             >
               <div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                     isOverdue
                       ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
@@ -146,15 +146,15 @@ export const FollowUpManager: React.FC<FollowUpManagerProps> = ({
                   </span>
 
                   <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
+                    <Calendar className="w-3 h-3 shrink-0" />
                     Due: {task.dueDate}
                   </span>
                 </div>
 
-                <div className="mt-3">
-                  <h4 className="text-sm font-bold text-white">{task.leadName}</h4>
-                  <p className="text-xs text-indigo-300">{task.companyName}</p>
-                  <p className="text-[11px] text-slate-400 font-mono mt-0.5">{task.email}</p>
+                <div className="mt-3 min-w-0">
+                  <h4 className="text-sm font-bold text-white truncate">{task.leadName}</h4>
+                  <p className="text-xs text-indigo-300 truncate">{task.companyName}</p>
+                  <p className="text-[11px] text-slate-400 font-mono mt-0.5 break-all">{task.email}</p>
                 </div>
 
                 {task.suggestedDraftSubject && (
@@ -165,7 +165,7 @@ export const FollowUpManager: React.FC<FollowUpManagerProps> = ({
                 )}
               </div>
 
-              <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
+              <div className="mt-4 pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2">
                 <button
                   onClick={() => handleMarkCompleted(task.id)}
                   className="p-1.5 rounded-lg bg-emerald-950/50 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/20 text-xs flex items-center gap-1"
@@ -223,7 +223,7 @@ export const FollowUpManager: React.FC<FollowUpManagerProps> = ({
               />
             </div>
 
-            <div className="flex justify-between items-center pt-3 border-t border-slate-800">
+            <div className="flex flex-wrap justify-between items-center gap-2 pt-3 border-t border-slate-800">
               <button
                 onClick={() => handleSnooze(inspectingTask.id, 7)}
                 className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs"
