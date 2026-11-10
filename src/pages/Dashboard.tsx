@@ -7,15 +7,12 @@ import {
   Mail,
   ArrowRight,
   Search,
-  ExternalLink,
   Copy,
   Check,
   Briefcase,
   Globe2,
-  Sparkles,
   X,
   Inbox,
-  ShieldCheck,
   CheckCircle2
 } from 'lucide-react';
 import { Lead, EmailDraft, ClientReply, ClientReplyStatus } from '../types';
@@ -35,8 +32,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   drafts,
   clientReplies,
   onNavigate,
-  onSelectLead,
-  onUpdateClientReplyStatus
+  onSelectLead
 }) => {
   const [emailSearch, setEmailSearch] = useState('');
   const [emailModeFilter, setEmailModeFilter] = useState<'all' | 'service_leads' | 'export_buyers'>('all');
@@ -44,18 +40,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
   const [replyFilter, setReplyFilter] = useState<'all' | 'needs_action' | 'in_discussion'>('all');
 
-  // Exact metrics required: Leads Sourced & Companies Emailed
   const totalLeads = leads.length;
   const modeALeads = leads.filter(l => l.leadMode === 'service_leads').length;
   const modeBLeads = leads.filter(l => l.leadMode === 'export_buyers').length;
 
-  // Filter only drafts that were actually SENT to companies
   const sentDrafts = drafts.filter(d => d.status === 'Sent');
   const emailsSent = sentDrafts.length;
   const modeASent = sentDrafts.filter(d => d.leadMode === 'service_leads' || !d.leadMode).length;
   const modeBSent = sentDrafts.filter(d => d.leadMode === 'export_buyers').length;
 
-  // Filter sent emails based on user search and mode tabs
   const filteredSentEmails = sentDrafts.filter(d => {
     if (emailModeFilter === 'service_leads' && d.leadMode === 'export_buyers') return false;
     if (emailModeFilter === 'export_buyers' && d.leadMode !== 'export_buyers') return false;
@@ -70,7 +63,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
     );
   });
 
-  // Filter inbound replies
   const filteredReplies = clientReplies.filter(r => {
     if (replyFilter === 'needs_action') return r.status === 'Needs Action';
     if (replyFilter === 'in_discussion') return r.status === 'In Discussion';
@@ -85,145 +77,155 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Top Welcome & Navigation Header */}
-      <div className="galaxy-card rounded-2xl p-6 border border-indigo-500/20 bg-gradient-to-r from-galaxy-900 via-indigo-950/40 to-galaxy-900 relative overflow-hidden">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold mb-2">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>DataGalactic Executive Outreach Center</span>
-            </div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">
-              Welcome, {DATAGALACTIC_COMPANY.founder}
-            </h1>
-            <p className="text-xs text-slate-300 mt-1">
-              Direct tracking of sourced prospects and outbound client emails.
-            </p>
-          </div>
+      {/* Executive Header */}
+      <div className="chatgpt-card rounded-2xl p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-neutral-100 dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 text-neutral-700 dark:text-[#d4d4d4] text-[11px] font-medium mb-2">
+            DataGalactic Executive Outreach Center
+          </span>
+          <h1 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white tracking-tight">
+            Welcome, {DATAGALACTIC_COMPANY.founder}
+          </h1>
+          <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] mt-1">
+            Direct overview of sourced leads, outbound mailed companies, and client responses.
+          </p>
+        </div>
 
-          <div className="flex items-center gap-3 shrink-0">
-            <button
-              onClick={() => onNavigate('service_leads')}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all hover:scale-[1.02]"
-            >
-              <Briefcase className="w-4 h-4" />
-              <span>Open Mode A (Services)</span>
-            </button>
-            <button
-              onClick={() => onNavigate('export_buyer_leads')}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-lg shadow-sky-600/30 transition-all hover:scale-[1.02]"
-            >
-              <Globe2 className="w-4 h-4" />
-              <span>Open Mode B (Export)</span>
-            </button>
-          </div>
+        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+          <button
+            onClick={() => onNavigate('service_leads')}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] text-xs font-semibold hover:opacity-85 transition-opacity"
+          >
+            <Briefcase className="w-4 h-4" />
+            <span>Open Mode A Agent</span>
+          </button>
+          <button
+            onClick={() => onNavigate('export_buyer_leads')}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-100 dark:bg-[#2f2f2f] hover:bg-neutral-200 dark:hover:bg-[#383838] text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 text-xs font-semibold transition-colors"
+          >
+            <Globe2 className="w-4 h-4" />
+            <span>Open Mode B Agent</span>
+          </button>
         </div>
       </div>
 
-      {/* Primary Key Metrics (Required by User: Leads Sourced & Companies Emailed) */}
+      {/* Primary Metrics: Leads Sourced, Companies Emailed, Inbound Replies */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Metric 1: Total Leads Sourced */}
-        <div className="galaxy-card p-5 rounded-2xl border border-slate-800 bg-slate-900/80 shadow-md">
+        <div className="chatgpt-card p-5 rounded-2xl">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-400">Total Leads Sourced</span>
-            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-              <Users className="w-5 h-5" />
+            <span className="text-xs font-semibold text-neutral-500 dark:text-[#9e9e9e]">Total Leads Sourced</span>
+            <div className="p-2 rounded-xl bg-neutral-100 dark:bg-[#2f2f2f] text-neutral-800 dark:text-white border border-neutral-200 dark:border-white/10">
+              <Users className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-white">{totalLeads}</span>
-            <span className="text-xs text-indigo-300 font-medium">Verified Records</span>
+            <span className="text-3xl font-bold text-neutral-900 dark:text-white">{totalLeads}</span>
+            <span className="text-xs text-neutral-500 dark:text-[#9e9e9e] font-medium">Verified Records</span>
           </div>
-          <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
-            <span>Mode A Services: <strong className="text-slate-200">{modeALeads}</strong></span>
+          <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-white/10 flex items-center justify-between text-[11px] text-neutral-500 dark:text-[#9e9e9e]">
+            <span>
+              Mode A Services: <strong className="text-neutral-900 dark:text-white">{modeALeads}</strong>
+            </span>
             <span>•</span>
-            <span>Mode B Export: <strong className="text-slate-200">{modeBLeads}</strong></span>
+            <span>
+              Mode B Export: <strong className="text-neutral-900 dark:text-white">{modeBLeads}</strong>
+            </span>
           </div>
         </div>
 
-        {/* Metric 2: Companies Emailed */}
-        <div className="galaxy-card p-5 rounded-2xl border border-emerald-500/30 bg-slate-900/80 shadow-md">
+        <div className="chatgpt-card p-5 rounded-2xl">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-400">Companies Emailed (Sent)</span>
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <Send className="w-5 h-5" />
+            <span className="text-xs font-semibold text-neutral-500 dark:text-[#9e9e9e]">
+              Companies Emailed (Sent)
+            </span>
+            <div className="p-2 rounded-xl bg-[#10a37f]/15 text-[#10a37f] border border-[#10a37f]/25">
+              <Send className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-emerald-400">{emailsSent}</span>
-            <span className="text-xs text-slate-300 font-medium">Outbound Mails Delivered</span>
+            <span className="text-3xl font-bold text-[#10a37f]">{emailsSent}</span>
+            <span className="text-xs text-neutral-500 dark:text-[#9e9e9e] font-medium">Outbound Mails Delivered</span>
           </div>
-          <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
-            <span>Mode A: <strong className="text-slate-200">{modeASent}</strong> sent</span>
+          <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-white/10 flex items-center justify-between text-[11px] text-neutral-500 dark:text-[#9e9e9e]">
+            <span>
+              Mode A: <strong className="text-neutral-900 dark:text-white">{modeASent}</strong> sent
+            </span>
             <span>•</span>
-            <span>Mode B: <strong className="text-slate-200">{modeBSent}</strong> sent</span>
+            <span>
+              Mode B: <strong className="text-neutral-900 dark:text-white">{modeBSent}</strong> sent
+            </span>
           </div>
         </div>
 
-        {/* Metric 3: Inbound Client Replies */}
-        <div className="galaxy-card p-5 rounded-2xl border border-slate-800 bg-slate-900/80 shadow-md">
+        <div className="chatgpt-card p-5 rounded-2xl">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-400">Client Responses Received</span>
-            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-              <MessageSquare className="w-5 h-5" />
+            <span className="text-xs font-semibold text-neutral-500 dark:text-[#9e9e9e]">
+              Client Responses Received
+            </span>
+            <div className="p-2 rounded-xl bg-neutral-100 dark:bg-[#2f2f2f] text-neutral-800 dark:text-white border border-neutral-200 dark:border-white/10">
+              <MessageSquare className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-purple-400">{clientReplies.length}</span>
-            <span className="text-xs text-slate-300 font-medium">Inbound Client Replies</span>
+            <span className="text-3xl font-bold text-neutral-900 dark:text-white">{clientReplies.length}</span>
+            <span className="text-xs text-neutral-500 dark:text-[#9e9e9e] font-medium">Inbound Replies</span>
           </div>
-          <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
-            <span>Response Rate: <strong className="text-purple-300">{emailsSent > 0 ? Math.round((clientReplies.length / emailsSent) * 100) : 0}%</strong></span>
+          <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-white/10 flex items-center justify-between text-[11px] text-neutral-500 dark:text-[#9e9e9e]">
+            <span>
+              Response Rate:{' '}
+              <strong className="text-neutral-900 dark:text-white">
+                {emailsSent > 0 ? Math.round((clientReplies.length / emailsSent) * 100) : 0}%
+              </strong>
+            </span>
             <span>•</span>
-            <span className="text-emerald-400 font-semibold">Active Inbound</span>
+            <span className="text-[#10a37f] font-semibold">Active Inbound</span>
           </div>
         </div>
       </div>
 
-      {/* MAIN SECTION: EMAILED COMPANIES TABLE ("yna yna company mail panirukomnu matum view ana pothum") */}
-      <div className="galaxy-card p-5 sm:p-6 rounded-2xl border border-slate-800 bg-slate-900/90 shadow-xl space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+      {/* EMAILED COMPANIES LOG TABLE */}
+      <div className="chatgpt-card p-5 sm:p-6 rounded-2xl space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-neutral-200 dark:border-white/10">
           <div>
             <div className="flex items-center gap-2">
-              <Mail className="w-5 h-5 text-indigo-400" />
-              <h2 className="text-base font-bold text-white">
+              <Mail className="w-4 h-4 text-[#10a37f]" />
+              <h2 className="text-base font-bold text-neutral-900 dark:text-white">
                 Emailed Companies & Sent Outreach Log
               </h2>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Complete list of companies that received outbound cold emails from DataGalactic
+            <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] mt-0.5">
+              Complete list of companies that received outbound emails
             </p>
           </div>
 
-          {/* Mode Filter Tabs & Search */}
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <div className="flex items-center bg-neutral-100 dark:bg-[#212121] p-1 rounded-xl border border-neutral-200 dark:border-white/10">
               <button
                 onClick={() => setEmailModeFilter('all')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                   emailModeFilter === 'all'
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-neutral-900 dark:bg-[#2f2f2f] text-white'
+                    : 'text-neutral-600 dark:text-[#9e9e9e] hover:text-neutral-900 dark:hover:text-white'
                 }`}
               >
-                All Sent ({sentDrafts.length})
+                All ({sentDrafts.length})
               </button>
               <button
                 onClick={() => setEmailModeFilter('service_leads')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                   emailModeFilter === 'service_leads'
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-neutral-900 dark:bg-[#2f2f2f] text-white'
+                    : 'text-neutral-600 dark:text-[#9e9e9e] hover:text-neutral-900 dark:hover:text-white'
                 }`}
               >
                 Mode A ({modeASent})
               </button>
               <button
                 onClick={() => setEmailModeFilter('export_buyers')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                   emailModeFilter === 'export_buyers'
-                    ? 'bg-sky-600 text-white'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-neutral-900 dark:bg-[#2f2f2f] text-white'
+                    : 'text-neutral-600 dark:text-[#9e9e9e] hover:text-neutral-900 dark:hover:text-white'
                 }`}
               >
                 Mode B ({modeBSent})
@@ -231,22 +233,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             <div className="relative min-w-[200px]">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
               <input
                 type="text"
                 value={emailSearch}
                 onChange={(e) => setEmailSearch(e.target.value)}
                 placeholder="Search company or email..."
-                className="w-full pl-8 pr-3 py-1.5 bg-slate-950 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none"
               />
             </div>
           </div>
         </div>
 
-        {/* Sent Emails Table */}
-        <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/60">
+        <div className="overflow-x-auto rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-[#1a1a1a]">
           <table className="w-full text-left text-xs min-w-[680px]">
-            <thead className="bg-slate-950 text-slate-400 text-[10px] uppercase tracking-wider border-b border-slate-800">
+            <thead className="bg-neutral-50 dark:bg-[#212121] text-neutral-500 dark:text-[#9e9e9e] text-[10px] uppercase tracking-wider border-b border-neutral-200 dark:border-white/10">
               <tr>
                 <th className="py-2.5 px-3 text-center w-10">#</th>
                 <th className="py-2.5 px-3 font-semibold min-w-[150px]">Company Name</th>
@@ -258,52 +259,45 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <th className="py-2.5 px-3 font-semibold text-right w-24">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-neutral-100 dark:divide-white/5">
               {filteredSentEmails.length > 0 ? (
                 filteredSentEmails.map((draft, idx) => (
-                  <tr key={draft.id} className="hover:bg-slate-800/40 transition-colors">
-                    <td className="py-2.5 px-3 text-center font-mono text-slate-500 text-[10px]">
+                  <tr key={draft.id} className="hover:bg-neutral-50 dark:hover:bg-[#212121] transition-colors">
+                    <td className="py-2.5 px-3 text-center font-mono text-neutral-400 text-[10px]">
                       {idx + 1}
                     </td>
 
-                    {/* Company Name */}
                     <td className="py-2.5 px-3">
-                      <div className="font-bold text-white text-xs flex items-center gap-1.5">
-                        <Building className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                      <div className="font-semibold text-neutral-900 dark:text-white text-xs flex items-center gap-1.5">
+                        <Building className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
                         <span className="truncate max-w-[140px]">{draft.companyName}</span>
                       </div>
-                      <span className={`text-[9px] px-1.5 py-0.2 rounded font-semibold mt-0.5 inline-block ${
-                        draft.leadMode === 'export_buyers'
-                          ? 'bg-sky-500/20 text-sky-300'
-                          : 'bg-indigo-500/20 text-indigo-300'
-                      }`}>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-neutral-100 dark:bg-[#2f2f2f] text-neutral-600 dark:text-[#d4d4d4] font-medium mt-0.5 inline-block">
                         {draft.leadMode === 'export_buyers' ? 'Mode B: Export' : 'Mode A: Service'}
                       </span>
                     </td>
 
-                    {/* Contact Person */}
                     <td className="py-2.5 px-3">
-                      <div className="font-semibold text-slate-200 text-xs truncate max-w-[130px]">
+                      <div className="font-medium text-neutral-800 dark:text-[#ececec] text-xs truncate max-w-[130px]">
                         {draft.recipientName}
                       </div>
-                      <div className="text-[10px] text-slate-400 truncate max-w-[130px]">
+                      <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] truncate max-w-[130px]">
                         {draft.jobTitle}
                       </div>
                     </td>
 
-                    {/* Business Email */}
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-1">
-                        <span className="font-mono text-slate-300 text-[11px] truncate max-w-[140px]">
+                        <span className="font-mono text-neutral-700 dark:text-[#d4d4d4] text-[11px] truncate max-w-[140px]">
                           {draft.recipientEmail}
                         </span>
                         <button
                           onClick={() => handleCopy(draft.recipientEmail)}
-                          className="text-slate-400 hover:text-white p-0.5 rounded transition-colors"
+                          className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white p-0.5 rounded transition-colors"
                           title="Copy Email"
                         >
                           {copiedEmail === draft.recipientEmail ? (
-                            <Check className="w-3 h-3 text-emerald-400" />
+                            <Check className="w-3 h-3 text-[#10a37f]" />
                           ) : (
                             <Copy className="w-3 h-3" />
                           )}
@@ -311,18 +305,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </div>
                     </td>
 
-                    {/* Subject / Service */}
                     <td className="py-2.5 px-3">
-                      <div className="font-medium text-slate-200 text-xs truncate max-w-[180px]">
+                      <div className="font-medium text-neutral-900 dark:text-white text-xs truncate max-w-[180px]">
                         {draft.subject}
                       </div>
-                      <span className="text-[10px] text-indigo-300/80 truncate block max-w-[180px]">
-                        Service: {draft.recommendedService || 'Direct Outreach'}
+                      <span className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] truncate block max-w-[180px]">
+                        {draft.recommendedService || 'Direct Outreach'}
                       </span>
                     </td>
 
-                    {/* Sent Date */}
-                    <td className="py-2.5 px-3 text-slate-400 text-[11px] whitespace-nowrap">
+                    <td className="py-2.5 px-3 text-neutral-500 dark:text-[#9e9e9e] text-[11px] whitespace-nowrap">
                       {draft.sentAt
                         ? new Date(draft.sentAt).toLocaleDateString([], {
                             day: 'numeric',
@@ -332,19 +324,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
                         : 'Recently Sent'}
                     </td>
 
-                    {/* Status Badge */}
                     <td className="py-2.5 px-3 text-center">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] border border-[#10a37f]/30 text-[10px] font-semibold">
                         <CheckCircle2 className="w-3 h-3" />
                         <span>Sent</span>
                       </span>
                     </td>
 
-                    {/* Action: View Sent Email */}
                     <td className="py-2.5 px-3 text-right">
                       <button
                         onClick={() => setViewingDraft(draft)}
-                        className="px-2.5 py-1 rounded-lg bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white text-[11px] font-semibold border border-indigo-500/40 transition-colors whitespace-nowrap"
+                        className="px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-[#2f2f2f] hover:bg-neutral-200 dark:hover:bg-[#383838] text-neutral-800 dark:text-white text-[11px] font-semibold border border-neutral-200 dark:border-white/10 transition-colors whitespace-nowrap"
                       >
                         View Email
                       </button>
@@ -353,14 +343,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                  <td colSpan={8} className="py-12 text-center text-neutral-500 dark:text-[#9e9e9e]">
                     <div className="max-w-sm mx-auto space-y-2">
-                      <Send className="w-8 h-8 text-slate-500 mx-auto" />
-                      <p className="text-sm font-semibold text-slate-300">No Sent Emails Found</p>
-                      <p className="text-xs text-slate-400">
+                      <Send className="w-8 h-8 text-neutral-400 mx-auto" />
+                      <p className="text-sm font-semibold text-neutral-800 dark:text-white">No Sent Emails Found</p>
+                      <p className="text-xs">
                         {emailSearch
                           ? 'No sent emails match your search query.'
-                          : 'Go to Mode A (Services) or Mode B (Export) to draft and approve emails. Once sent, they appear right here!'}
+                          : 'Compose and approve emails in Mode A or Mode B to see them logged here.'}
                       </p>
                     </div>
                   </td>
@@ -371,42 +361,48 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* COMPACT INBOUND CLIENT REPLIES SECTION */}
-      <div className="galaxy-card p-5 sm:p-6 rounded-2xl border border-slate-800 bg-slate-900/90 shadow-xl space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+      {/* INBOUND CLIENT REPLIES */}
+      <div className="chatgpt-card p-5 sm:p-6 rounded-2xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-neutral-200 dark:border-white/10">
           <div>
             <div className="flex items-center gap-2">
-              <Inbox className="w-5 h-5 text-emerald-400" />
-              <h2 className="text-base font-bold text-white">
+              <Inbox className="w-4 h-4 text-[#10a37f]" />
+              <h2 className="text-base font-bold text-neutral-900 dark:text-white">
                 Client Inbound Responses
               </h2>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Live replies and interest received from contacted companies
+            <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] mt-0.5">
+              Replies received from contacted companies
             </p>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <div className="flex items-center gap-1 bg-neutral-100 dark:bg-[#212121] p-1 rounded-xl border border-neutral-200 dark:border-white/10">
             <button
               onClick={() => setReplyFilter('all')}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                replyFilter === 'all' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                replyFilter === 'all'
+                  ? 'bg-neutral-900 dark:bg-[#2f2f2f] text-white'
+                  : 'text-neutral-600 dark:text-[#9e9e9e] hover:text-neutral-900 dark:hover:text-white'
               }`}
             >
-              All Replies ({clientReplies.length})
+              All ({clientReplies.length})
             </button>
             <button
               onClick={() => setReplyFilter('needs_action')}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                replyFilter === 'needs_action' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                replyFilter === 'needs_action'
+                  ? 'bg-amber-500 text-neutral-950 font-semibold'
+                  : 'text-neutral-600 dark:text-[#9e9e9e] hover:text-neutral-900 dark:hover:text-white'
               }`}
             >
               Needs Action
             </button>
             <button
               onClick={() => setReplyFilter('in_discussion')}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                replyFilter === 'in_discussion' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                replyFilter === 'in_discussion'
+                  ? 'bg-[#10a37f] text-white'
+                  : 'text-neutral-600 dark:text-[#9e9e9e] hover:text-neutral-900 dark:hover:text-white'
               }`}
             >
               In Discussion
@@ -418,30 +414,24 @@ export const Dashboard: React.FC<DashboardProps> = ({
           {filteredReplies.map((reply) => (
             <div
               key={reply.id}
-              className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800/80 hover:border-slate-700 transition-all flex flex-col md:flex-row md:items-center justify-between gap-3"
+              className="p-3.5 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3"
             >
               <div className="space-y-1 flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-white text-xs">{reply.leadName}</span>
-                  <span className="text-[11px] text-slate-400">({reply.companyName})</span>
-                  <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${
-                    reply.leadMode === 'service_leads'
-                      ? 'bg-indigo-500/20 text-indigo-300'
-                      : 'bg-sky-500/20 text-sky-300'
-                  }`}>
+                  <span className="font-semibold text-neutral-900 dark:text-white text-xs">{reply.leadName}</span>
+                  <span className="text-[11px] text-neutral-500 dark:text-[#9e9e9e]">({reply.companyName})</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-neutral-200 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#d4d4d4] font-semibold">
                     {reply.leadMode === 'service_leads' ? 'Mode A' : 'Mode B'}
                   </span>
-                  <span className="text-[9px] px-1.5 py-0.2 rounded font-bold bg-purple-500/20 text-purple-300">
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] font-semibold">
                     {reply.sentiment}
                   </span>
-                  <span className="text-[9px] px-1.5 py-0.2 rounded font-bold bg-amber-500/20 text-amber-300">
-                    Status: {reply.status}
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300 font-semibold">
+                    {reply.status}
                   </span>
                 </div>
-                <p className="text-xs font-semibold text-white truncate">
-                  {reply.replySubject}
-                </p>
-                <p className="text-[11px] text-slate-300 italic truncate max-w-2xl">
+                <p className="text-xs font-semibold text-neutral-900 dark:text-white truncate">{reply.replySubject}</p>
+                <p className="text-[11px] text-neutral-600 dark:text-[#b4b4b4] italic truncate max-w-2xl">
                   "{reply.replySnippet}"
                 </p>
               </div>
@@ -456,7 +446,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       else onNavigate('export_buyer_leads');
                     }
                   }}
-                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1 transition-colors"
+                  className="px-3 py-1.5 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] text-xs font-semibold flex items-center gap-1 hover:opacity-85 transition-opacity"
                 >
                   <span>View Details</span>
                   <ArrowRight className="w-3 h-3" />
@@ -466,7 +456,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           ))}
 
           {filteredReplies.length === 0 && (
-            <div className="p-6 text-center text-slate-400 text-xs">
+            <div className="p-6 text-center text-neutral-500 dark:text-[#9e9e9e] text-xs">
               No replies matching this filter.
             </div>
           )}
@@ -475,65 +465,63 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* VIEW SENT EMAIL MODAL */}
       {viewingDraft && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#1e1e1e] border border-neutral-200 dark:border-white/15 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="p-4 sm:p-5 border-b border-neutral-200 dark:border-white/10 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] uppercase">
                   ✓ Sent Outbound Email
                 </span>
-                <h3 className="text-base font-bold text-white mt-1">
+                <h3 className="text-base font-bold text-neutral-900 dark:text-white mt-1">
                   {viewingDraft.companyName}
                 </h3>
               </div>
               <button
                 onClick={() => setViewingDraft(null)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-[#2f2f2f] transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Email Meta Details */}
-            <div className="p-4 bg-slate-950/60 border-b border-slate-800 space-y-1.5 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="text-slate-400 w-16">To:</span>
-                <span className="font-semibold text-white">{viewingDraft.recipientName}</span>
-                <span className="text-slate-400">({viewingDraft.jobTitle})</span>
-                <span className="font-mono text-indigo-300 ml-auto">{viewingDraft.recipientEmail}</span>
+            <div className="p-4 bg-neutral-50 dark:bg-[#171717] border-b border-neutral-200 dark:border-white/10 space-y-1.5 text-xs">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-neutral-500 dark:text-[#9e9e9e] w-16">To:</span>
+                <span className="font-semibold text-neutral-900 dark:text-white">{viewingDraft.recipientName}</span>
+                <span className="text-neutral-500 dark:text-[#9e9e9e]">({viewingDraft.jobTitle})</span>
+                <span className="font-mono text-neutral-700 dark:text-[#d4d4d4] ml-auto">
+                  {viewingDraft.recipientEmail}
+                </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-slate-400 w-16">Subject:</span>
-                <span className="font-bold text-slate-200">{viewingDraft.subject}</span>
+                <span className="text-neutral-500 dark:text-[#9e9e9e] w-16">Subject:</span>
+                <span className="font-semibold text-neutral-900 dark:text-white">{viewingDraft.subject}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-slate-400 w-16">Service:</span>
-                <span className="text-indigo-300 font-medium">{viewingDraft.recommendedService || 'Direct Pitch'}</span>
+                <span className="text-neutral-500 dark:text-[#9e9e9e] w-16">Service:</span>
+                <span className="text-[#10a37f] font-medium">{viewingDraft.recommendedService || 'Direct Pitch'}</span>
                 {viewingDraft.sentAt && (
-                  <span className="text-slate-400 ml-auto">
+                  <span className="text-neutral-500 dark:text-[#9e9e9e] ml-auto">
                     Sent: {new Date(viewingDraft.sentAt).toLocaleString()}
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Email Body */}
             <div className="p-5 flex-1 overflow-y-auto">
-              <div className="whitespace-pre-wrap text-xs text-slate-200 leading-relaxed font-sans bg-slate-950 p-4 rounded-xl border border-slate-800">
+              <div className="whitespace-pre-wrap text-xs text-neutral-800 dark:text-[#ececec] leading-relaxed font-sans bg-neutral-50 dark:bg-[#171717] p-4 rounded-xl border border-neutral-200 dark:border-white/10">
                 {viewingDraft.body}
               </div>
             </div>
 
-            {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-800 flex items-center justify-between">
+            <div className="p-4 border-t border-neutral-200 dark:border-white/10 flex items-center justify-between">
               <button
                 onClick={() => handleCopy(viewingDraft.body)}
-                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                className="px-3 py-1.5 rounded-lg bg-neutral-100 dark:bg-[#2f2f2f] hover:bg-neutral-200 dark:hover:bg-[#383838] text-neutral-800 dark:text-[#ececec] text-xs font-semibold flex items-center gap-1.5 transition-colors"
               >
                 {copiedEmail === viewingDraft.body ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <Check className="w-3.5 h-3.5 text-[#10a37f]" />
                     <span>Copied!</span>
                   </>
                 ) : (
@@ -546,7 +534,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
               <button
                 onClick={() => setViewingDraft(null)}
-                className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-colors"
+                className="px-4 py-1.5 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] text-xs font-semibold hover:opacity-85 transition-opacity"
               >
                 Close
               </button>

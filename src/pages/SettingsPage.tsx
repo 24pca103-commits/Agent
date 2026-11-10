@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Settings as SettingsIcon,
   Building,
-  User,
   Sliders,
   Database,
   Save,
@@ -10,10 +9,8 @@ import {
   Copy,
   Check,
   Mail,
-  Globe2,
-  Briefcase
+  Globe2
 } from 'lucide-react';
-import { DATAGALACTIC_COMPANY } from '../data/catalog';
 import { useCompanySettings } from '../utils/settingsStorage';
 
 interface SettingsPageProps {
@@ -99,12 +96,11 @@ CREATE TABLE IF NOT EXISTS public.email_drafts (
 
 CREATE TABLE IF NOT EXISTS public.suppression_records (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    entry_value TEXT UNIQUE NOT NULL, -- email or domain
+    entry_value TEXT UNIQUE NOT NULL,
     reason TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Row Level Security (RLS)
 ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.email_drafts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.suppression_records ENABLE ROW LEVEL SECURITY;
@@ -124,7 +120,7 @@ ALTER TABLE public.suppression_records ENABLE ROW LEVEL SECURITY;
       founder,
       tagline,
       dailySendLimit,
-      delayBetweenSends,
+      delayBetweenSends
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
@@ -132,121 +128,127 @@ ALTER TABLE public.suppression_records ENABLE ROW LEVEL SECURITY;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <div className="flex items-center gap-2">
-          <SettingsIcon className="w-5 h-5 text-indigo-400" />
-          <h2 className="text-xl font-bold text-white">Application Settings & Database Setup</h2>
+          <SettingsIcon className="w-5 h-5 text-neutral-700 dark:text-[#ececec]" />
+          <h2 className="text-xl font-bold text-neutral-900 dark:text-white">
+            Application Settings & Mail Profile
+          </h2>
         </div>
-        <p className="text-xs text-slate-400 mt-1">
-          Configure DataGalactic company credentials, daily email sending thresholds, and view persistent Supabase PostgreSQL SQL setup.
+        <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] mt-1">
+          Configure sender identity, company email ID, daily send thresholds, and PostgreSQL storage.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Company Settings */}
-        <form onSubmit={handleSave} className="galaxy-card p-6 rounded-2xl border border-slate-800 space-y-4">
-          <div className="flex items-center gap-2 font-semibold text-sm">
-            {isModeB ? <Globe2 className="w-4 h-4 text-sky-400" /> : <Building className="w-4 h-4 text-indigo-400" />}
-            <span className={isModeB ? "text-sky-300" : "text-indigo-300"}>
-              {isModeB ? 'Mode B: Export Trade & Sender Profile' : 'Mode A: DataGalactic B2B Company & Sender Profile'}
+        <form onSubmit={handleSave} className="chatgpt-card p-6 rounded-2xl space-y-4">
+          <div className="flex items-center gap-2 font-semibold text-sm text-neutral-900 dark:text-white">
+            {isModeB ? <Globe2 className="w-4 h-4 text-[#10a37f]" /> : <Building className="w-4 h-4 text-[#10a37f]" />}
+            <span>
+              {isModeB ? 'Mode B: Export Trade & Sender Profile' : 'Mode A: DataGalactic Company & Sender Profile'}
             </span>
           </div>
 
           <div>
-            <label className="text-[11px] font-semibold text-slate-300 block mb-1">Company Name</label>
+            <label className="text-[11px] font-semibold text-neutral-600 dark:text-[#b4b4b4] block mb-1">
+              Company Name
+            </label>
             <input
               type="text"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white"
+              className="w-full px-3 py-2 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-white"
             />
           </div>
 
           <div>
-            <label className="text-[11px] font-semibold text-slate-300 block mb-1 flex items-center justify-between">
+            <label className="text-[11px] font-semibold text-neutral-600 dark:text-[#b4b4b4] mb-1 flex items-center justify-between">
               <span>{isModeB ? 'Export Company Mail ID *' : 'Official Company Mail ID *'}</span>
-              <span className="text-[9px] text-emerald-400 font-normal">Primary Sender Email</span>
+              <span className="text-[10px] text-[#10a37f] font-medium">Primary Sender Email</span>
             </label>
             <div className="relative">
-              <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Mail className="w-3.5 h-3.5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="email"
                 required
                 value={companyEmail}
                 onChange={(e) => setCompanyEmail(e.target.value)}
-                placeholder={isModeB ? "export@datagalactic.com" : "contact@datagalactic.com"}
-                className={`w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none ${
-                  isModeB ? 'focus:border-sky-500' : 'focus:border-indigo-500'
-                }`}
+                placeholder={isModeB ? 'export@datagalactic.com' : 'contact@datagalactic.com'}
+                className="w-full pl-9 pr-3 py-2 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none"
               />
             </div>
-            <p className="text-[10px] text-slate-400 mt-1">
-              Official sender & reply-to email address used when approving and sending pitches to clients.
+            <p className="text-[10px] text-neutral-500 dark:text-[#8e8e8e] mt-1">
+              All approved cold emails and follow-ups are sent using this sender address.
             </p>
           </div>
 
           <div>
-            <label className="text-[11px] font-semibold text-slate-300 block mb-1">Founder / Sign-Off Name</label>
+            <label className="text-[11px] font-semibold text-neutral-600 dark:text-[#b4b4b4] block mb-1">
+              Founder / Sign-Off Name
+            </label>
             <input
               type="text"
               value={founder}
               onChange={(e) => setFounder(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white"
+              className="w-full px-3 py-2 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-white"
             />
           </div>
 
           <div>
-            <label className="text-[11px] font-semibold text-slate-300 block mb-1">Company Tagline</label>
+            <label className="text-[11px] font-semibold text-neutral-600 dark:text-[#b4b4b4] block mb-1">
+              Company Tagline
+            </label>
             <input
               type="text"
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white"
+              className="w-full px-3 py-2 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-white"
             />
           </div>
 
-          <div className="pt-2 border-t border-slate-800">
-            <div className="flex items-center gap-2 text-indigo-400 font-semibold text-xs mb-3">
+          <div className="pt-2 border-t border-neutral-200 dark:border-white/10">
+            <div className="flex items-center gap-2 text-neutral-900 dark:text-white font-semibold text-xs mb-3">
               <Sliders className="w-3.5 h-3.5" />
               <span>Safety & Sending Limits</span>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] text-slate-400 block mb-1">Max Daily Emails</label>
+                <label className="text-[11px] text-neutral-500 dark:text-[#9e9e9e] block mb-1">Max Daily Emails</label>
                 <input
                   type="number"
                   value={dailySendLimit}
                   onChange={(e) => setDailySendLimit(Number(e.target.value))}
-                  className="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white"
+                  className="w-full px-3 py-1.5 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-lg text-xs text-neutral-900 dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] text-slate-400 block mb-1">Delay Between Sends (sec)</label>
+                <label className="text-[11px] text-neutral-500 dark:text-[#9e9e9e] block mb-1">
+                  Delay Between Sends (sec)
+                </label>
                 <input
                   type="number"
                   value={delayBetweenSends}
                   onChange={(e) => setDelayBetweenSends(Number(e.target.value))}
-                  className="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white"
+                  className="w-full px-3 py-1.5 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-lg text-xs text-neutral-900 dark:text-white"
                 />
               </div>
             </div>
           </div>
 
-          <div className="pt-4 flex items-center justify-between">
+          <div className="pt-4 flex items-center justify-between gap-2 flex-wrap">
             {saved && (
-              <span className="text-xs text-emerald-400 flex items-center gap-1 font-medium animate-in fade-in">
+              <span className="text-xs text-[#10a37f] flex items-center gap-1 font-medium">
                 <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                 <span>
-                  Settings Saved! Outgoing emails will now be sent from: <strong className="text-white underline">{companyEmail}</strong> ({founder})
+                  Saved! Sending from <strong className="underline">{companyEmail}</strong> ({founder})
                 </span>
               </span>
             )}
             <button
               type="submit"
-              className="ml-auto flex items-center gap-1.5 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30"
+              className="ml-auto flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#10a37f] hover:bg-[#0e906f] text-white text-xs font-semibold transition-colors"
             >
               <Save className="w-3.5 h-3.5" />
               <span>Save Settings</span>
@@ -254,28 +256,29 @@ ALTER TABLE public.suppression_records ENABLE ROW LEVEL SECURITY;
           </div>
         </form>
 
-        {/* Supabase SQL Documentation & Guide */}
-        <div className="galaxy-card p-6 rounded-2xl border border-slate-800 space-y-4">
+        <div className="chatgpt-card p-6 rounded-2xl space-y-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-emerald-400 font-semibold text-sm">
+            <div className="flex items-center gap-2 text-[#10a37f] font-semibold text-sm">
               <Database className="w-4 h-4" />
               <span>Persistent Database Setup (Supabase PostgreSQL)</span>
             </div>
 
             <button
               onClick={handleCopySql}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-[#2f2f2f] hover:bg-neutral-200 dark:hover:bg-[#383838] text-neutral-700 dark:text-[#ececec] text-xs font-medium border border-neutral-200 dark:border-white/10 transition-colors"
             >
-              {copiedSql ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+              {copiedSql ? <Check className="w-3 h-3 text-[#10a37f]" /> : <Copy className="w-3 h-3" />}
               <span>{copiedSql ? 'Copied SQL!' : 'Copy Schema SQL'}</span>
             </button>
           </div>
 
-          <p className="text-xs text-slate-300 leading-relaxed">
-            For persistent cloud storage across multiple sessions, paste this SQL into your free <strong>Supabase SQL Editor</strong> (at supabase.com), then add your <code className="text-indigo-300 font-mono">SUPABASE_URL</code> to <code className="text-indigo-300 font-mono">.env</code>.
+          <p className="text-xs text-neutral-600 dark:text-[#b4b4b4] leading-relaxed">
+            For persistent cloud storage across sessions, paste this SQL into your free{' '}
+            <strong>Supabase SQL Editor</strong> and configure <code className="font-mono">SUPABASE_URL</code> in{' '}
+            <code className="font-mono">.env</code>.
           </p>
 
-          <pre className="p-3 bg-slate-950 rounded-xl border border-slate-800/80 font-mono text-[10px] text-slate-300 max-h-64 overflow-y-auto overflow-x-auto min-w-0 max-w-full leading-relaxed whitespace-pre-wrap break-all">
+          <pre className="p-3 bg-neutral-50 dark:bg-[#212121] rounded-xl border border-neutral-200 dark:border-white/10 font-mono text-[10px] text-neutral-700 dark:text-[#d4d4d4] max-h-64 overflow-y-auto overflow-x-auto min-w-0 max-w-full leading-relaxed whitespace-pre-wrap break-all">
             {supabaseSqlSchema}
           </pre>
         </div>

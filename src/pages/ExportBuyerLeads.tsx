@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Globe2,
   Package,
-  Search,
-  CheckCircle2,
   Ship,
   Sparkles,
   ExternalLink,
@@ -12,37 +10,38 @@ import {
   Bot,
   Send,
   CalendarClock,
-  Clock,
-  AlertCircle,
   RefreshCw,
-  FileText,
-  BadgeCheck,
   Building2,
   ArrowRight,
-  Filter,
   Mail,
   Printer,
-  Download,
   Table as TableIcon,
   LayoutGrid,
   ChevronLeft,
-  User,
-  Copy,
-  Check,
+  CheckCircle2,
   Settings as SettingsIcon,
-  Plus
+  SquarePen,
+  ArrowUp
 } from 'lucide-react';
-import { Lead, EmailDraft, EmailTone, FollowUpTask, ClientReply } from '../types';
-import { TARGET_COUNTRIES, DATAGALACTIC_COMPANY } from '../data/catalog';
+import { Lead, EmailDraft, EmailTone, FollowUpTask, ClientReply, ChatMessage } from '../types';
+import { DATAGALACTIC_COMPANY } from '../data/catalog';
 import { StatusBadge } from '../components/Badge';
-import { exportLeadsToPdf, openPrintPdfView, downloadLeadsPdfDirectly } from '../utils/exportPdf';
+import { exportLeadsToPdf } from '../utils/exportPdf';
 import { SettingsPage } from './SettingsPage';
+import { useCompanySettings } from '../utils/settingsStorage';
+import { InlineLeadsTable } from '../components/InlineLeadsTable';
+import { renderFormattedChatText } from '../utils/formatChatText';
 
 interface ExportBuyerLeadsProps {
   initialTab?: 'agent' | 'leads' | 'email' | 'followup' | 'products' | 'settings';
+  onTabChange?: (tab: 'agent' | 'leads' | 'email' | 'followup' | 'products' | 'settings') => void;
   leads: Lead[];
   drafts: EmailDraft[];
   clientReplies?: ClientReply[];
+  chatSessionId?: string;
+  initialMessages?: ChatMessage[];
+  onSyncChatMessages?: (sessionId: string, messages: ChatMessage[]) => void;
+  onNewChat?: () => void;
   onSelectLead: (lead: Lead) => void;
   onAddNewLead: (lead: Lead) => void;
   onAddMultipleLeads?: (leads: Lead[]) => void;
@@ -51,38 +50,36 @@ interface ExportBuyerLeadsProps {
   onUpdateLead?: (lead: Lead) => void;
 }
 
-interface ChatMessage {
-  id: string;
-  sender: 'user' | 'agent';
-  text: string;
-  timestamp: string;
-  suggestedAction?: {
-    type: 'source_buyer' | 'draft_pitch' | 'download_pdf';
-    buyerCategory?: string;
-    targetCountry?: string;
-    leadCount?: number;
-  };
-}
-
 export const ExportBuyerLeads: React.FC<ExportBuyerLeadsProps> = ({
   initialTab = 'agent',
+  onTabChange,
   leads,
   drafts,
   clientReplies = [],
-  onSelectLead,
+  chatSessionId = 'session-b-initial',
+  initialMessages = [],
+  onSyncChatMessages,
+  onNewChat,
   onAddNewLead,
   onAddMultipleLeads,
   onSaveDraftForApproval,
   onApproveAndSend,
   onUpdateLead
 }) => {
-  // Mode B Active Tab
-  const [activeTab, setActiveTab] = useState<'agent' | 'leads' | 'email' | 'followup' | 'products' | 'settings'>(initialTab);
+  const [activeTab, setActiveTabState] = useState<'agent' | 'leads' | 'email' | 'followup' | 'products' | 'settings'>(
+    initialTab
+  );
   const [downloadedFileNotice, setDownloadedFileNotice] = useState<string | null>(null);
+  const { settings } = useCompanySettings('mode_b');
 
-  React.useEffect(() => {
+  const setActiveTab = (tab: 'agent' | 'leads' | 'email' | 'followup' | 'products' | 'settings') => {
+    setActiveTabState(tab);
+    if (onTabChange) onTabChange(tab);
+  };
+
+  useEffect(() => {
     if (initialTab) {
-      setActiveTab(initialTab);
+      setActiveTabState(initialTab);
     }
   }, [initialTab]);
 
@@ -93,43 +90,45 @@ export const ExportBuyerLeads: React.FC<ExportBuyerLeadsProps> = ({
     return d.leadMode === 'export_buyers' || (parentLead && parentLead.leadMode === 'export_buyers');
   });
 
-  // Export Sourcing Form State
+  // Export Sourcing Config State
   const [productCategory, setProductCategory] = useState('Agro-Commodities & Spices');
-  const [productDescription, setProductDescription] = useState('Premium export-quality whole black pepper, cardamom, and organic spices.');
-  const [originCountry, setOriginCountry] = useState('India');
   const [targetCountry, setTargetCountry] = useState('United Arab Emirates (UAE)');
-  const [buyerType, setBuyerType] = useState<'importer' | 'distributor' | 'wholesaler' | 'retailer'>('distributor');
   const [minOrderQty, setMinOrderQty] = useState('1 x 20ft Full Container Load (FCL)');
-  const [certifications, setCertifications] = useState('ISO 22000, HACCP, Halal Certified');
-  const [sourcingLimit, setSourcingLimit] = useState<number>(100);
   const [isSearching, setIsSearching] = useState(false);
   const [sourcingSuccess, setSourcingSuccess] = useState<string | null>(null);
 
-  // View & Pagination States
+  // View & Pagination States (Tab 2)
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [pageSize, setPageSize] = useState<number>(25);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  // AI Agent Chat State
+  // AI Agent Chat State (Starts clean/empty on load)
   const [chatInput, setChatInput] = useState<string>('');
   const [chatSelectedCountry, setChatSelectedCountry] = useState<string>('United Arab Emirates (UAE)');
-  const [countrySelectError, setCountrySelectError] = useState<boolean>(false);
-  const [agentSourcedResults, setAgentSourcedResults] = useState<Lead[]>([]);
-  const [agentTableSearch, setAgentTableSearch] = useState<string>('');
-  const [agentTablePageSize, setAgentTablePageSize] = useState<number>(25);
-  const [agentTablePage, setAgentTablePage] = useState<number>(1);
-  const [agentTableViewMode, setAgentTableViewMode] = useState<'table' | 'grid'>('table');
-  const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
-
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      id: 'msg-exp-1',
-      sender: 'agent',
-      text: `Welcome to Mode B: International Export Buyer Hub! I am your AI Global Trade & Sourcing Consultant.\n\n⚠️ **Please select a Target Country next to the Send button** before sending your buyer search prompt (e.g. "100 UAE buyer venum").\nOnce selected, all 100 verified buyer details will be displayed live below with 1-click executive PDF export!`,
-      timestamp: 'Just now'
-    }
-  ]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(initialMessages);
   const [isAgentThinking, setIsAgentThinking] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setChatMessages(initialMessages);
+    setIsAgentThinking(false);
+  }, [chatSessionId]);
+
+  useEffect(() => {
+    if (chatMessages.length > 0 || isAgentThinking) {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [chatMessages.length, isAgentThinking]);
+
+  const appendChatMessages = (newMsgs: ChatMessage[]) => {
+    setChatMessages(prev => {
+      const next = [...prev, ...newMsgs];
+      if (onSyncChatMessages) {
+        onSyncChatMessages(chatSessionId, next);
+      }
+      return next;
+    });
+  };
 
   // Email Composer State
   const [composerLeadId, setComposerLeadId] = useState<string>(buyerLeads[0]?.id || '');
@@ -173,29 +172,10 @@ export const ExportBuyerLeads: React.FC<ExportBuyerLeadsProps> = ({
   // Pagination Calculations
   const effectivePageSize = pageSize === 0 ? (buyerLeads.length || 1) : pageSize;
   const totalPages = Math.ceil(buyerLeads.length / effectivePageSize) || 1;
-  const paginatedLeads = pageSize === 0 
-    ? buyerLeads 
-    : buyerLeads.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
-  // Live Agent Sourced Results (STRICTLY Mode B Sourced Results in current session)
-  const currentLiveBuyers = agentSourcedResults;
-  const filteredLiveBuyers = currentLiveBuyers.filter(lead => {
-    if (!agentTableSearch.trim()) return true;
-    const q = agentTableSearch.toLowerCase();
-    return (lead.companyName && lead.companyName.toLowerCase().includes(q)) ||
-      (lead.contactFullName && lead.contactFullName.toLowerCase().includes(q)) ||
-      (lead.businessEmail && lead.businessEmail.toLowerCase().includes(q)) ||
-      (lead.country && lead.country.toLowerCase().includes(q)) ||
-      (lead.regionCity && lead.regionCity.toLowerCase().includes(q)) ||
-      (lead.buyerType && lead.buyerType.toLowerCase().includes(q)) ||
-      (lead.targetProductCategory && lead.targetProductCategory.toLowerCase().includes(q));
-  });
-
-  const effectiveBuyerPageSize = agentTablePageSize === 0 ? (filteredLiveBuyers.length || 1) : agentTablePageSize;
-  const totalBuyerPages = Math.ceil(filteredLiveBuyers.length / effectiveBuyerPageSize) || 1;
-  const paginatedLiveBuyers = agentTablePageSize === 0
-    ? filteredLiveBuyers
-    : filteredLiveBuyers.slice((agentTablePage - 1) * agentTablePageSize, agentTablePage * agentTablePageSize);
+  const paginatedLeads =
+    pageSize === 0
+      ? buyerLeads
+      : buyerLeads.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   // Mode B Stats
   const awaitingApprovalCount = exportDrafts.filter(d => d.status === 'Awaiting Approval').length;
@@ -230,33 +210,38 @@ export const ExportBuyerLeads: React.FC<ExportBuyerLeadsProps> = ({
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `export_buyers_${(chatSelectedCountry || targetCountry || 'all').toLowerCase().replace(/\s+/g, '_')}_${Date.now()}.csv`);
+    link.setAttribute(
+      'download',
+      `export_buyers_${(chatSelectedCountry || targetCountry || 'all').toLowerCase().replace(/\s+/g, '_')}_${Date.now()}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  // Reset conversation and start a clean new chat session
+  // Start clean New Chat session
   const handleStartNewChat = () => {
-    setChatMessages([
-      {
-        id: `msg-exp-${Date.now()}`,
-        sender: 'agent',
-        text: `✨ **New Trade Consultation Session Initialized!**\n\nI am your AI Global Trade & Sourcing Consultant for **Mode B: International Export Buyers**.\n\nType your command below to source buyers (e.g. *"50 UAE food importers"*, *"100 USA distributors"*, *"50 Germany buyers"*), or click any suggestion pill above.\n\nAll verified buyers will be sourced live into the panel on the right.`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }
-    ]);
     setChatInput('');
-    setAgentSourcedResults([]);
-    setAgentTablePage(1);
-    setAgentTableSearch('');
+    setSourcingSuccess(null);
     setIsAgentThinking(false);
+    if (onNewChat) {
+      onNewChat();
+    } else {
+      setChatMessages([]);
+    }
   };
 
-  // Handle Sourcing Search with 100 limit support
-  const handleSourcingSearch = async (overrideCount?: number) => {
-    const targetCount = overrideCount || sourcingLimit || 100;
-    const countryToUse = chatSelectedCountry || targetCountry || 'United Arab Emirates (UAE)';
+  // Handle Sourcing Search
+  const handleSourcingSearch = async (
+    overrideCount?: number,
+    customPrompt?: string,
+    overrideCountry?: string,
+    overrideCategory?: string
+  ) => {
+    const targetCount = overrideCount || 50;
+    const countryToUse = overrideCountry || chatSelectedCountry || targetCountry || 'United Arab Emirates (UAE)';
+    const categoryToUse = overrideCategory || productCategory;
+    setIsAgentThinking(true);
     setIsSearching(true);
     setSourcingSuccess(null);
 
@@ -265,12 +250,14 @@ export const ExportBuyerLeads: React.FC<ExportBuyerLeadsProps> = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          prompt: customPrompt,
           filters: {
+            prompt: customPrompt,
             requestedCount: targetCount,
             leadMode: 'export_buyers',
             country: countryToUse,
             industry: 'Export & Import Trade',
-            targetProductCategory: productCategory
+            targetProductCategory: categoryToUse
           }
         })
       });
@@ -283,54 +270,107 @@ export const ExportBuyerLeads: React.FC<ExportBuyerLeadsProps> = ({
           data.leads.forEach((l: Lead) => onAddNewLead(l));
         }
 
-        // Save into live results state
-        setAgentSourcedResults(data.leads);
-        setAgentTablePage(1);
+        const finalCountry = data.country || countryToUse;
+        setSourcingSuccess(`Successfully sourced ${data.leads.length} verified overseas buyers in ${finalCountry}!`);
 
-        setSourcingSuccess(`Successfully sourced ${data.leads.length} verified overseas buyers in ${countryToUse}!`);
-        
         const agentMsg: ChatMessage = {
           id: `msg-${Date.now()}`,
           sender: 'agent',
-          text: `🎉 Sourced **${data.leads.length} verified international buyers** in **${countryToUse}** matching your export parameters!\n\n• **Count:** ${data.leads.length} Verified Buyers\n• **Country:** ${countryToUse}\n• **Product Category:** ${productCategory}\n• **Container MOQs:** 1x20ft / 2x40ft FCL\n\nAll ${data.leads.length} buyers are listed directly below in the live table. You can inspect all contact info or download the complete executive PDF dossier below.`,
+          text: `Sourced **${data.leads.length} verified overseas buyers** in **${finalCountry}**.\n\n• **Product Category:** ${categoryToUse}\n• **Container MOQ:** ${minOrderQty}\n• **Compliance Focus:** ISO 22000, HACCP, Halal / Trade Verified`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          leads: data.leads,
+          industry: categoryToUse,
+          country: finalCountry,
           suggestedAction: {
             type: 'download_pdf',
             leadCount: data.leads.length
           }
         };
 
-        setChatMessages(prev => [...prev, agentMsg]);
+        appendChatMessages([agentMsg]);
         return data.leads;
       }
     } catch (err) {
       console.error('Error sourcing export buyers:', err);
+      appendChatMessages([
+        {
+          id: `msg-${Date.now()}`,
+          sender: 'agent',
+          text: `Unable to reach the export buyer sourcing service right now. Please ensure the backend server is running.`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
     } finally {
+      setIsAgentThinking(false);
       setIsSearching(false);
     }
   };
 
-  // Agent Chat Handler
+  // Agent Chat Handler with natural-language Country & Product Category detection
   const handleSendChatMessage = async (textToSend?: string) => {
     const query = textToSend || chatInput;
     if (!query.trim()) return;
 
     const lower = query.toLowerCase();
 
-    // Check if query is asking about overseas buyer replies
-    const isReplyQuery = lower.includes('reply') ||
+    const isReplyQuery =
+      lower.includes('reply') ||
       lower.includes('replied') ||
       lower.includes('response') ||
       lower.includes('inbound') ||
       lower.includes('vanthucha') ||
       lower.includes('vandhucha');
 
-    // Enforce country selection before allowing prompt to send (except for general reply inquiries)
-    if (!chatSelectedCountry && !isReplyQuery) {
-      setCountrySelectError(true);
-      return;
+    // Auto-detect Country
+    let detectedCountry: string | undefined;
+    if (lower.includes('uae') || lower.includes('dubai') || lower.includes('abu dhabi')) {
+      detectedCountry = 'United Arab Emirates (UAE)';
+    } else if (lower.includes('saudi') || lower.includes('riyadh') || lower.includes('jeddah')) {
+      detectedCountry = 'Saudi Arabia';
+    } else if (lower.includes('germany') || lower.includes('hamburg') || lower.includes('berlin')) {
+      detectedCountry = 'Germany';
+    } else if (lower.includes('uk') || lower.includes('united kingdom') || lower.includes('london')) {
+      detectedCountry = 'United Kingdom (UK)';
+    } else if (lower.includes('usa') || lower.includes('united states') || lower.includes('new york')) {
+      detectedCountry = 'United States (USA)';
+    } else if (lower.includes('canada') || lower.includes('toronto')) {
+      detectedCountry = 'Canada';
+    } else if (lower.includes('singapore')) {
+      detectedCountry = 'Singapore';
+    } else if (lower.includes('australia') || lower.includes('sydney')) {
+      detectedCountry = 'Australia';
+    } else if (lower.includes('sweden')) {
+      detectedCountry = 'Sweden';
     }
-    setCountrySelectError(false);
+
+    if (detectedCountry) {
+      setChatSelectedCountry(detectedCountry);
+      setTargetCountry(detectedCountry);
+    }
+
+    // Auto-detect Product Category
+    let detectedCategory: string | undefined;
+    if (lower.includes('spice') || lower.includes('agro') || lower.includes('pepper') || lower.includes('cardamom')) {
+      detectedCategory = 'Agro-Commodities & Spices';
+    } else if (lower.includes('organic') || lower.includes('superfood') || lower.includes('moringa')) {
+      detectedCategory = 'Organic Foods & Health Products';
+    } else if (lower.includes('food') || lower.includes('beverage') || lower.includes('rice') || lower.includes('mango')) {
+      detectedCategory = 'Processed Food & Beverages';
+    } else if (lower.includes('garment') || lower.includes('apparel') || lower.includes('textile') || lower.includes('cotton')) {
+      detectedCategory = 'Apparel, Garments & Textiles';
+    } else if (lower.includes('chemical') || lower.includes('mineral')) {
+      detectedCategory = 'Industrial Chemicals & Minerals';
+    } else if (lower.includes('engineering') || lower.includes('auto') || lower.includes('cnc') || lower.includes('machin')) {
+      detectedCategory = 'Engineering & Auto Components';
+    } else if (lower.includes('ceramic') || lower.includes('tile') || lower.includes('sanitary')) {
+      detectedCategory = 'Ceramics, Tiles & Sanitaryware';
+    }
+
+    if (detectedCategory) {
+      setProductCategory(detectedCategory);
+    }
+
+    const activeCountry = detectedCountry || chatSelectedCountry || targetCountry || 'United Arab Emirates (UAE)';
 
     const userMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
@@ -339,7 +379,7 @@ export const ExportBuyerLeads: React.FC<ExportBuyerLeadsProps> = ({
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
-    setChatMessages(prev => [...prev, userMsg]);
+    appendChatMessages([userMsg]);
     if (!textToSend) setChatInput('');
 
     // Handle Overseas Buyer Replies Query
@@ -349,23 +389,23 @@ export const ExportBuyerLeads: React.FC<ExportBuyerLeadsProps> = ({
         const modeBReplies = clientReplies.filter(r => r.leadMode === 'export_buyers');
         let replyText = '';
         if (modeBReplies.length > 0) {
-          replyText = `📬 **Yes! All overseas buyer replies are captured directly inside the Agent and the system.**\n\nWe have **${modeBReplies.length} active trade buyer replies** for Mode B Export Buyers:\n\n` +
-            modeBReplies.map((r, idx) => 
-              `**${idx + 1}. ${r.leadName}** — *${r.companyName}* (${r.replyDate})\n` +
-              `• **Subject:** ${r.replySubject}\n` +
-              `• **Buyer Message:** "${r.replySnippet}"\n` +
-              `• **Sentiment:** [${r.sentiment}] • **Status:** [${r.status}]`
-            ).join('\n\n') +
-            `\n\n✨ **Where you can view and manage overseas buyer replies:**\n` +
-            `1. **Here in Mode B AI Agent:** Reported live whenever you ask ("Overseas buyer replies status").\n` +
-            `2. **Dashboard > Inbound Communications Tracker:** Full buyer response cards with 1-click status updates.\n` +
-            `3. **Step 4: Trade Follow-ups:** Unreplied buyers automatically trigger Day 3 and Day 7 trade follow-ups.`;
+          replyText =
+            `We have **${modeBReplies.length} active trade buyer replies** for Mode B Export Buyers:\n\n` +
+            modeBReplies
+              .map(
+                (r, idx) =>
+                  `**${idx + 1}. ${r.leadName}** — *${r.companyName}* (${r.replyDate})\n` +
+                  `• **Subject:** ${r.replySubject}\n` +
+                  `• **Buyer Message:** "${r.replySnippet}"\n` +
+                  `• **Sentiment:** ${r.sentiment} • **Status:** ${r.status}`
+              )
+              .join('\n\n') +
+            `\n\nYou can also manage full buyer response statuses in **Dashboard** or schedule sample follow-ups in **Follow-ups**.`;
         } else {
-          replyText = `📬 **No new overseas buyer replies received yet for Mode B.**\n\nWhen foreign importers reply to your export catalog & proposals:\n1. Their reply arrives directly inside this Agent.\n2. It appears on the Dashboard Inbound Tracker.\n3. If they don't reply in 3 days, Step 4 (Trade Follow-ups) automatically schedules follow-up messages!`;
+          replyText = `No new overseas buyer replies received yet for Mode B.`;
         }
 
-        setChatMessages(prev => [
-          ...prev,
+        appendChatMessages([
           {
             id: `msg-${Date.now() + 1}`,
             sender: 'agent',
@@ -374,19 +414,35 @@ export const ExportBuyerLeads: React.FC<ExportBuyerLeadsProps> = ({
           }
         ]);
         setIsAgentThinking(false);
-      }, 500);
+      }, 450);
       return;
     }
 
-    // Check if user requested 100 buyers or searching
-    let requestedCount = 100;
+    let requestedCount = 50;
     const matchCount = query.match(/\b(\d+)\b/);
     if (matchCount && parseInt(matchCount[1]) > 0) {
       requestedCount = Math.min(100, parseInt(matchCount[1]));
+    } else if (lower.includes('100')) {
+      requestedCount = 100;
     }
 
-    if (lower.includes('100') || lower.includes('buyer') || lower.includes('importer') || lower.includes('search') || lower.includes('source') || lower.includes('find') || lower.includes('venum') || lower.includes('kudu')) {
-      await handleSourcingSearch(requestedCount);
+    const isBuyerSearch =
+      lower.includes('100') ||
+      lower.includes('50') ||
+      lower.includes('buyer') ||
+      lower.includes('importer') ||
+      lower.includes('distributor') ||
+      lower.includes('wholesaler') ||
+      lower.includes('search') ||
+      lower.includes('source') ||
+      lower.includes('find') ||
+      lower.includes('venum') ||
+      lower.includes('kudu') ||
+      !!detectedCountry ||
+      !!detectedCategory;
+
+    if (isBuyerSearch) {
+      await handleSourcingSearch(requestedCount, query, activeCountry, detectedCategory || productCategory);
       return;
     }
 
@@ -394,21 +450,15 @@ export const ExportBuyerLeads: React.FC<ExportBuyerLeadsProps> = ({
 
     setTimeout(() => {
       let replyText = '';
-      let action: ChatMessage['suggestedAction'];
-      const lower = query.toLowerCase();
-
-      if (lower.includes('uae') || lower.includes('dubai') || lower.includes('halal')) {
-        replyText = `For the UAE & GCC markets (like Dubai / Jebel Ali Port delivery):\n\n• **Mandatory Certifications:** Halal Certification by an ESMA-recognized body, HACCP, and ISO 22000.\n• **Trade Terms:** Most Gulf wholesalers & distributors require CIF Jebel Ali terms with 30% advance, balance against Bill of Lading (B/L) copy.\n• **Key Sourcing Hubs:** Dubai Central Fruit & Vegetable Market (Al Aweer), Dubai Investment Park cold stores.\n\nWould you like me to run an AI sourcing scan for UAE distributors?`;
-      } else if (lower.includes('sweden') || lower.includes('europe') || lower.includes('eu')) {
-        replyText = `For European Union & Nordic buyers (like Biofood-Biolivs in Sweden):\n\n• **Mandatory Compliance:** EU Organic Certification (for bio items), EC Regulation 852/2004 hygiene, Maximum Residue Limit (MRL) lab test compliance.\n• **Preferred Logistics:** Container delivery to Gothenburg or Stockholm Port.\n• **High-Demand Products:** Organic whole spices, cold-pressed oils, and non-GMO grains.`;
-      } else if (lower.includes('moq') || lower.includes('container') || lower.includes('fcl')) {
-        replyText = `Standard International Trade MOQ benchmarks:\n\n• **Spices & High-Value Agro:** 1 x 20ft Full Container Load (approx. 14-16 Metric Tons).\n• **Grains & Bulk Commodities:** 1 x 40ft FCL or 25-50 MT breakbulk.\n• **Samples:** Usually 250g - 500g courier packs sent via DHL/FedEx with Certificate of Analysis (COA).`;
+      if (lower.includes('moq') || lower.includes('container') || lower.includes('fcl')) {
+        replyText = `Standard International Trade MOQ benchmarks:\n\n• **Spices & High-Value Agro:** 1 x 20ft Full Container Load (approx. 14-18 Metric Tons).\n• **Grains & Bulk Commodities:** 1 x 40ft FCL or 25-50 MT breakbulk.\n• **Samples:** Usually 250g - 500g courier packs sent via DHL/FedEx with Certificate of Analysis (COA).`;
+      } else if (lower.includes('halal') || lower.includes('iso') || lower.includes('cert')) {
+        replyText = `Key Export Compliance Certifications by Region:\n\n• **UAE & Saudi Arabia (GCC):** ESMA Halal, ISO 22000, HACCP, SFDA / SABER registration.\n• **European Union:** EU Organic (EC 834/2007), MRL lab test reports.\n• **United States:** US FDA Food Facility Registration & Prior Notice.`;
       } else {
-        replyText = `In Mode B, I specialize in finding verified overseas importers, distributors, and wholesalers for physical product exports.\n\nYou can specify your Product Category, Target Country, and required Certifications (Halal, ISO, FDA) in the Sourcing Form, and I will source direct procurement decision-makers for you.`;
+        replyText = `In Mode B, I source verified overseas importers, distributors, and wholesalers for physical product exports.\n\nAsk me anything like **"50 UAE agro spice buyers"**, **"100 Germany organic food importers"**, or **"50 Saudi ceramic tile distributors"**.`;
       }
 
-      setChatMessages(prev => [
-        ...prev,
+      appendChatMessages([
         {
           id: `msg-${Date.now() + 1}`,
           sender: 'agent',
@@ -417,7 +467,7 @@ export const ExportBuyerLeads: React.FC<ExportBuyerLeadsProps> = ({
         }
       ]);
       setIsAgentThinking(false);
-    }, 800);
+    }, 600);
   };
 
   // Generate Email for Selected Buyer
@@ -432,16 +482,18 @@ export const ExportBuyerLeads: React.FC<ExportBuyerLeadsProps> = ({
     setSendSuccessMsg(null);
 
     setTimeout(() => {
-      const subject = tone === 'Concise'
-        ? `Direct Export Supply: Container-load ${targetBuyer.targetProductCategory || 'Agro-Commodities'} for ${targetBuyer.companyName}`
-        : `Export Trade Inquiry: Certified ${targetBuyer.targetProductCategory || 'Commodity Products'} for ${targetBuyer.companyName} (${targetBuyer.country})`;
+      const subject =
+        tone === 'Concise'
+          ? `Direct Export Supply: Container-load ${targetBuyer.targetProductCategory || 'Agro-Commodities'} for ${targetBuyer.companyName}`
+          : `Export Trade Inquiry: Certified ${targetBuyer.targetProductCategory || 'Commodity Products'} for ${targetBuyer.companyName} (${targetBuyer.country})`;
 
       let greeting = `Dear Mr./Ms. ${targetBuyer.contactLastName || targetBuyer.contactFirstName},`;
       if (tone === 'Friendly') greeting = `Hi ${targetBuyer.contactFirstName},`;
 
-      const certText = targetBuyer.productCertifications && targetBuyer.productCertifications.length > 0
-        ? `We maintain certified compliance with ${targetBuyer.productCertifications.join(', ')}.`
-        : `We maintain certified compliance with ISO 22000, HACCP, and international export safety standards.`;
+      const certText =
+        targetBuyer.productCertifications && targetBuyer.productCertifications.length > 0
+          ? `We maintain certified compliance with ${targetBuyer.productCertifications.join(', ')}.`
+          : `We maintain certified compliance with ISO 22000, HACCP, and international export safety standards.`;
 
       const body = `${greeting}
 
@@ -457,15 +509,15 @@ Could you let us know if your procurement committee is currently accepting suppl
 
 Respectfully yours,
 
-${DATAGALACTIC_COMPANY.founder}
-Global Trade Operations
-${DATAGALACTIC_COMPANY.website}
-Email: ${DATAGALACTIC_COMPANY.email}`;
+${settings.founder || DATAGALACTIC_COMPANY.founder}
+${settings.companyName || 'Global Trade Operations'}
+${settings.website || DATAGALACTIC_COMPANY.website}
+Email: ${settings.companyEmail}`;
 
       setComposedSubject(subject);
       setComposedBody(body);
       setIsDrafting(false);
-    }, 600);
+    }, 300);
   };
 
   // Save Draft
@@ -483,14 +535,16 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
       subject: composedSubject,
       body: composedBody,
       tone: composerTone,
-      recommendedService: 'Export Sourcing',
+      recommendedService: targetLead.targetProductCategory || 'Export Sourcing',
       leadMode: 'export_buyers',
+      senderEmail: settings.companyEmail,
+      senderName: settings.founder,
       status: 'Awaiting Approval',
       createdAt: new Date().toISOString()
     };
 
     onSaveDraftForApproval(newDraft);
-    setSendSuccessMsg('Export inquiry draft saved and queued for Approval Gate inspection.');
+    setSendSuccessMsg(`Export draft saved and queued for Approval Gate (From: ${settings.companyEmail}).`);
   };
 
   // Send Direct
@@ -509,860 +563,400 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
       subject: composedSubject,
       body: composedBody,
       tone: composerTone,
-      recommendedService: 'Export Sourcing',
+      recommendedService: targetLead.targetProductCategory || 'Export Sourcing',
       leadMode: 'export_buyers',
+      senderEmail: settings.companyEmail,
+      senderName: settings.founder,
       status: 'Awaiting Approval',
       createdAt: new Date().toISOString()
     };
 
     onSaveDraftForApproval(newDraft);
-    const sent = await onApproveAndSend(tempDraftId);
-    if (sent) {
-      setSendSuccessMsg(`Export inquiry successfully dispatched to ${targetLead.businessEmail}!`);
-    } else {
-      setSendSuccessMsg(`Export inquiry approved and dispatched in Demo Mode simulation.`);
+    await onApproveAndSend(tempDraftId);
+
+    const newFollowUpTask: FollowUpTask = {
+      id: `exp-task-${Date.now()}`,
+      leadId: targetLead.id,
+      leadName: targetLead.contactFullName,
+      companyName: targetLead.companyName,
+      email: targetLead.businessEmail,
+      lastEmailSentDate: new Date().toISOString(),
+      dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      status: 'Due Today',
+      cadenceDay: 3,
+      suggestedDraftSubject: `Export quotation follow-up for ${targetLead.companyName}`,
+      suggestedDraftBody: `Dear ${targetLead.contactFirstName},\n\nChecking in regarding our export trade inquiry and CIF quotation for ${targetLead.companyName}.\n\nBest regards,\n${settings.founder} - ${settings.companyName}`
+    };
+
+    setFollowUpTasks(prev => [newFollowUpTask, ...prev.filter(t => t.leadId !== targetLead.id)]);
+
+    if (onUpdateLead) {
+      onUpdateLead({
+        ...targetLead,
+        leadStatus: 'Sent',
+        lastContactDate: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
     }
+
+    setSendSuccessMsg(
+      `Export inquiry dispatched from ${settings.companyEmail} (${settings.founder}) to ${targetLead.businessEmail}!`
+    );
   };
 
+  // Reusable ChatGPT Pill Composer for Mode B
+  const renderChatComposer = (centered: boolean) => (
+    <div
+      className={`w-full ${centered ? 'max-w-2xl' : 'max-w-3xl'} mx-auto rounded-[26px] bg-[#f4f4f4] dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 px-4 py-3 shadow-sm transition-colors`}
+    >
+      <textarea
+        rows={centered ? 2 : 1}
+        value={chatInput}
+        onChange={(e) => setChatInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendChatMessage();
+          }
+        }}
+        placeholder={`Ask Export AI Agent (e.g. "50 ${chatSelectedCountry} buyers", "100 Germany organic importers")...`}
+        className="chatgpt-pill-input w-full bg-transparent border-0 resize-none text-sm text-neutral-900 dark:text-[#ececec] placeholder-neutral-500 dark:placeholder-[#9e9e9e] focus:outline-none leading-relaxed max-h-36"
+      />
+
+      <div className="flex items-center justify-between gap-2 pt-2 mt-1 border-t border-neutral-200/70 dark:border-white/10 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <select
+            value={chatSelectedCountry}
+            onChange={(e) => {
+              setChatSelectedCountry(e.target.value);
+              setTargetCountry(e.target.value);
+            }}
+            className="chatgpt-pill-select px-2.5 py-1.5 rounded-full bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs font-medium text-neutral-800 dark:text-[#ececec] cursor-pointer focus:outline-none"
+          >
+            <option value="United Arab Emirates (UAE)">🇦🇪 UAE (Dubai)</option>
+            <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
+            <option value="Germany">🇩🇪 Germany</option>
+            <option value="United Kingdom (UK)">🇬🇧 United Kingdom</option>
+            <option value="United States (USA)">🇺🇸 United States</option>
+            <option value="Canada">🇨🇦 Canada</option>
+            <option value="Singapore">🇸🇬 Singapore</option>
+            <option value="Australia">🇦🇺 Australia</option>
+          </select>
+
+          <select
+            value={productCategory}
+            onChange={(e) => setProductCategory(e.target.value)}
+            className="chatgpt-pill-select px-2.5 py-1.5 rounded-full bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs font-medium text-neutral-800 dark:text-[#ececec] cursor-pointer focus:outline-none max-w-[175px] truncate"
+          >
+            <option value="Agro-Commodities & Spices">Agro & Spices</option>
+            <option value="Processed Food & Beverages">Processed Food</option>
+            <option value="Organic Foods & Health Products">Organic Foods</option>
+            <option value="Apparel, Garments & Textiles">Apparel & Textiles</option>
+            <option value="Industrial Chemicals & Minerals">Chemicals & Minerals</option>
+            <option value="Engineering & Auto Components">Engineering & Auto</option>
+            <option value="Ceramics, Tiles & Sanitaryware">Ceramics & Tiles</option>
+          </select>
+
+          <select
+            value={minOrderQty}
+            onChange={(e) => setMinOrderQty(e.target.value)}
+            className="chatgpt-pill-select hidden sm:inline-block px-2.5 py-1.5 rounded-full bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs font-medium text-neutral-800 dark:text-[#ececec] cursor-pointer focus:outline-none max-w-[140px] truncate"
+          >
+            <option value="1 x 20ft Full Container Load (FCL)">1x20ft FCL</option>
+            <option value="1 x 40ft High Cube FCL">1x40ft HQ FCL</option>
+            <option value="LCL / Air Cargo Pallet">LCL / Air Pallet</option>
+          </select>
+
+          {!centered && chatMessages.length > 0 && (
+            <button
+              onClick={handleStartNewChat}
+              className="px-2.5 py-1.5 rounded-full text-xs font-medium text-neutral-600 dark:text-[#b4b4b4] hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-200/70 dark:hover:bg-[#383838] flex items-center gap-1 transition-colors"
+              title="Start new chat"
+            >
+              <SquarePen className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        <button
+          onClick={() => handleSendChatMessage()}
+          disabled={!chatInput.trim() || isAgentThinking}
+          title="Send message"
+          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all shrink-0 ${
+            chatInput.trim() && !isAgentThinking
+              ? 'bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] hover:opacity-85 cursor-pointer'
+              : 'bg-neutral-300 dark:bg-[#424242] text-neutral-500 dark:text-[#8e8e8e] cursor-not-allowed'
+          }`}
+        >
+          <ArrowUp className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="space-y-6">
-      {/* Download Notification Banner */}
+    <div className={`flex flex-col flex-1 w-full ${activeTab === 'agent' ? 'space-y-3' : 'space-y-5'}`}>
+      {/* Header visible on structured workspace tabs 2-6 */}
+      {activeTab !== 'agent' && (
+        <div className="chatgpt-card p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-neutral-100 dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 text-neutral-700 dark:text-[#d4d4d4] text-[11px] font-medium mb-2">
+              <Globe2 className="w-3.5 h-3.5" />
+              <span>Mode B • International Export Trade Hub</span>
+            </div>
+            <h1 className="text-xl font-bold text-neutral-900 dark:text-white tracking-tight">
+              Export Buyer Sourcing & Outreach
+            </h1>
+            <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] mt-0.5 max-w-2xl">
+              Manage overseas importers, container MOQs, Halal/ISO certifications, and outbound trade proposals.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="px-3 py-2 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-center min-w-[74px]">
+              <span className="text-[10px] uppercase tracking-wider text-neutral-500 dark:text-[#8e8e8e] block font-semibold">
+                Buyers
+              </span>
+              <span className="text-base font-bold text-neutral-900 dark:text-white">{buyerLeads.length}</span>
+            </div>
+            <div className="px-3 py-2 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-center min-w-[74px]">
+              <span className="text-[10px] uppercase tracking-wider text-amber-600 dark:text-amber-400 block font-semibold">
+                Approvals
+              </span>
+              <span className="text-base font-bold text-amber-600 dark:text-amber-400">{awaitingApprovalCount}</span>
+            </div>
+            <div className="px-3 py-2 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-center min-w-[74px]">
+              <span className="text-[10px] uppercase tracking-wider text-[#10a37f] block font-semibold">
+                Sent
+              </span>
+              <span className="text-base font-bold text-[#10a37f]">{sentCount}</span>
+            </div>
+            <div className="px-3 py-2 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-center min-w-[74px]">
+              <span className="text-[10px] uppercase tracking-wider text-neutral-500 dark:text-[#9e9e9e] block font-semibold">
+                Follow-ups
+              </span>
+              <span className="text-base font-bold text-neutral-900 dark:text-white">{followUpsDueCount}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Slim ChatGPT Sub-Navigation Strip */}
+      <div className="flex items-center justify-between gap-2 pb-2 border-b border-neutral-200/80 dark:border-white/10 overflow-x-auto">
+        <div className="flex items-center gap-1 flex-nowrap">
+          {[
+            { id: 'agent', label: 'Export AI Chat', icon: Bot },
+            { id: 'leads', label: `Saved Buyers (${buyerLeads.length})`, icon: Building2 },
+            { id: 'email', label: `Export Proposals (${exportDrafts.length})`, icon: Mail },
+            { id: 'followup', label: `Follow-ups (${followUpTasks.length})`, icon: CalendarClock },
+            { id: 'products', label: 'Products & MOQ', icon: Package },
+            { id: 'settings', label: 'Settings', icon: SettingsIcon }
+          ].map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
+                  isActive
+                    ? 'bg-neutral-900 dark:bg-[#2f2f2f] text-white font-semibold'
+                    : 'text-neutral-600 dark:text-[#9e9e9e] hover:text-neutral-900 dark:hover:text-[#ececec] hover:bg-neutral-100 dark:hover:bg-[#2f2f2f]/60'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5 shrink-0" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {activeTab === 'agent' && chatMessages.length > 0 && (
+          <button
+            onClick={handleStartNewChat}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-neutral-700 dark:text-[#ececec] bg-neutral-100 dark:bg-[#2f2f2f] hover:bg-neutral-200 dark:hover:bg-[#383838] border border-neutral-200 dark:border-white/10 shrink-0 transition-colors"
+          >
+            <SquarePen className="w-3.5 h-3.5" />
+            <span>New chat</span>
+          </button>
+        )}
+      </div>
+
+      {/* Download Notification Toast */}
       {downloadedFileNotice && (
-        <div className="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-semibold flex items-center justify-between shadow-lg animate-in fade-in">
+        <div className="px-4 py-2.5 rounded-xl bg-[#10a37f]/15 border border-[#10a37f]/30 text-[#0e906f] dark:text-[#34d399] text-xs font-medium flex items-center justify-between gap-2 max-w-4xl mx-auto w-full">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span>{downloadedFileNotice}</span>
           </div>
           <button
             onClick={() => setDownloadedFileNotice(null)}
-            className="text-emerald-400 hover:text-white text-xs underline"
+            className="text-xs underline font-semibold shrink-0"
           >
             Dismiss
           </button>
         </div>
       )}
 
-      {/* Workspace Header */}
-      <div className="galaxy-card p-6 rounded-2xl border border-sky-500/30 bg-gradient-to-r from-galaxy-900 via-sky-950/40 to-galaxy-900 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/20 border border-sky-400/40 text-sky-300 text-xs font-bold mb-2">
-            <Globe2 className="w-3.5 h-3.5 text-sky-400" />
-            <span>Agent: Mode B Dedicated Workspace</span>
-          </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-            <span>International Export Sourcing Agent Hub</span>
-          </h1>
-          <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
-            Source overseas importers, distributors, and wholesalers for international physical product exports. Filter by container MOQ, certifications (FDA, ISO, Halal), and trade category.
-          </p>
-        </div>
-
-        {/* Quick KPI Badges */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
-            <span className="text-[10px] uppercase tracking-wider text-slate-400 block font-semibold">Overseas Buyers</span>
-            <span className="text-lg font-bold text-white">{buyerLeads.length}</span>
-          </div>
-          <div className="px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
-            <span className="text-[10px] uppercase tracking-wider text-amber-400 block font-semibold">Approvals</span>
-            <span className="text-lg font-bold text-amber-400">{awaitingApprovalCount}</span>
-          </div>
-          <div className="px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
-            <span className="text-[10px] uppercase tracking-wider text-cyan-400 block font-semibold">Inquiries Sent</span>
-            <span className="text-lg font-bold text-cyan-400">{sentCount}</span>
-          </div>
-          <div className="px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
-            <span className="text-[10px] uppercase tracking-wider text-emerald-400 block font-semibold">Follow-ups</span>
-            <span className="text-lg font-bold text-emerald-400">{followUpsDueCount}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Mode B Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-2 flex-wrap">
-        <button
-          onClick={() => setActiveTab('agent')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
-            activeTab === 'agent'
-              ? 'bg-sky-600 text-white shadow-lg shadow-sky-600/30'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-          }`}
-        >
-          <Bot className="w-4 h-4 text-sky-300" />
-          <span>1. Find Buyers & PDF</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('leads')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
-            activeTab === 'leads'
-              ? 'bg-sky-600 text-white shadow-lg shadow-sky-600/30'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-          }`}
-        >
-          <Building2 className="w-4 h-4 text-sky-300" />
-          <span>2. Saved Buyers List ({buyerLeads.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('email')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
-            activeTab === 'email'
-              ? 'bg-sky-600 text-white shadow-lg shadow-sky-600/30'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-          }`}
-        >
-          <Mail className="w-4 h-4 text-sky-300" />
-          <span>3. Send Export Proposals ({exportDrafts.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('followup')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
-            activeTab === 'followup'
-              ? 'bg-sky-600 text-white shadow-lg shadow-sky-600/30'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-          }`}
-        >
-          <CalendarClock className="w-4 h-4 text-sky-300" />
-          <span>4. Trade Follow-ups ({followUpTasks.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('products')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
-            activeTab === 'products'
-              ? 'bg-sky-600 text-white shadow-lg shadow-sky-600/30'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-          }`}
-        >
-          <Package className="w-4 h-4 text-sky-300" />
-          <span>5. Products, MOQ & Certs</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('settings')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
-            activeTab === 'settings'
-              ? 'bg-sky-600 text-white shadow-lg shadow-sky-600/30'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-          }`}
-        >
-          <SettingsIcon className="w-4 h-4 text-sky-300" />
-          <span>6. Export Company Profile</span>
-        </button>
-      </div>
-
-            {/* TAB 1: EXPORT AI AGENT & SOURCING ENGINE (SIDE-BY-SIDE SPLIT VIEW) */}
+      {/* ========================================================
+          TAB 1: CHATGPT SINGLE-COLUMN EXPORT AI AGENT
+         ======================================================== */}
       {activeTab === 'agent' && (
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start min-w-0 max-w-full">
-          {/* Left Column: AI Export Agent Assistant & Quick Parameters (xl:col-span-5) */}
-          <div className="xl:col-span-5 space-y-4 min-w-0 max-w-full overflow-hidden">
-            {/* Quick Sourcing Parameters Bar (Compact) */}
-            <div className="galaxy-card p-3.5 rounded-2xl border border-slate-800 bg-slate-900/60">
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <Ship className="w-3.5 h-3.5 text-sky-400" />
-                  <span>Export Sourcing Config</span>
-                </span>
-                <span className="text-[10px] text-sky-300 font-semibold px-2 py-0.5 rounded bg-sky-500/20 border border-sky-500/30">
-                  {buyerType.toUpperCase()}
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-[11px]">
-                <div>
-                  <span className="text-slate-400 block text-[10px]">Product Category:</span>
-                  <select
-                    value={productCategory}
-                    onChange={(e) => setProductCategory(e.target.value)}
-                    className="w-full px-2 py-1 bg-slate-950 border border-slate-700/80 rounded-lg text-white text-xs truncate"
-                  >
-                    <option value="Agro-Commodities & Spices">Agro-Commodities & Spices</option>
-                    <option value="Processed Food & Beverages">Processed Food & Beverages</option>
-                    <option value="Organic Foods & Health Products">Organic Foods & Health Products</option>
-                    <option value="Apparel, Garments & Textiles">Apparel, Garments & Textiles</option>
-                    <option value="Industrial Chemicals & Minerals">Industrial Chemicals & Minerals</option>
-                    <option value="Engineering & Auto Components">Engineering & Auto Components</option>
-                    <option value="Ceramics, Tiles & Sanitaryware">Ceramics, Tiles & Sanitaryware</option>
-                  </select>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px]">Container MOQ:</span>
-                  <select
-                    value={minOrderQty}
-                    onChange={(e) => setMinOrderQty(e.target.value)}
-                    className="w-full px-2 py-1 bg-slate-950 border border-slate-700/80 rounded-lg text-white text-xs truncate"
-                  >
-                    <option value="1 x 20ft Full Container Load (FCL)">1 x 20ft FCL (15-18 MT)</option>
-                    <option value="1 x 40ft High Cube FCL">1 x 40ft HQ FCL (26 MT)</option>
-                    <option value="LCL / Air Cargo Pallet">LCL / Air Pallet (500kg)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* AI Global Trade Consultant Chat Stream */}
-            <div className="galaxy-card p-4 rounded-2xl border border-slate-800 flex flex-col h-[650px]">
-              <div className="pb-3 border-b border-slate-800 flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-300 shrink-0">
-                    <Bot className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="text-xs font-bold text-white flex items-center gap-1.5 truncate">
-                      <span>Export AI Consultant</span>
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
-                    </h3>
-                    <p className="text-[10px] text-slate-400 truncate">Trade Intelligence & Buyer Sourcing</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={handleStartNewChat}
-                    title="Start fresh conversation and clear live buyers"
-                    className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-xl bg-sky-600/30 hover:bg-sky-600 text-sky-200 hover:text-white border border-sky-500/40 font-semibold transition-all shadow-sm hover:scale-[1.02] cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>New Chat</span>
-                  </button>
-
-                  <button
-                    onClick={() => setActiveTab('products')}
-                    title="Open Export Categories"
-                    className="text-[10px] px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold border border-slate-700/60"
-                  >
-                    Categories
-                  </button>
-                </div>
+        <div className="flex-1 flex flex-col w-full min-h-[calc(100vh-11rem)]">
+          {chatMessages.length === 0 ? (
+            /* STANDBY VIEW (Vertically Centered ChatGPT Screen) */
+            <div className="flex-1 flex flex-col items-center justify-center py-8 px-2 max-w-3xl mx-auto w-full">
+              <div className="w-11 h-11 rounded-2xl bg-neutral-100 dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 flex items-center justify-center mb-4">
+                <Ship className="w-6 h-6 text-neutral-800 dark:text-white" />
               </div>
 
-              {/* Quick Prompts */}
-              <div className="py-2 flex items-center gap-1.5 flex-wrap border-b border-slate-800/60">
+              <h1 className="text-2xl sm:text-3xl font-semibold text-neutral-900 dark:text-white text-center tracking-tight">
+                Which export buyers are we sourcing?
+              </h1>
+              <p className="text-xs sm:text-sm text-neutral-500 dark:text-[#9e9e9e] mt-1.5 mb-6 text-center">
+                Mode B Global Trade AI • Overseas Importers, Distributors & Wholesalers
+              </p>
+
+              {/* Centered Pill Composer */}
+              {renderChatComposer(true)}
+
+              {/* Subtle Suggestion Chips */}
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-5 max-w-2xl">
                 {[
-                  'Buyer replies status venum',
-                  '50 UAE buyers venum',
+                  '50 UAE agro spice buyers',
                   '100 UAE buyers venum',
-                  '50 Saudi buyers venum',
-                  '50 UK export buyers venum',
+                  '50 Saudi ceramic tile buyers',
+                  '50 Germany organic food importers',
+                  'Buyer replies status venum',
                   'Agro-Commodities MOQ'
-                ].map((pill, i) => (
+                ].map((chip, idx) => (
                   <button
-                    key={i}
-                    onClick={() => {
-                      if (!chatSelectedCountry) {
-                        if (pill.toLowerCase().includes('uae')) setChatSelectedCountry('United Arab Emirates (UAE)');
-                        else if (pill.toLowerCase().includes('saudi')) setChatSelectedCountry('Saudi Arabia');
-                        else if (pill.toLowerCase().includes('uk')) setChatSelectedCountry('United Kingdom');
-                        else if (pill.toLowerCase().includes('reply')) setChatSelectedCountry('United Arab Emirates (UAE)');
-                        else {
-                          setCountrySelectError(true);
-                          return;
-                        }
-                      }
-                      handleSendChatMessage(pill);
-                    }}
-                    className={`text-[10px] px-2.5 py-1 rounded-lg border whitespace-nowrap transition-colors ${
-                      pill.toLowerCase().includes('reply')
-                        ? 'bg-sky-900/40 hover:bg-sky-900/70 text-sky-200 border-sky-500/40 font-semibold'
-                        : 'bg-slate-900 hover:bg-sky-950/60 text-slate-300 hover:text-sky-200 border-slate-800 hover:border-sky-500/40'
-                    }`}
+                    key={idx}
+                    onClick={() => handleSendChatMessage(chip)}
+                    className="px-3.5 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-[#2a2a2a] hover:bg-neutral-100 dark:hover:bg-[#383838] text-neutral-700 dark:text-[#d4d4d4] border border-neutral-200 dark:border-white/10 transition-colors"
                   >
-                    {pill}
+                    {chip}
                   </button>
                 ))}
               </div>
-
-              {/* Messages Stream */}
-              <div className="flex-1 overflow-y-auto py-3 space-y-3 pr-1">
+            </div>
+          ) : (
+            /* ACTIVE CONVERSATION SINGLE-COLUMN FEED */
+            <>
+              <div className="flex-1 w-full max-w-4xl mx-auto space-y-6 pb-8 pt-2">
                 {chatMessages.map(msg => (
                   <div
                     key={msg.id}
-                    className={`flex gap-2.5 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
-                    {msg.sender === 'agent' && (
-                      <div className="w-6 h-6 rounded bg-sky-500/20 border border-sky-500/30 flex items-center justify-center text-sky-300 shrink-0 mt-0.5">
-                        <Bot className="w-3.5 h-3.5" />
+                    {msg.sender === 'user' ? (
+                      <div className="max-w-[85%] sm:max-w-[75%] rounded-3xl px-4 py-2.5 bg-[#f4f4f4] dark:bg-[#2f2f2f] text-neutral-900 dark:text-[#ececec] text-sm leading-relaxed">
+                        {msg.text}
+                      </div>
+                    ) : (
+                      <div className="flex items-start gap-3 w-full max-w-full min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-neutral-100 dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 flex items-center justify-center text-neutral-800 dark:text-white shrink-0 mt-0.5">
+                          <Ship className="w-3.5 h-3.5" />
+                        </div>
+
+                        <div className="flex-1 min-w-0 space-y-2 text-sm text-neutral-800 dark:text-[#ececec] leading-relaxed">
+                          <div>{renderFormattedChatText(msg.text)}</div>
+
+                          {/* Inline Sourced Buyers Table rendered inside Agent Message */}
+                          {msg.leads && msg.leads.length > 0 && (
+                            <InlineLeadsTable
+                              leads={msg.leads}
+                              mode="export_buyers"
+                              industryOrCategory={msg.industry}
+                              country={msg.country}
+                              onPitchLead={handleGeneratePitchForBuyer}
+                              onExportCsv={handleExportCsv}
+                              onPdfDownloaded={setDownloadedFileNotice}
+                            />
+                          )}
+
+                          <div className="text-[10px] text-neutral-400 dark:text-[#8e8e8e]">
+                            {msg.timestamp}
+                          </div>
+                        </div>
                       </div>
                     )}
-
-                    <div className={`max-w-[88%] rounded-2xl p-3 text-xs leading-relaxed whitespace-pre-wrap ${
-                      msg.sender === 'user'
-                        ? 'bg-sky-600 text-white rounded-br-none'
-                        : 'bg-slate-900/90 text-slate-200 border border-slate-800 rounded-bl-none'
-                    }`}>
-                      <p>{msg.text}</p>
-
-                      {/* Download PDF to PC Action inside Chat */}
-                      {msg.suggestedAction && msg.suggestedAction.type === 'download_pdf' && (
-                        <div className="mt-3 pt-2.5 border-t border-slate-800 flex items-center gap-2 flex-wrap">
-                          <button
-                            onClick={() => {
-                              const listToExport = agentSourcedResults.length > 0 ? agentSourcedResults : buyerLeads;
-                              const savedName = exportLeadsToPdf(listToExport, {
-                                title: `Mode B International Export Buyer Intelligence Dossier (${chatSelectedCountry || targetCountry})`,
-                                leadMode: 'export_buyers'
-                              });
-                              setDownloadedFileNotice(`✓ Downloaded ${listToExport.length} overseas buyers to This PC > Downloads (${savedName})`);
-                            }}
-                            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-600/30 transition-all hover:scale-[1.02]"
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                            <span>Save {msg.suggestedAction.leadCount || agentSourcedResults.length || 50} Buyers PDF to PC</span>
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              const listToExport = agentSourcedResults.length > 0 ? agentSourcedResults : buyerLeads;
-                              openPrintPdfView(listToExport, {
-                                title: `Mode B International Export Buyer Intelligence Dossier (${chatSelectedCountry || targetCountry})`,
-                                leadMode: 'export_buyers'
-                              });
-                            }}
-                            className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium flex items-center gap-1 transition-all"
-                          >
-                            <Printer className="w-3 h-3" />
-                            <span>Print View</span>
-                          </button>
-                        </div>
-                      )}
-
-                      <div className={`text-[9px] mt-1 text-right ${msg.sender === 'user' ? 'text-sky-200' : 'text-slate-400'}`}>
-                        {msg.timestamp}
-                      </div>
-                    </div>
                   </div>
                 ))}
 
                 {isAgentThinking && (
-                  <div className="flex items-center gap-2 text-slate-400 text-xs">
-                    <RefreshCw className="w-3 h-3 animate-spin text-sky-400" />
-                    <span>Agent is sourcing verified buyers in {chatSelectedCountry || 'selected market'}...</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Chat Input with Country Selector next to Send button */}
-              <div className="pt-2.5 border-t border-slate-800 space-y-2">
-                {countrySelectError && !chatSelectedCountry && (
-                  <div className="flex items-center gap-1.5 text-xs text-rose-300 bg-rose-500/15 border border-rose-500/40 px-3 py-1.5 rounded-xl animate-bounce">
-                    <AlertCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                    <span>Please select target country next to Send button first!</span>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        if (!chatSelectedCountry) {
-                          setCountrySelectError(true);
-                        } else {
-                          handleSendChatMessage();
-                        }
-                      }
-                    }}
-                    placeholder={
-                      chatSelectedCountry
-                        ? `Ask for ${chatSelectedCountry} buyers (e.g. "50 ${chatSelectedCountry} buyers venum")...`
-                        : "⚠️ Select target country on right before sending prompt..."
-                    }
-                    className={`flex-1 px-3 py-2 bg-slate-950 border rounded-xl text-xs text-white placeholder-slate-400 focus:outline-none transition-all ${
-                      countrySelectError && !chatSelectedCountry
-                        ? 'border-rose-500 focus:border-rose-500 ring-2 ring-rose-500/30'
-                        : 'border-slate-700/80 focus:border-sky-500 focus:ring-1 focus:ring-sky-500'
-                    }`}
-                  />
-
-                  {/* Country Selector next to Send button */}
-                  <div className="relative shrink-0">
-                    <select
-                      value={chatSelectedCountry}
-                      onChange={(e) => {
-                        setChatSelectedCountry(e.target.value);
-                        setTargetCountry(e.target.value);
-                        if (e.target.value) setCountrySelectError(false);
-                      }}
-                      className={`px-2.5 py-2 bg-slate-950 border rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                        countrySelectError && !chatSelectedCountry
-                          ? 'border-rose-500 text-rose-300 ring-2 ring-rose-500/40 bg-rose-950/30'
-                          : chatSelectedCountry
-                          ? 'border-sky-500 text-sky-200 bg-sky-950/50'
-                          : 'border-amber-500/80 text-amber-300 bg-amber-950/20'
-                      } focus:outline-none focus:border-sky-500`}
-                    >
-                      <option value="">🌍 Country *</option>
-                      <option value="United Arab Emirates (UAE)">🇦🇪 UAE (Dubai)</option>
-                      <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
-                      <option value="Germany">🇩🇪 Germany</option>
-                      <option value="United Kingdom">🇬🇧 UK</option>
-                      <option value="United States">🇺🇸 USA</option>
-                      <option value="Canada">🇨🇦 Canada</option>
-                      <option value="Singapore">🇸🇬 Singapore</option>
-                      <option value="Australia">🇦🇺 Australia</option>
-                    </select>
-                  </div>
-
-                  {/* Send Button */}
-                  <button
-                    onClick={() => {
-                      if (!chatSelectedCountry) {
-                        setCountrySelectError(true);
-                      } else {
-                        handleSendChatMessage();
-                      }
-                    }}
-                    disabled={!chatSelectedCountry || isAgentThinking}
-                    title={!chatSelectedCountry ? "Please select a target country next to this button first" : "Send prompt"}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all shrink-0 ${
-                      chatSelectedCountry && !isAgentThinking
-                        ? 'bg-sky-600 hover:bg-sky-500 text-white shadow-md shadow-sky-600/30 cursor-pointer hover:scale-[1.02]'
-                        : 'bg-slate-800 text-slate-400 border border-slate-700/60 cursor-not-allowed opacity-60'
-                    }`}
-                  >
-                    <span>Send</span>
-                    <Send className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: LIVE SOURCED OVERSEAS BUYERS LEAD DETAILS (SIDE VIEW!) (xl:col-span-7) */}
-          <div className="xl:col-span-7 galaxy-card p-4 sm:p-5 rounded-2xl border border-sky-500/30 flex flex-col h-[740px] shadow-2xl min-w-0 max-w-full overflow-hidden">
-            {/* Header with Title, Stats & PDF Export Button */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-500/30 flex items-center justify-center text-sky-300 shrink-0">
-                  <Ship className="w-4 h-4" />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2 flex-wrap">
-                    <span className="truncate">Live Sourced Overseas Buyer Details</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 font-semibold shrink-0">
-                      {filteredLiveBuyers.length} Buyers
-                    </span>
-                    {chatSelectedCountry && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold shrink-0">
-                        📍 {chatSelectedCountry}
-                      </span>
-                    )}
-                  </h3>
-                  <p className="text-[11px] text-slate-400 truncate">
-                    Side View: Verified overseas importers & wholesale distributors
-                  </p>
-                </div>
-              </div>
-
-              {/* Action Buttons: Save PDF to PC, CSV, Print */}
-              <div className="flex items-center gap-1.5 flex-wrap shrink-0">
-                <button
-                  onClick={() => {
-                    if (filteredLiveBuyers.length === 0) return;
-                    const savedName = exportLeadsToPdf(filteredLiveBuyers, {
-                      title: `International Export Buyer Intelligence Dossier (${chatSelectedCountry || targetCountry})`,
-                      leadMode: 'export_buyers'
-                    });
-                    setDownloadedFileNotice(`✓ Downloaded ${filteredLiveBuyers.length} overseas buyers to This PC > Downloads (${savedName})`);
-                  }}
-                  disabled={filteredLiveBuyers.length === 0}
-                  className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all ${
-                    filteredLiveBuyers.length > 0
-                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-600/30 hover:scale-[1.02] cursor-pointer'
-                      : 'bg-slate-800 text-slate-500 border border-slate-700/40 cursor-not-allowed opacity-50'
-                  }`}
-                  title={filteredLiveBuyers.length > 0 ? "Save PDF to PC" : "Source buyers via Agent first"}
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Save PDF to PC</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    if (filteredLiveBuyers.length === 0) return;
-                    openPrintPdfView(filteredLiveBuyers, {
-                      title: `International Export Buyer Intelligence Dossier (${chatSelectedCountry || targetCountry})`,
-                      leadMode: 'export_buyers'
-                    });
-                  }}
-                  disabled={filteredLiveBuyers.length === 0}
-                  className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all ${
-                    filteredLiveBuyers.length > 0
-                      ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer'
-                      : 'bg-slate-800 text-slate-600 border border-slate-700/40 cursor-not-allowed opacity-50'
-                  }`}
-                  title="Open Print Dialog"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>Print</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    if (filteredLiveBuyers.length === 0) return;
-                    handleExportCsv(filteredLiveBuyers);
-                  }}
-                  disabled={filteredLiveBuyers.length === 0}
-                  className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all ${
-                    filteredLiveBuyers.length > 0
-                      ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer'
-                      : 'bg-slate-800 text-slate-600 border border-slate-700/40 cursor-not-allowed opacity-50'
-                  }`}
-                  title="Export CSV"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>CSV</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Filter and View Controls Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 py-2.5 border-b border-slate-800/80 min-w-0">
-              <div className="relative flex-1 min-w-0">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  value={agentTableSearch}
-                  onChange={(e) => {
-                    setAgentTableSearch(e.target.value);
-                    setAgentTablePage(1);
-                  }}
-                  placeholder="Filter company, contact, email, city..."
-                  className="w-full pl-8 pr-3 py-1.5 bg-slate-950 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-500 truncate"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <div className="flex items-center gap-1 text-[11px] text-slate-400">
-                  <span>Show:</span>
-                  <select
-                    value={agentTablePageSize}
-                    onChange={(e) => {
-                      setAgentTablePageSize(Number(e.target.value));
-                      setAgentTablePage(1);
-                    }}
-                    className="px-2 py-1 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white focus:outline-none"
-                  >
-                    <option value={10}>10</option>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100 (All)</option>
-                    <option value={0}>All Records</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center bg-slate-950 p-0.5 rounded-lg border border-slate-800">
-                  <button
-                    onClick={() => setAgentTableViewMode('table')}
-                    className={`p-1 rounded text-xs transition-colors ${
-                      agentTableViewMode === 'table' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:text-white'
-                    }`}
-                    title="Table View"
-                  >
-                    <TableIcon className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => setAgentTableViewMode('grid')}
-                    className={`p-1 rounded text-xs transition-colors ${
-                      agentTableViewMode === 'grid' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:text-white'
-                    }`}
-                    title="Card View"
-                  >
-                    <LayoutGrid className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* LIVE TABLE VIEW (SCROLLABLE) */}
-            <div className="flex-1 overflow-y-auto overflow-x-auto min-w-0 max-w-full mt-2 rounded-xl border border-slate-800/80">
-              {agentTableViewMode === 'table' ? (
-                <table className="w-full text-left text-xs min-w-[600px]">
-                  <thead className="sticky top-0 bg-slate-950 z-10 border-b border-slate-800">
-                    <tr className="text-slate-400 text-[10px] uppercase tracking-wider">
-                      <th className="py-2 px-2 text-center w-8">#</th>
-                      <th className="py-2 px-3 font-semibold min-w-[130px]">Buyer Company</th>
-                      <th className="py-2 px-3 font-semibold min-w-[110px]">Procurement Lead</th>
-                      <th className="py-2 px-3 font-semibold min-w-[140px]">Email</th>
-                      <th className="py-2 px-2 font-semibold min-w-[80px]">Port / City</th>
-                      <th className="py-2 px-2 font-semibold min-w-[70px]">Country</th>
-                      <th className="py-2 px-2 font-semibold min-w-[110px]">Product / MOQ</th>
-                      <th className="py-2 px-2 font-semibold text-center w-14">Score</th>
-                      <th className="py-2 px-2 font-semibold text-center w-16">Status</th>
-                      <th className="py-2 px-2 font-semibold text-right w-14">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/60">
-                    {paginatedLiveBuyers.length > 0 ? (
-                      paginatedLiveBuyers.map((lead, idx) => (
-                        <tr key={lead.id} className="hover:bg-slate-850/60 transition-colors">
-                          <td className="py-2 px-2 text-center text-slate-400 text-[10px]">
-                            {(agentTablePage - 1) * (agentTablePageSize || 1) + idx + 1}
-                          </td>
-                          <td className="py-2 px-3">
-                            <div className="font-semibold text-white truncate max-w-[170px]" title={lead.companyName}>
-                              {lead.companyName}
-                            </div>
-                            <div className="text-[10px] text-sky-400 truncate max-w-[170px]">
-                              {lead.companyDomain || 'trade-portal.com'}
-                            </div>
-                          </td>
-                          <td className="py-2 px-3">
-                            <div className="font-medium text-slate-200 truncate max-w-[150px]">
-                              {lead.contactFullName}
-                            </div>
-                            <div className="text-[10px] text-slate-400 truncate max-w-[150px]">
-                              {lead.jobTitle}
-                            </div>
-                          </td>
-                          <td className="py-2 px-3">
-                            <div className="flex items-center gap-1 max-w-[190px]">
-                              <span className="font-mono text-[11px] text-slate-300 truncate" title={lead.businessEmail}>
-                                {lead.businessEmail}
-                              </span>
-                              <button
-                                onClick={() => {
-                                  navigator.clipboard.writeText(lead.businessEmail);
-                                  setCopiedEmail(lead.businessEmail);
-                                  setTimeout(() => setCopiedEmail(null), 2000);
-                                }}
-                                className="text-slate-400 hover:text-white shrink-0"
-                                title="Copy email"
-                              >
-                                {copiedEmail === lead.businessEmail ? (
-                                  <Check className="w-3 h-3 text-emerald-400" />
-                                ) : (
-                                  <Copy className="w-3 h-3" />
-                                )}
-                              </button>
-                            </div>
-                          </td>
-                          <td className="py-2 px-3 text-slate-300">
-                            {lead.regionCity || 'Jebel Ali / Dubai'}
-                          </td>
-                          <td className="py-2 px-3">
-                            <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-900 text-sky-300 border border-slate-700 whitespace-nowrap">
-                              {lead.country}
-                            </span>
-                          </td>
-                          <td className="py-2 px-3">
-                            <div className="text-slate-200 text-[11px] truncate max-w-[140px]" title={lead.targetProductCategory || productCategory}>
-                              {lead.targetProductCategory || productCategory}
-                            </div>
-                            <div className="text-[10px] text-sky-400">
-                              MOQ: {lead.minOrderQuantity || '1 FCL'}
-                            </div>
-                          </td>
-                          <td className="py-2 px-3 text-center">
-                            <span className="font-bold text-emerald-400 text-xs">
-                              {lead.leadScore}/100
-                            </span>
-                          </td>
-                          <td className="py-2 px-3 text-center">
-                            <StatusBadge status={lead.leadStatus} />
-                          </td>
-                          <td className="py-2 px-3 text-right">
-                            <button
-                              onClick={() => handleGeneratePitchForBuyer(lead)}
-                              className="px-2 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-semibold transition-colors whitespace-nowrap"
-                            >
-                              Write Email
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={10} className="py-24 text-center">
-                          <div className="max-w-md mx-auto space-y-3 px-4">
-                            <div className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 mx-auto">
-                              <Bot className="w-6 h-6" />
-                            </div>
-                            <h4 className="text-sm font-bold text-white">Agent Standby — No Buyers Sourced Yet</h4>
-                            <p className="text-xs text-slate-400 leading-relaxed">
-                              Type your command in the AI Consultant chat on the left (e.g. <span className="text-sky-300 font-semibold">"50 UAE buyers"</span> or <span className="text-sky-300 font-semibold">"50 Saudi buyers"</span>), or click any suggestion pill above to source verified buyers live into this table.
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3">
-                  {paginatedLiveBuyers.length > 0 ? (
-                    paginatedLiveBuyers.map((lead) => (
-                      <div key={lead.id} className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-sky-500/40 transition-all flex flex-col justify-between">
-                        <div>
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <h4 className="font-bold text-white text-xs">{lead.companyName}</h4>
-                              <span className="text-[10px] text-sky-300 capitalize">{lead.buyerType || 'Importer'} • {lead.country}</span>
-                            </div>
-                            <span className="font-bold text-emerald-400 text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
-                              {lead.leadScore}/100
-                            </span>
-                          </div>
-
-                          <div className="mt-2 space-y-1 text-[11px] text-slate-300">
-                            <div className="flex items-center gap-1.5">
-                              <User className="w-3 h-3 text-slate-400" />
-                              <span><strong>{lead.contactFullName}</strong> ({lead.jobTitle})</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <Mail className="w-3 h-3 text-sky-400" />
-                              <span className="font-mono text-[10px] text-slate-200 truncate">{lead.businessEmail}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <Package className="w-3 h-3 text-sky-400" />
-                              <span className="truncate">Category: <strong>{lead.targetProductCategory || productCategory}</strong></span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between">
-                          <StatusBadge status={lead.leadStatus} />
-                          <button
-                            onClick={() => handleGeneratePitchForBuyer(lead)}
-                            className="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-semibold"
-                          >
-                            Write Pitch
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="col-span-2 py-24 text-center">
-                      <div className="max-w-md mx-auto space-y-3 px-4">
-                        <div className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 mx-auto">
-                          <Bot className="w-6 h-6" />
-                        </div>
-                        <h4 className="text-sm font-bold text-white">Agent Standby — No Buyers Sourced Yet</h4>
-                        <p className="text-xs text-slate-400 leading-relaxed">
-                          Ask the AI Consultant on the left to source verified buyers into this view.
-                        </p>
-                      </div>
+                  <div className="flex items-center gap-3 text-neutral-500 dark:text-[#b4b4b4] text-sm">
+                    <div className="w-7 h-7 rounded-full bg-neutral-100 dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 flex items-center justify-center shrink-0">
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#10a37f]" />
                     </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Pagination Controls */}
-            {filteredLiveBuyers.length > 0 && agentTablePageSize !== 0 && (
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2.5 border-t border-slate-800 text-[11px] text-slate-400">
-                <div>
-                  Showing{' '}
-                  <span className="font-semibold text-white">
-                    {(agentTablePage - 1) * agentTablePageSize + 1}
-                  </span>{' '}
-                  to{' '}
-                  <span className="font-semibold text-white">
-                    {Math.min(agentTablePage * agentTablePageSize, filteredLiveBuyers.length)}
-                  </span>{' '}
-                  of{' '}
-                  <span className="font-semibold text-white">{filteredLiveBuyers.length}</span> buyers
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <button
-                    disabled={agentTablePage <= 1}
-                    onClick={() => setAgentTablePage(prev => Math.max(1, prev - 1))}
-                    className="p-1 rounded-lg bg-slate-950 border border-slate-800 hover:border-slate-700 disabled:opacity-40 text-slate-300 transition-colors"
-                  >
-                    <ChevronLeft className="w-3.5 h-3.5" />
-                  </button>
-
-                  <div className="flex items-center gap-1 px-1">
-                    {Array.from({ length: Math.min(5, totalBuyerPages) }, (_, i) => {
-                      let pageNum = i + 1;
-                      if (totalBuyerPages > 5 && agentTablePage > 3) {
-                        pageNum = agentTablePage - 3 + i;
-                        if (pageNum > totalBuyerPages) pageNum = totalBuyerPages - (4 - i);
-                      }
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => setAgentTablePage(pageNum)}
-                          className={`w-6 h-6 rounded-lg text-[10px] font-semibold transition-colors ${
-                            agentTablePage === pageNum
-                              ? 'bg-sky-600 text-white'
-                              : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
+                    <span>Searching verified overseas buyers in {chatSelectedCountry || targetCountry}...</span>
                   </div>
+                )}
 
-                  <button
-                    disabled={agentTablePage >= totalBuyerPages}
-                    onClick={() => setAgentTablePage(prev => Math.min(totalBuyerPages, prev + 1))}
-                    className="p-1 rounded-lg bg-slate-950 border border-slate-800 hover:border-slate-700 disabled:opacity-40 text-slate-300 transition-colors"
-                  >
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                <div ref={chatEndRef} />
               </div>
-            )}
-          </div>
+
+              {/* Sticky Bottom Pill Composer */}
+              <div className="sticky bottom-0 z-20 pt-3 pb-1 bg-gradient-to-t from-white via-white/95 dark:from-[#212121] dark:via-[#212121]/95 to-transparent w-full">
+                {renderChatComposer(false)}
+                <p className="text-[10px] text-center text-neutral-400 dark:text-[#8e8e8e] mt-1.5">
+                  Export Hub AI • Importers & distributors synced to Saved Buyers List
+                </p>
+              </div>
+            </>
+          )}
         </div>
       )}
 
-      {/* TAB 2: OVERSEAS BUYER LEADS */}
+      {/* ========================================================
+          TAB 2: OVERSEAS BUYER LEADS DIRECTORY
+         ======================================================== */}
       {activeTab === 'leads' && (
         <div className="space-y-4">
-          {/* Action Toolbar: Sourcing, 100-limit, and PDF Download */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-slate-900/90 border border-slate-800">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-white">
+          <div className="chatgpt-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-semibold text-neutral-900 dark:text-white">
                 Overseas Buyer Directory ({buyerLeads.length})
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 font-medium">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] border border-[#10a37f]/25 font-medium">
                 Verified Importers
               </span>
               {sourcingSuccess && (
-                <span className="text-[11px] text-emerald-400 font-semibold animate-pulse">
-                  ✓ {sourcingSuccess}
-                </span>
+                <span className="text-[11px] text-[#10a37f] font-semibold">✓ {sourcingSuccess}</span>
               )}
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
-              {/* Source 100 Buyers Button */}
               <button
                 onClick={() => handleSourcingSearch(100)}
                 disabled={isSearching}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white text-xs font-semibold shadow-md shadow-sky-600/30 transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] disabled:opacity-50 text-xs font-semibold hover:opacity-85 transition-opacity"
               >
-                {isSearching ? (
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Sparkles className="w-3.5 h-3.5" />
-                )}
+                {isSearching ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                 <span>Source 100 Buyers</span>
               </button>
 
-              {/* Download PDF Button */}
               <button
-                onClick={() => exportLeadsToPdf(buyerLeads, { title: 'International Export Buyer Intelligence Dossier', leadMode: 'export_buyers' })}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition-all"
+                onClick={() =>
+                  exportLeadsToPdf(buyerLeads, {
+                    title: 'International Export Buyer Intelligence Dossier',
+                    leadMode: 'export_buyers'
+                  })
+                }
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#10a37f] hover:bg-[#0e906f] text-white text-xs font-semibold transition-colors"
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Download PDF ({buyerLeads.length})</span>
               </button>
 
-              {/* View Mode Switcher */}
-              <div className="flex items-center bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+              <div className="flex items-center bg-neutral-100 dark:bg-[#212121] p-0.5 rounded-lg border border-neutral-200 dark:border-white/10">
                 <button
                   onClick={() => setViewMode('table')}
                   title="Table View"
                   className={`p-1.5 rounded-md text-xs transition-colors ${
-                    viewMode === 'table' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:text-white'
+                    viewMode === 'table'
+                      ? 'bg-neutral-900 dark:bg-[#2f2f2f] text-white'
+                      : 'text-neutral-500 dark:text-[#9e9e9e]'
                   }`}
                 >
                   <TableIcon className="w-3.5 h-3.5" />
@@ -1371,21 +965,22 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
                   onClick={() => setViewMode('grid')}
                   title="Cards View"
                   className={`p-1.5 rounded-md text-xs transition-colors ${
-                    viewMode === 'grid' ? 'bg-sky-600 text-white' : 'text-slate-400 hover:text-white'
+                    viewMode === 'grid'
+                      ? 'bg-neutral-900 dark:bg-[#2f2f2f] text-white'
+                      : 'text-neutral-500 dark:text-[#9e9e9e]'
                   }`}
                 >
                   <LayoutGrid className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              {/* Page Size Selector */}
               <select
                 value={pageSize}
                 onChange={(e) => {
                   setPageSize(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white"
+                className="px-2.5 py-1.5 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-lg text-xs text-neutral-900 dark:text-white"
               >
                 <option value={10}>10 / page</option>
                 <option value={25}>25 / page</option>
@@ -1396,74 +991,73 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
             </div>
           </div>
 
-          {/* TABLE VIEW (Optimal for 100 Buyers) */}
           {viewMode === 'table' && buyerLeads.length > 0 && (
-            <div className="galaxy-card rounded-2xl border border-slate-800 overflow-hidden">
+            <div className="chatgpt-card rounded-2xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="bg-slate-950/80 border-b border-slate-800 text-slate-400 text-[10px] uppercase tracking-wider">
+                    <tr className="bg-neutral-50 dark:bg-[#1e1e1e] border-b border-neutral-200 dark:border-white/10 text-neutral-500 dark:text-[#9e9e9e] text-[10px] uppercase tracking-wider">
                       <th className="py-3 px-3 text-center w-10">#</th>
-                      <th className="py-3 px-4 font-semibold min-w-[200px]">Buyer Enterprise & Web</th>
+                      <th className="py-3 px-4 font-semibold min-w-[200px]">Buyer Enterprise</th>
                       <th className="py-3 px-4 font-semibold min-w-[170px]">Procurement Lead</th>
-                      <th className="py-3 px-4 font-semibold min-w-[210px]">Direct Email / Phone</th>
+                      <th className="py-3 px-4 font-semibold min-w-[210px]">Direct Email</th>
                       <th className="py-3 px-4 font-semibold min-w-[150px]">Port & Destination</th>
                       <th className="py-3 px-4 font-semibold min-w-[200px]">Target Products & MOQ</th>
-                      <th className="py-3 px-4 font-semibold text-center w-20">Trade Score</th>
+                      <th className="py-3 px-4 font-semibold text-center w-20">Score</th>
                       <th className="py-3 px-4 font-semibold text-center w-28">Status</th>
                       <th className="py-3 px-4 font-semibold text-right w-24">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60">
+                  <tbody className="divide-y divide-neutral-100 dark:divide-white/5">
                     {paginatedLeads.map((buyer, idx) => (
-                      <tr key={buyer.id} className="hover:bg-slate-800/30 transition-colors">
-                        <td className="py-3 px-3 text-center font-mono text-slate-500 text-[11px]">
+                      <tr key={buyer.id} className="hover:bg-neutral-50 dark:hover:bg-[#212121] transition-colors">
+                        <td className="py-3 px-3 text-center font-mono text-neutral-400 text-[11px]">
                           {(currentPage - 1) * (pageSize || 1) + idx + 1}
                         </td>
                         <td className="py-3 px-4">
-                          <div className="font-bold text-white text-xs flex items-center gap-1.5">
+                          <div className="font-semibold text-neutral-900 dark:text-white text-xs flex items-center gap-1.5">
                             <span>{buyer.companyName}</span>
                             <a
                               href={buyer.companyWebsite}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-slate-400 hover:text-sky-400"
+                              className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
                             >
                               <ExternalLink className="w-3 h-3" />
                             </a>
                           </div>
-                          <div className="text-[10px] text-sky-300/80 mt-0.5">
+                          <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] mt-0.5">
                             {buyer.buyerType?.toUpperCase() || 'IMPORTER & DISTRIBUTOR'}
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <div className="font-semibold text-slate-200">{buyer.contactFullName}</div>
-                          <div className="text-[10px] text-slate-400">{buyer.jobTitle}</div>
+                          <div className="font-medium text-neutral-800 dark:text-[#ececec]">{buyer.contactFullName}</div>
+                          <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e]">{buyer.jobTitle}</div>
                         </td>
                         <td className="py-3 px-4">
-                          <div className="font-mono text-slate-200 text-xs flex items-center gap-1">
+                          <div className="font-mono text-neutral-800 dark:text-[#d4d4d4] text-xs flex items-center gap-1">
                             <span>{buyer.businessEmail}</span>
-                            <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                            <ShieldCheck className="w-3 h-3 text-[#10a37f]" />
                           </div>
                           {buyer.publicBusinessPhone && (
-                            <div className="text-[10px] text-slate-400 mt-0.5">{buyer.publicBusinessPhone}</div>
+                            <div className="text-[10px] text-neutral-500 dark:text-[#8e8e8e] mt-0.5">
+                              {buyer.publicBusinessPhone}
+                            </div>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-slate-300 text-xs">
+                        <td className="py-3 px-4 text-neutral-600 dark:text-[#b4b4b4] text-xs">
                           {buyer.regionCity || buyer.country}
                         </td>
                         <td className="py-3 px-4">
-                          <div className="text-xs font-semibold text-sky-300">
+                          <div className="text-xs font-medium text-neutral-900 dark:text-white">
                             {buyer.targetProductCategory || 'Agro-Commodities'}
                           </div>
-                          <div className="text-[10px] text-slate-400 mt-0.5">
+                          <div className="text-[10px] text-neutral-500 dark:text-[#8e8e8e] mt-0.5">
                             MOQ: {buyer.minOrderQuantity || '1 x 20ft FCL'}
                           </div>
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <span className="font-bold text-emerald-400 text-xs">
-                            {buyer.leadScore}/100
-                          </span>
+                          <span className="font-semibold text-[#10a37f] text-xs">{buyer.leadScore}/100</span>
                         </td>
                         <td className="py-3 px-4 text-center">
                           <StatusBadge status={buyer.leadStatus} />
@@ -1471,7 +1065,7 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
                         <td className="py-3 px-4 text-right">
                           <button
                             onClick={() => handleGeneratePitchForBuyer(buyer)}
-                            className="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-semibold transition-colors whitespace-nowrap"
+                            className="px-2.5 py-1 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] hover:opacity-85 text-[11px] font-semibold transition-opacity whitespace-nowrap"
                           >
                             Send Pitch
                           </button>
@@ -1484,88 +1078,75 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
             </div>
           )}
 
-          {/* GRID VIEW */}
           {viewMode === 'grid' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {paginatedLeads.map((buyer) => (
-                <div key={buyer.id} className="galaxy-card p-5 rounded-2xl border border-slate-800 hover:border-sky-500/40 transition-all flex flex-col justify-between">
+                <div key={buyer.id} className="chatgpt-card p-5 rounded-2xl flex flex-col justify-between">
                   <div>
-                    {/* Header */}
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="text-base font-bold text-white">{buyer.companyName}</h3>
+                          <h3 className="text-base font-semibold text-neutral-900 dark:text-white">{buyer.companyName}</h3>
                           <a
                             href={buyer.companyWebsite}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-slate-400 hover:text-sky-400"
+                            className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
                         </div>
-                        <p className="text-xs text-sky-300 font-medium">
+                        <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] font-medium">
                           {buyer.regionCity || buyer.country} • {buyer.buyerType?.toUpperCase() || 'IMPORTER'}
                         </p>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-bold text-emerald-400">{buyer.leadScore}/100</div>
-                        <span className="text-[10px] text-slate-400">Trade Score</span>
+                        <div className="text-sm font-bold text-[#10a37f]">{buyer.leadScore}/100</div>
+                        <span className="text-[10px] text-neutral-400">Trade Score</span>
                       </div>
                     </div>
 
-                    {/* Contact Info */}
-                    <div className="mt-4 p-3.5 rounded-xl bg-slate-950/80 border border-slate-800">
+                    <div className="mt-4 p-3.5 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-white">{buyer.contactFullName}</span>
-                        <span className="text-xs px-2.5 py-0.5 rounded-md bg-sky-950/50 text-sky-300 border border-sky-500/30 font-medium">
+                        <span className="text-sm font-semibold text-neutral-900 dark:text-white">{buyer.contactFullName}</span>
+                        <span className="text-xs px-2.5 py-0.5 rounded-md bg-neutral-200/70 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#d4d4d4] font-medium">
                           {buyer.jobTitle}
                         </span>
                       </div>
-                      
-                      <div className="mt-2.5 flex items-center justify-between text-xs pt-2.5 border-t border-slate-800/80">
-                        <span className="text-slate-300 font-mono text-xs">{buyer.businessEmail}</span>
-                        <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
+
+                      <div className="mt-2.5 flex items-center justify-between text-xs pt-2.5 border-t border-neutral-200 dark:border-white/10">
+                        <span className="text-neutral-700 dark:text-[#d4d4d4] font-mono text-xs">{buyer.businessEmail}</span>
+                        <span className="text-xs text-[#10a37f] font-semibold flex items-center gap-1">
                           <ShieldCheck className="w-3.5 h-3.5" />
                           {buyer.emailVerificationStatus} ({buyer.emailConfidenceScore}%)
                         </span>
                       </div>
                     </div>
 
-                    {/* Trade Specs */}
                     <div className="mt-3.5 space-y-2 text-xs">
                       <div className="flex items-center justify-between">
-                        <span className="text-slate-400">Product Category:</span>
-                        <span className="font-semibold text-sky-300">{buyer.targetProductCategory || 'Food & Commodities'}</span>
+                        <span className="text-neutral-500 dark:text-[#9e9e9e]">Product Category:</span>
+                        <span className="font-semibold text-neutral-900 dark:text-white">
+                          {buyer.targetProductCategory || 'Agro-Commodities'}
+                        </span>
                       </div>
-
-                      {buyer.productCertifications && (
-                        <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                          <span className="text-slate-400 text-[11px]">Required:</span>
-                          {buyer.productCertifications.map(c => (
-                            <span key={c} className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-200 border border-slate-700">
-                              {c}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      <p className="text-xs text-slate-300 bg-sky-950/30 p-3 rounded-xl border border-sky-500/20 leading-relaxed mt-2">
-                        <strong className="text-sky-200">Trade Sourcing Evidence:</strong> {buyer.leadScoreReason}
-                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-neutral-500 dark:text-[#9e9e9e]">MOQ:</span>
+                        <span className="text-neutral-700 dark:text-[#d4d4d4]">
+                          {buyer.minOrderQuantity || '1 x 20ft FCL'}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Bottom Actions */}
-                  <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                  <div className="mt-4 pt-3 border-t border-neutral-200 dark:border-white/10 flex items-center justify-between">
                     <StatusBadge status={buyer.leadStatus} />
-                    
                     <button
                       onClick={() => handleGeneratePitchForBuyer(buyer)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-medium transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] text-xs font-semibold hover:opacity-85 transition-opacity"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      <span>Draft Export Inquiry</span>
+                      <span>Write Pitch</span>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -1574,28 +1155,28 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
             </div>
           )}
 
-          {/* Pagination Toolbar */}
           {buyerLeads.length > 0 && pageSize > 0 && totalPages > 1 && (
-            <div className="flex items-center justify-between pt-3 border-t border-slate-800 text-xs text-slate-400">
+            <div className="flex items-center justify-between pt-3 border-t border-neutral-200 dark:border-white/10 text-xs text-neutral-500 dark:text-[#9e9e9e]">
               <span>
-                Showing {Math.min((currentPage - 1) * pageSize + 1, buyerLeads.length)} to {Math.min(currentPage * pageSize, buyerLeads.length)} of {buyerLeads.length} overseas buyers
+                Showing {Math.min((currentPage - 1) * pageSize + 1, buyerLeads.length)} to{' '}
+                {Math.min(currentPage * pageSize, buyerLeads.length)} of {buyerLeads.length} buyers
               </span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-40 flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-lg bg-white dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 text-neutral-700 dark:text-[#ececec] disabled:opacity-40 flex items-center gap-1"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
                   <span>Prev</span>
                 </button>
-                <span className="text-white font-semibold">
+                <span className="text-neutral-900 dark:text-white font-semibold">
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white disabled:opacity-40 flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-lg bg-white dark:bg-[#2f2f2f] border border-neutral-200 dark:border-white/10 text-neutral-700 dark:text-[#ececec] disabled:opacity-40 flex items-center gap-1"
                 >
                   <span>Next</span>
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -1605,11 +1186,13 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
           )}
 
           {buyerLeads.length === 0 && (
-            <div className="galaxy-card p-12 text-center rounded-2xl border border-slate-800">
-              <p className="text-sm text-slate-400">No overseas buyers sourced yet. Use the Sourcing Engine in Tab 1 to scan trade directories.</p>
+            <div className="chatgpt-card p-12 text-center rounded-2xl">
+              <p className="text-sm text-neutral-500 dark:text-[#9e9e9e]">
+                No overseas buyers sourced yet. Use the AI Chat or click below to scan trade directories.
+              </p>
               <button
                 onClick={() => handleSourcingSearch(100)}
-                className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold"
+                className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] text-xs font-semibold"
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Source 100 Verified Overseas Buyers</span>
@@ -1619,33 +1202,52 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
         </div>
       )}
 
-      {/* TAB 3: EXPORT MAIL PROCESSING */}
+      {/* ========================================================
+          TAB 3: EXPORT MAIL PROCESSING
+         ======================================================== */}
       {activeTab === 'email' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column: Email Composer */}
-          <div className="lg:col-span-2 galaxy-card p-5 rounded-2xl border border-slate-800 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2 chatgpt-card p-5 rounded-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-white/10 flex-wrap gap-2">
               <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-sky-400" />
+                <h3 className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
                   <span>Mode B Export Inquiry Generator</span>
                 </h3>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-neutral-500 dark:text-[#9e9e9e]">
                   Compose formal international buyer pitches and container specifications
                 </p>
               </div>
 
               {sendSuccessMsg && (
-                <span className="text-xs px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold animate-in fade-in">
+                <span className="text-xs px-3 py-1 rounded-lg bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] border border-[#10a37f]/30 font-semibold">
                   {sendSuccessMsg}
                 </span>
               )}
             </div>
 
-            {/* Controls Ribbon */}
+            {/* Sender Profile synced with Mode B Settings */}
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-[#10a37f]" />
+                <span className="text-[11px] text-neutral-500 dark:text-[#9e9e9e]">Sending Export Mail From:</span>
+                <span className="font-semibold text-neutral-900 dark:text-white underline">{settings.companyEmail}</span>
+                <span className="text-neutral-500 dark:text-[#9e9e9e]">({settings.founder})</span>
+              </div>
+              <button
+                onClick={() => setActiveTab('settings')}
+                className="text-[11px] text-neutral-700 dark:text-[#ececec] hover:underline font-semibold ml-auto flex items-center gap-1"
+              >
+                <span>Edit in Settings</span>
+                <ChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] font-semibold text-slate-400 block mb-1">Target Overseas Buyer</label>
+                <label className="text-[11px] font-semibold text-neutral-500 dark:text-[#9e9e9e] block mb-1">
+                  Target Overseas Buyer
+                </label>
                 <select
                   value={composerLeadId}
                   onChange={(e) => {
@@ -1654,7 +1256,7 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
                     const found = leads.find(l => l.id === id);
                     if (found) generateExportEmailContent(found, composerTone);
                   }}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white"
+                  className="w-full px-3 py-2 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-white"
                 >
                   {buyerLeads.map(b => (
                     <option key={b.id} value={b.id}>
@@ -1665,7 +1267,9 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold text-slate-400 block mb-1">Email Tone</label>
+                <label className="text-[11px] font-semibold text-neutral-500 dark:text-[#9e9e9e] block mb-1">
+                  Email Tone
+                </label>
                 <select
                   value={composerTone}
                   onChange={(e) => {
@@ -1674,7 +1278,7 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
                     const found = leads.find(l => l.id === composerLeadId);
                     if (found) generateExportEmailContent(found, tone);
                   }}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white"
+                  className="w-full px-3 py-2 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-white"
                 >
                   <option value="Formal">Formal (Standard International Trade)</option>
                   <option value="Professional">Professional (Consultative)</option>
@@ -1684,24 +1288,26 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
               </div>
             </div>
 
-            {/* Subject Line */}
             <div>
-              <label className="text-[11px] font-semibold text-slate-400 block mb-1">Subject Line</label>
+              <label className="text-[11px] font-semibold text-neutral-500 dark:text-[#9e9e9e] block mb-1">
+                Subject Line
+              </label>
               <input
                 type="text"
                 value={composedSubject}
                 onChange={(e) => setComposedSubject(e.target.value)}
                 placeholder="Export subject line..."
-                className="w-full px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white font-medium"
+                className="w-full px-3.5 py-2 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-white font-medium"
               />
             </div>
 
-            {/* Body */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-[11px] font-semibold text-slate-400">Trade Letter Content</label>
+                <label className="text-[11px] font-semibold text-neutral-500 dark:text-[#9e9e9e]">
+                  Trade Letter Content
+                </label>
                 {isDrafting && (
-                  <span className="text-[11px] text-sky-400 flex items-center gap-1 font-semibold">
+                  <span className="text-[11px] text-[#10a37f] flex items-center gap-1 font-semibold">
                     <RefreshCw className="w-3 h-3 animate-spin" />
                     AI drafting trade proposal...
                   </span>
@@ -1712,33 +1318,32 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
                 value={composedBody}
                 onChange={(e) => setComposedBody(e.target.value)}
                 placeholder="Export inquiry copy..."
-                className="w-full p-3.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white leading-relaxed font-sans focus:outline-none focus:border-sky-500"
+                className="w-full p-3.5 bg-white dark:bg-[#212121] border border-neutral-200 dark:border-white/10 rounded-xl text-xs text-neutral-900 dark:text-[#ececec] leading-relaxed font-sans focus:outline-none"
               />
             </div>
 
-            {/* Action Bar */}
-            <div className="pt-3 border-t border-slate-800 flex items-center justify-between flex-wrap gap-2">
+            <div className="pt-3 border-t border-neutral-200 dark:border-white/10 flex items-center justify-between flex-wrap gap-2">
               <button
                 onClick={() => {
                   const found = leads.find(l => l.id === composerLeadId);
                   if (found) generateExportEmailContent(found, composerTone);
                 }}
-                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                className="px-3.5 py-2 rounded-xl bg-neutral-100 dark:bg-[#2f2f2f] hover:bg-neutral-200 dark:hover:bg-[#383838] text-neutral-800 dark:text-[#ececec] text-xs font-semibold flex items-center gap-1.5 border border-neutral-200 dark:border-white/10 transition-colors"
               >
-                <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+                <Sparkles className="w-3.5 h-3.5" />
                 <span>Regenerate Export Pitch</span>
               </button>
 
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleSaveCurrentDraft}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition-colors"
+                  className="px-4 py-2 rounded-xl bg-neutral-100 dark:bg-[#2f2f2f] hover:bg-neutral-200 dark:hover:bg-[#383838] text-neutral-900 dark:text-white text-xs font-semibold border border-neutral-200 dark:border-white/10 transition-colors"
                 >
                   Save as Draft
                 </button>
                 <button
                   onClick={handleSendDirect}
-                  className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-md shadow-sky-600/30 flex items-center gap-1.5 transition-all"
+                  className="px-4 py-2 rounded-xl bg-[#10a37f] hover:bg-[#0e906f] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Approve & Send Now</span>
@@ -1747,53 +1352,58 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
             </div>
           </div>
 
-          {/* Right Column: Outbound Export Inquiries */}
-          <div className="galaxy-card p-5 rounded-2xl border border-slate-800 flex flex-col h-[600px]">
-            <div className="pb-3 border-b border-slate-800 flex items-center justify-between">
+          <div className="chatgpt-card p-5 rounded-2xl flex flex-col h-[600px]">
+            <div className="pb-3 border-b border-neutral-200 dark:border-white/10 flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-white">Mode B Export Outbox</h3>
-                <p className="text-[11px] text-slate-400">Trade inquiries & approvals</p>
+                <h3 className="text-sm font-bold text-neutral-900 dark:text-white">Mode B Export Outbox</h3>
+                <p className="text-[11px] text-neutral-500 dark:text-[#9e9e9e]">Trade inquiries & approvals</p>
               </div>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#ececec] font-semibold border border-neutral-200 dark:border-white/10">
                 {exportDrafts.length} Total
               </span>
             </div>
 
-            <div className="flex-1 overflow-y-auto py-3 space-y-3 pr-1">
+            <div className="flex-1 overflow-y-auto py-3 space-y-2.5 pr-1">
               {exportDrafts.map((d) => (
                 <div
                   key={d.id}
-                  className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs space-y-2 hover:border-slate-700 transition-colors"
+                  className="p-3.5 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 text-xs space-y-2"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <span className="font-bold text-white block">{d.recipientName}</span>
-                      <span className="text-[11px] text-slate-400">{d.companyName}</span>
+                      <span className="font-semibold text-neutral-900 dark:text-white block">{d.recipientName}</span>
+                      <span className="text-[11px] text-neutral-500 dark:text-[#9e9e9e]">{d.companyName}</span>
                     </div>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                      d.status === 'Sent'
-                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                        : d.status === 'Awaiting Approval'
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                        : 'bg-slate-800 text-slate-300'
-                    }`}>
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                        d.status === 'Sent'
+                          ? 'bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] border border-[#10a37f]/30'
+                          : d.status === 'Awaiting Approval'
+                          ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30'
+                          : 'bg-neutral-200 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#d4d4d4]'
+                      }`}
+                    >
                       {d.status}
                     </span>
                   </div>
 
-                  <p className="text-[11px] text-sky-300 font-medium truncate">
+                  <p className="text-[11px] text-neutral-700 dark:text-[#d4d4d4] font-medium truncate">
                     {d.subject}
                   </p>
 
-                  <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-800">
-                    <span>{d.sentAt ? `Sent: ${new Date(d.sentAt).toLocaleDateString()}` : `Created: ${new Date(d.createdAt).toLocaleDateString()}`}</span>
+                  <div className="flex items-center justify-between text-[10px] text-neutral-500 dark:text-[#8e8e8e] pt-1 border-t border-neutral-200 dark:border-white/10">
+                    <span>
+                      {d.sentAt
+                        ? `Sent: ${new Date(d.sentAt).toLocaleDateString()}`
+                        : `Created: ${new Date(d.createdAt).toLocaleDateString()}`}
+                    </span>
                     <button
                       onClick={() => {
                         setComposedSubject(d.subject);
                         setComposedBody(d.body);
                         setComposerLeadId(d.leadId);
                       }}
-                      className="text-sky-400 hover:text-sky-300 font-semibold"
+                      className="text-neutral-900 dark:text-white hover:underline font-semibold"
                     >
                       Load in Editor
                     </button>
@@ -1802,7 +1412,7 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
               ))}
 
               {exportDrafts.length === 0 && (
-                <div className="p-8 text-center text-slate-400 text-xs">
+                <div className="p-8 text-center text-neutral-500 dark:text-[#9e9e9e] text-xs">
                   No export outreach drafts generated yet.
                 </div>
               )}
@@ -1811,165 +1421,175 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
         </div>
       )}
 
-      {/* TAB 4: EXPORT FOLLOW-UP CADENCE */}
+      {/* ========================================================
+          TAB 4: EXPORT FOLLOW-UP CADENCE
+         ======================================================== */}
       {activeTab === 'followup' && (
-        <div className="space-y-4">
-          <div className="galaxy-card p-5 rounded-2xl border border-slate-800">
-            <div className="flex items-center justify-between flex-wrap gap-3 pb-4 border-b border-slate-800">
-              <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <CalendarClock className="w-4 h-4 text-sky-400" />
-                  <span>Mode B Trade Cadence & Sample Follow-ups</span>
-                </h3>
-                <p className="text-[11px] text-slate-400">
-                  Track catalog review, sample shipment delivery, and quotation discussions
-                </p>
-              </div>
-
-              {/* Status Tabs */}
-              <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
-                {(['All', 'Due Today', 'Overdue', 'Upcoming'] as const).map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => setFollowUpTab(tab)}
-                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
-                      followUpTab === tab
-                        ? 'bg-sky-600 text-white'
-                        : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
+        <div className="chatgpt-card p-5 rounded-2xl">
+          <div className="flex items-center justify-between flex-wrap gap-3 pb-4 border-b border-neutral-200 dark:border-white/10">
+            <div>
+              <h3 className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+                <CalendarClock className="w-4 h-4" />
+                <span>Mode B Trade Cadence & Sample Follow-ups</span>
+              </h3>
+              <p className="text-[11px] text-neutral-500 dark:text-[#9e9e9e]">
+                Track catalog review, sample shipment delivery, and quotation discussions
+              </p>
             </div>
 
-            {/* Mode B Buyer Inbound Replies Section */}
-            {clientReplies.filter(r => r.leadMode === 'export_buyers').length > 0 && (
-              <div className="pt-4 pb-2 border-b border-slate-800">
-                <div className="flex items-center justify-between mb-2.5">
-                  <span className="text-xs font-bold text-sky-400 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Inbound Buyer Replies Received ({clientReplies.filter(r => r.leadMode === 'export_buyers').length})</span>
+            <div className="flex items-center gap-1 bg-neutral-100 dark:bg-[#212121] p-1 rounded-xl border border-neutral-200 dark:border-white/10">
+              {(['All', 'Due Today', 'Overdue', 'Upcoming'] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setFollowUpTab(tab)}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                    followUpTab === tab
+                      ? 'bg-neutral-900 dark:bg-[#2f2f2f] text-white'
+                      : 'text-neutral-600 dark:text-[#9e9e9e] hover:text-neutral-900 dark:hover:text-white'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {clientReplies.filter(r => r.leadMode === 'export_buyers').length > 0 && (
+            <div className="pt-4 pb-3 border-b border-neutral-200 dark:border-white/10">
+              <div className="flex items-center justify-between mb-2.5">
+                <span className="text-xs font-bold text-[#10a37f] flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>
+                    Inbound Buyer Replies Received ({clientReplies.filter(r => r.leadMode === 'export_buyers').length})
                   </span>
-                  <span className="text-[10px] text-slate-400">These buyers replied — trade negotiation in progress!</span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                  {clientReplies.filter(r => r.leadMode === 'export_buyers').map(reply => (
-                    <div key={reply.id} className="p-3 rounded-xl bg-slate-950/80 border border-sky-500/30 space-y-1.5">
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {clientReplies
+                  .filter(r => r.leadMode === 'export_buyers')
+                  .map(reply => (
+                    <div
+                      key={reply.id}
+                      className="p-3 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-[#10a37f]/30 space-y-1.5"
+                    >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-white">{reply.leadName} ({reply.companyName})</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-semibold border border-sky-500/30">
+                        <span className="text-xs font-semibold text-neutral-900 dark:text-white">
+                          {reply.leadName} ({reply.companyName})
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] font-semibold">
                           {reply.sentiment}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-300 italic line-clamp-2">"{reply.replySnippet}"</p>
-                      <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-800/60">
+                      <p className="text-[11px] text-neutral-600 dark:text-[#b4b4b4] italic line-clamp-2">
+                        "{reply.replySnippet}"
+                      </p>
+                      <div className="flex items-center justify-between text-[10px] text-neutral-500 dark:text-[#8e8e8e] pt-1 border-t border-neutral-200 dark:border-white/10">
                         <span>{reply.replyDate}</span>
-                        <span className="text-sky-400 font-medium">{reply.status}</span>
+                        <span className="text-neutral-900 dark:text-white font-medium">{reply.status}</span>
                       </div>
                     </div>
                   ))}
+              </div>
+            </div>
+          )}
+
+          <div className="pt-4 space-y-3">
+            {followUpTasks
+              .filter(t => followUpTab === 'All' || t.status === followUpTab)
+              .map(task => (
+                <div
+                  key={task.id}
+                  className="p-4 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <span className="font-semibold text-neutral-900 dark:text-white text-sm">{task.leadName}</span>
+                      <span className="px-2.5 py-0.5 rounded-lg bg-white dark:bg-[#2f2f2f] text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 text-xs font-semibold">
+                        Company: {task.companyName}
+                      </span>
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                          task.status === 'Due Today'
+                            ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30'
+                            : task.status === 'Overdue'
+                            ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30'
+                            : 'bg-neutral-200 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#d4d4d4]'
+                        }`}
+                      >
+                        {task.status} (Day {task.cadenceDay})
+                      </span>
+                    </div>
+                    <p className="text-xs text-neutral-500 dark:text-[#9e9e9e]">
+                      {task.email} • Due: {task.dueDate}
+                    </p>
+                    {task.suggestedDraftSubject && (
+                      <p className="text-xs text-neutral-700 dark:text-[#d4d4d4] mt-1 font-medium bg-white dark:bg-[#171717] p-2 rounded-lg border border-neutral-200 dark:border-white/10">
+                        Follow-up for {task.companyName}: "{task.suggestedDraftSubject}"
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => {
+                        setComposedSubject(task.suggestedDraftSubject || 'Following up on our export proposal');
+                        setComposedBody(task.suggestedDraftBody || 'Hi, checking in regarding our trade inquiry.');
+                        setComposerLeadId(task.leadId);
+                        setActiveTab('email');
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] text-xs font-semibold flex items-center gap-1.5 hover:opacity-85 transition-opacity"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Open Trade Follow-up</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setFollowUpTasks(prev =>
+                          prev.map(t => (t.id === task.id ? { ...t, status: 'Completed' } : t))
+                        );
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#2f2f2f] hover:bg-neutral-100 dark:hover:bg-[#383838] text-neutral-700 dark:text-[#ececec] text-xs font-semibold border border-neutral-200 dark:border-white/10 transition-colors"
+                    >
+                      Mark Done
+                    </button>
+                  </div>
                 </div>
+              ))}
+
+            {followUpTasks.length === 0 && (
+              <div className="p-8 text-center text-neutral-500 dark:text-[#9e9e9e] text-xs">
+                No active export follow-ups currently due.
               </div>
             )}
-
-            {/* Follow-up Tasks */}
-            <div className="pt-4 space-y-3">
-              {followUpTasks
-                .filter(t => followUpTab === 'All' || t.status === followUpTab)
-                .map(task => (
-                  <div
-                    key={task.id}
-                    className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4"
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2.5">
-                        <span className="font-bold text-white text-sm">{task.leadName}</span>
-                        <span className="text-xs text-sky-300">({task.companyName})</span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                          task.status === 'Due Today'
-                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse'
-                            : task.status === 'Overdue'
-                            ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                            : 'bg-slate-800 text-slate-300'
-                        }`}>
-                          {task.status} (Day {task.cadenceDay})
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-400">{task.email} • Due: {task.dueDate}</p>
-                      {task.suggestedDraftSubject && (
-                        <p className="text-xs text-sky-200 mt-1 italic">
-                          "{task.suggestedDraftSubject}"
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => {
-                          setComposedSubject(task.suggestedDraftSubject || 'Following up on our export proposal');
-                          setComposedBody(task.suggestedDraftBody || 'Hi, checking in regarding our trade inquiry.');
-                          setComposerLeadId(task.leadId);
-                          setActiveTab('email');
-                        }}
-                        className="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
-                      >
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>Open Trade Follow-up</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setFollowUpTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: 'Completed' } : t));
-                        }}
-                        className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors"
-                      >
-                        Mark Done
-                      </button>
-                    </div>
-                  </div>
-                ))}
-
-              {followUpTasks.length === 0 && (
-                <div className="p-8 text-center text-slate-400 text-xs">
-                  No active export follow-ups currently due.
-                </div>
-              )}
-            </div>
           </div>
         </div>
       )}
 
-      {/* TAB 5: EXPORT PRODUCT CATEGORIES, MOQ & CERTIFICATIONS */}
+      {/* ========================================================
+          TAB 5: EXPORT PRODUCT CATEGORIES, MOQ & CERTIFICATIONS
+         ======================================================== */}
       {activeTab === 'products' && (
-        <div className="space-y-6">
-          <div className="galaxy-card p-6 rounded-2xl border border-sky-500/30 bg-gradient-to-r from-galaxy-900 via-sky-950/40 to-galaxy-900">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/20 border border-sky-400/40 text-sky-300 text-xs font-bold mb-2">
-                  <Package className="w-3.5 h-3.5" />
-                  <span>Mode B Trade Portfolio</span>
-                </div>
-                <h2 className="text-xl font-bold text-white tracking-tight">Export Product Categories, MOQ & Certifications</h2>
-                <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
-                  International commodity catalogs with standard container MOQs, port delivery specifications, and mandatory compliance certifications (ISO 22000, HACCP, Halal, FDA, CE).
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setActiveTab('agent')}
-                  className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-sky-600/30 transition-all"
-                >
-                  <Bot className="w-4 h-4" />
-                  <span>Ask Export AI Agent</span>
-                </button>
-              </div>
+        <div className="space-y-5">
+          <div className="chatgpt-card p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-neutral-900 dark:text-white tracking-tight">
+                Export Product Categories, MOQ & Certifications
+              </h2>
+              <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] mt-1 max-w-2xl">
+                International commodity catalogs with standard container MOQs, port delivery specs, and compliance certifications.
+              </p>
             </div>
+
+            <button
+              onClick={() => setActiveTab('agent')}
+              className="px-4 py-2 rounded-xl bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] text-xs font-semibold flex items-center gap-2 hover:opacity-85 transition-opacity shrink-0"
+            >
+              <Bot className="w-4 h-4" />
+              <span>Ask Export AI Agent</span>
+            </button>
           </div>
 
-          {/* Product Categories Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               {
@@ -1978,38 +1598,38 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
                 badge: 'High Volume Export',
                 moq: '1 x 20ft FCL (15-18 MT)',
                 ports: 'Jebel Ali, Rotterdam, London Gateway',
-                certs: ['ISO 22000:2018', 'HACCP', 'Halal Certified (ESMA)', 'Spice Board Registration', 'Phytosanitary Cert'],
-                items: ['Black Pepper (TGSEB)', 'Green Cardamom (8mm)', 'Turmeric Fingers (Curcumin > 3%)', 'Dry Ginger', 'Cumin & Coriander Seeds'],
+                certs: ['ISO 22000:2018', 'HACCP', 'Halal Certified', 'Spice Board', 'Phytosanitary'],
+                items: ['Black Pepper (TGSEB)', 'Green Cardamom (8mm)', 'Turmeric Fingers', 'Dry Ginger', 'Cumin Seeds'],
                 prompt: '50 UAE agro spice buyers venum'
               },
               {
                 id: 'food',
-                title: 'Processed Foods & Beverages',
+                title: 'Processed Food & Beverages',
                 badge: 'FMCG Wholesale',
                 moq: '1 x 20ft FCL or Mixed 40ft HQ',
                 ports: 'Jebel Ali, Dammam, Singapore, New York',
-                certs: ['US FDA Registered', 'FSSAI Export License', 'ISO 22000', 'Halal Certified', 'BRCGS Food Safety'],
-                items: ['Aphonso Mango Pulp (Canned)', 'Indian Ready-to-Eat curries', 'Instant Coffee Powder', 'Basmati Rice (1121 Sella)', 'Pickles & Condiments'],
+                certs: ['US FDA Registered', 'FSSAI Export', 'ISO 22000', 'Halal Certified', 'BRCGS'],
+                items: ['Alphonso Mango Pulp', 'Ready-to-Eat Curries', 'Instant Coffee Powder', '1121 Basmati Rice', 'Condiments'],
                 prompt: '50 UAE food distributors venum'
               },
               {
                 id: 'organic',
-                title: 'Organic Foods & Superfoods',
+                title: 'Organic Foods & Health Products',
                 badge: 'Premium Margin',
                 moq: '500 kg - 1 x 20ft FCL',
-                ports: 'Hamburg, Antwerp, Gothenburg, Felixstowe',
-                certs: ['EU Organic (EC 834/2007)', 'USDA Organic (NOP)', 'NPOP India', 'Non-GMO Project', 'Fair Trade'],
-                items: ['Organic Moringa Powder', 'Cold-Pressed Virgin Coconut Oil', 'Chia & Flax Seeds', 'Herbal Infusions & Teas', 'Organic Turmeric Powder'],
+                ports: 'Hamburg, Antwerp, Gothenburg',
+                certs: ['EU Organic', 'USDA Organic (NOP)', 'NPOP India', 'Non-GMO', 'Fair Trade'],
+                items: ['Organic Moringa Powder', 'Virgin Coconut Oil', 'Chia & Flax Seeds', 'Herbal Teas', 'Organic Turmeric'],
                 prompt: '50 Germany organic food buyers venum'
               },
               {
                 id: 'textiles',
-                title: 'Apparel, Garments & Home Textiles',
-                badge: 'Contract Manufacturing',
-                moq: '1,000 pcs per style / 1x20ft FCL',
+                title: 'Apparel, Garments & Textiles',
+                badge: 'Contract Mfg',
+                moq: '1,000 pcs / 1x20ft FCL',
                 ports: 'Southampton, Le Havre, Savannah, Dubai',
-                certs: ['OEKO-TEX Standard 100', 'GOTS (Global Organic Textile)', 'Sedex SMETA Audited', 'WRAP Certified'],
-                items: ['100% Combed Cotton T-Shirts', 'Hotel Terry Bath Towels & Robes', 'Luxury Bed Linen 400TC', 'Hospital Uniforms & Scrubs', 'Workwear Overalls'],
+                certs: ['OEKO-TEX 100', 'GOTS Organic', 'Sedex SMETA', 'WRAP Certified'],
+                items: ['Combed Cotton T-Shirts', 'Hotel Bath Towels', '400TC Bed Linen', 'Hospital Scrubs', 'Workwear'],
                 prompt: '50 UK garment importers venum'
               },
               {
@@ -2018,54 +1638,57 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
                 badge: 'Industrial B2B',
                 moq: '2 - 5 Metric Tons',
                 ports: 'Hamburg, Chicago, Melbourne, Jebel Ali',
-                certs: ['ISO 9001:2015', 'IATF 16949 (Automotive)', 'CE Marking', 'RoHS Compliance', 'Material Test Cert 3.1'],
-                items: ['Precision CNC Turned Components', 'Cast Iron & SG Iron Castings', 'Brass Plumbing Fittings', 'Centrifugal Water Pumps', 'Industrial Fasteners Grade 8.8/10.9'],
+                certs: ['ISO 9001:2015', 'IATF 16949', 'CE Marking', 'RoHS', 'MTC 3.1'],
+                items: ['Precision CNC Parts', 'Iron Castings', 'Brass Fittings', 'Centrifugal Pumps', 'Industrial Fasteners'],
                 prompt: '50 USA auto component buyers venum'
               },
               {
                 id: 'ceramics',
                 title: 'Ceramics, Tiles & Sanitaryware',
                 badge: 'Infrastructure Export',
-                moq: '1 x 20ft FCL (1,200 - 1,400 sq.m)',
+                moq: '1 x 20ft FCL (1,200 sq.m)',
                 ports: 'Jeddah, Dammam, Shuwaikh, Sohar',
-                certs: ['SASO Saber Registered (Saudi)', 'CE Certified (EN 14411)', 'ISO 13006', 'Soncap Certified'],
-                items: ['Glazed Vitrified Tiles (600x1200mm)', 'Porcelain Outdoor Pavers', 'Ceramic Wall Tiles', 'Water Closets & Wash Basins', 'Full Body Vitrified Slabs'],
+                certs: ['SASO Saber (Saudi)', 'CE Certified', 'ISO 13006', 'Soncap'],
+                items: ['Vitrified Tiles (600x1200)', 'Porcelain Pavers', 'Wall Tiles', 'Sanitaryware', 'Vitrified Slabs'],
                 prompt: '50 Saudi Arabia ceramic tile buyers venum'
               }
             ].map(cat => (
-              <div key={cat.id} className="galaxy-card p-5 rounded-2xl border border-slate-800 bg-slate-900/60 flex flex-col justify-between hover:border-sky-500/40 transition-all group">
+              <div key={cat.id} className="chatgpt-card p-5 rounded-2xl flex flex-col justify-between">
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-bold border border-sky-500/30">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] font-semibold">
                       {cat.badge}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-medium">
-                      MOQ: {cat.moq}
-                    </span>
+                    <span className="text-[10px] text-neutral-500 dark:text-[#8e8e8e]">MOQ: {cat.moq}</span>
                   </div>
 
-                  <h3 className="font-bold text-white text-sm group-hover:text-sky-300 transition-colors">
-                    {cat.title}
-                  </h3>
+                  <h3 className="font-semibold text-neutral-900 dark:text-white text-sm">{cat.title}</h3>
 
                   <div className="mt-3 space-y-2 text-xs">
                     <div>
-                      <span className="text-[10px] text-slate-400 block uppercase tracking-wider font-semibold">Key Products:</span>
-                      <ul className="mt-1 space-y-0.5 text-slate-300 text-[11px]">
+                      <span className="text-[10px] text-neutral-500 dark:text-[#8e8e8e] block uppercase tracking-wider font-semibold">
+                        Key Products:
+                      </span>
+                      <ul className="mt-1 space-y-0.5 text-neutral-700 dark:text-[#d4d4d4] text-[11px]">
                         {cat.items.map((item, idx) => (
                           <li key={idx} className="flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shrink-0" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#10a37f] shrink-0" />
                             <span className="truncate">{item}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
 
-                    <div className="pt-2 border-t border-slate-800">
-                      <span className="text-[10px] text-slate-400 block uppercase tracking-wider font-semibold">Certifications:</span>
+                    <div className="pt-2 border-t border-neutral-200 dark:border-white/10">
+                      <span className="text-[10px] text-neutral-500 dark:text-[#8e8e8e] block uppercase tracking-wider font-semibold">
+                        Certifications:
+                      </span>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {cat.certs.map((c, idx) => (
-                          <span key={idx} className="text-[9px] px-1.5 py-0.5 rounded bg-slate-950 text-slate-300 border border-slate-800">
+                          <span
+                            key={idx}
+                            className="text-[9px] px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-[#212121] text-neutral-700 dark:text-[#d4d4d4] border border-neutral-200 dark:border-white/10"
+                          >
                             {c}
                           </span>
                         ))}
@@ -2074,15 +1697,17 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
                   </div>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
-                  <span className="text-[10px] text-slate-400 truncate">Delivery: {cat.ports.split(',')[0]}</span>
+                <div className="mt-4 pt-3 border-t border-neutral-200 dark:border-white/10 flex items-center justify-between gap-2">
+                  <span className="text-[10px] text-neutral-500 dark:text-[#8e8e8e] truncate">
+                    Port: {cat.ports.split(',')[0]}
+                  </span>
                   <button
                     onClick={() => {
                       setProductCategory(cat.title);
                       setActiveTab('agent');
                       handleSendChatMessage(cat.prompt);
                     }}
-                    className="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold flex items-center gap-1 shadow-md shadow-sky-600/30 transition-all shrink-0"
+                    className="px-3 py-1.5 rounded-xl bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] text-xs font-semibold flex items-center gap-1 hover:opacity-85 transition-opacity shrink-0"
                   >
                     <span>Source Buyers</span>
                     <ArrowRight className="w-3 h-3" />
@@ -2094,7 +1719,9 @@ Email: ${DATAGALACTIC_COMPANY.email}`;
         </div>
       )}
 
-      {/* TAB 6: EXPORT SETTINGS & SENDER PROFILE */}
+      {/* ========================================================
+          TAB 6: EXPORT SETTINGS & SENDER PROFILE
+         ======================================================== */}
       {activeTab === 'settings' && (
         <div className="space-y-4">
           <SettingsPage mode="mode_b" />

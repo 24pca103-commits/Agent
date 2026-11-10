@@ -8,16 +8,18 @@ interface BadgeProps {
 }
 
 export const Badge: React.FC<BadgeProps> = ({ children, variant = 'default', size = 'sm' }) => {
-  const sizeClasses = size === 'sm' ? 'px-2.5 py-1 text-xs font-medium leading-normal' : 'px-3 py-1.5 text-xs font-semibold leading-normal';
-  
+  const sizeClasses = size === 'sm'
+    ? 'px-2.5 py-0.5 text-[11px] font-medium leading-normal'
+    : 'px-3 py-1 text-xs font-semibold leading-normal';
+
   const variantClasses = {
-    default: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60',
-    success: 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/35',
-    warning: 'bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/35',
-    danger: 'bg-rose-50 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/35',
-    info: 'bg-sky-50 dark:bg-sky-950/70 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/35',
-    purple: 'bg-purple-50 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/35',
-    cosmic: 'bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-400/35 shadow-sm'
+    default: 'bg-neutral-100 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#d4d4d4] border border-neutral-200 dark:border-white/10',
+    success: 'bg-emerald-50 dark:bg-[#10a37f]/15 text-emerald-700 dark:text-[#34d399] border border-emerald-200 dark:border-[#10a37f]/30',
+    warning: 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30',
+    danger: 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30',
+    info: 'bg-neutral-100 dark:bg-white/10 text-neutral-800 dark:text-[#ececec] border border-neutral-200 dark:border-white/15',
+    purple: 'bg-neutral-100 dark:bg-white/10 text-neutral-800 dark:text-[#ececec] border border-neutral-200 dark:border-white/15',
+    cosmic: 'bg-neutral-900 dark:bg-white/15 text-white dark:text-white border border-neutral-900 dark:border-white/20'
   }[variant];
 
   return (
@@ -34,13 +36,13 @@ export const StatusBadge: React.FC<{ status: LeadStatus }> = ({ status }) => {
     case 'Qualified':
       return <Badge variant="success">Qualified</Badge>;
     case 'Draft Ready':
-      return <Badge variant="purple">Draft Ready</Badge>;
+      return <Badge variant="default">Draft Ready</Badge>;
     case 'Awaiting Approval':
       return <Badge variant="warning">Awaiting Approval</Badge>;
     case 'Approved':
-      return <Badge variant="cosmic">Approved</Badge>;
+      return <Badge variant="success">Approved</Badge>;
     case 'Sent':
-      return <Badge variant="info">Sent</Badge>;
+      return <Badge variant="success">Sent</Badge>;
     case 'Replied':
       return <Badge variant="success">Replied</Badge>;
     case 'Follow-up Due':
@@ -54,7 +56,7 @@ export const StatusBadge: React.FC<{ status: LeadStatus }> = ({ status }) => {
     case 'Unsubscribed':
       return <Badge variant="danger">Unsubscribed</Badge>;
     case 'Do Not Contact':
-      return <Badge variant="danger">⛔ Do Not Contact</Badge>;
+      return <Badge variant="danger">Do Not Contact</Badge>;
     default:
       return <Badge>{status}</Badge>;
   }

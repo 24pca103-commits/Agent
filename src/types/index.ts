@@ -141,3 +141,29 @@ export interface IntegrationStatus {
   lastTested?: string;
   message?: string;
 }
+
+export interface ChatMessage {
+  id: string;
+  sender: 'user' | 'agent';
+  text: string;
+  timestamp: string;
+  leads?: Lead[];
+  industry?: string;
+  country?: string;
+  suggestedAction?: {
+    type: 'draft_pitch' | 'add_lead' | 'download_pdf' | 'view_leads' | 'source_buyer';
+    leadData?: Partial<Lead>;
+    serviceName?: string;
+    buyerCategory?: string;
+    targetCountry?: string;
+    leadCount?: number;
+  };
+}
+
+export interface ChatSession {
+  id: string;
+  mode: 'mode_a' | 'mode_b';
+  title: string;
+  messages: ChatMessage[];
+  updatedAt: string;
+}
