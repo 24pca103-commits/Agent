@@ -762,9 +762,9 @@ Email: ${settings.companyEmail}`;
         </div>
       )}
 
-      {/* Slim ChatGPT Sub-Navigation Strip */}
-      <div className="flex items-center justify-between gap-2 pb-2 border-b border-neutral-200/80 dark:border-white/10 overflow-x-auto">
-        <div className="flex items-center gap-1 flex-nowrap">
+      {/* Slim ChatGPT Sub-Navigation Strip (Zero Horizontal Scroll) */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-neutral-200/80 dark:border-white/10">
+        <div className="flex items-center gap-1 flex-wrap">
           {[
             { id: 'agent', label: 'Export AI Chat', icon: Bot },
             { id: 'leads', label: `Saved Buyers (${buyerLeads.length})`, icon: Building2 },
@@ -1014,87 +1014,113 @@ Email: ${settings.companyEmail}`;
 
           {viewMode === 'table' && buyerLeads.length > 0 && (
             <div className="chatgpt-card rounded-2xl overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              <div className="hidden md:block overflow-x-hidden">
+                <table className="w-full text-left text-xs table-fixed">
                   <thead>
                     <tr className="bg-neutral-50 dark:bg-[#1e1e1e] border-b border-neutral-200 dark:border-white/10 text-neutral-500 dark:text-[#9e9e9e] text-[10px] uppercase tracking-wider">
-                      <th className="py-3 px-3 text-center w-10">#</th>
-                      <th className="py-3 px-4 font-semibold min-w-[200px]">Buyer Enterprise</th>
-                      <th className="py-3 px-4 font-semibold min-w-[170px]">Procurement Lead</th>
-                      <th className="py-3 px-4 font-semibold min-w-[210px]">Direct Email</th>
-                      <th className="py-3 px-4 font-semibold min-w-[150px]">Port & Destination</th>
-                      <th className="py-3 px-4 font-semibold min-w-[200px]">Target Products & MOQ</th>
-                      <th className="py-3 px-4 font-semibold text-center w-20">Score</th>
-                      <th className="py-3 px-4 font-semibold text-center w-28">Status</th>
-                      <th className="py-3 px-4 font-semibold text-right w-24">Action</th>
+                      <th className="py-3 px-2 text-center w-[4%]">#</th>
+                      <th className="py-3 px-3 font-semibold w-[22%]">Buyer & Port</th>
+                      <th className="py-3 px-3 font-semibold w-[16%]">Procurement Lead</th>
+                      <th className="py-3 px-3 font-semibold w-[22%]">Direct Email</th>
+                      <th className="py-3 px-3 font-semibold w-[15%]">Products & MOQ</th>
+                      <th className="py-3 px-2 font-semibold text-center w-[6%]">Score</th>
+                      <th className="py-3 px-2 font-semibold text-center w-[7%]">Status</th>
+                      <th className="py-3 px-3 font-semibold text-right w-[8%]">Email</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100 dark:divide-white/5">
                     {paginatedLeads.map((buyer, idx) => (
                       <tr key={buyer.id} className="hover:bg-neutral-50 dark:hover:bg-[#212121] transition-colors">
-                        <td className="py-3 px-3 text-center font-mono text-neutral-400 text-[11px]">
+                        <td className="py-3 px-2 text-center font-mono text-neutral-400 text-[11px]">
                           {(currentPage - 1) * (pageSize || 1) + idx + 1}
                         </td>
-                        <td className="py-3 px-4">
-                          <div className="font-semibold text-neutral-900 dark:text-white text-xs flex items-center gap-1.5">
-                            <span>{buyer.companyName}</span>
+                        <td className="py-3 px-3 min-w-0">
+                          <div className="font-semibold text-neutral-900 dark:text-white text-xs flex items-center gap-1 min-w-0">
+                            <span className="truncate">{buyer.companyName}</span>
                             <a
                               href={buyer.companyWebsite}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
+                              className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white shrink-0"
                             >
                               <ExternalLink className="w-3 h-3" />
                             </a>
                           </div>
-                          <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] mt-0.5">
-                            {buyer.buyerType?.toUpperCase() || 'IMPORTER & DISTRIBUTOR'}
+                          <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] mt-0.5 truncate">
+                            {buyer.buyerType?.toUpperCase() || 'IMPORTER'} • {buyer.regionCity || buyer.country}
                           </div>
                         </td>
-                        <td className="py-3 px-4">
-                          <div className="font-medium text-neutral-800 dark:text-[#ececec]">{buyer.contactFullName}</div>
-                          <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e]">{buyer.jobTitle}</div>
+                        <td className="py-3 px-3 min-w-0">
+                          <div className="font-medium text-neutral-800 dark:text-[#ececec] truncate">{buyer.contactFullName}</div>
+                          <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] truncate">{buyer.jobTitle}</div>
                         </td>
-                        <td className="py-3 px-4">
-                          <div className="font-mono text-neutral-800 dark:text-[#d4d4d4] text-xs flex items-center gap-1">
-                            <span>{buyer.businessEmail}</span>
-                            <ShieldCheck className="w-3 h-3 text-[#10a37f]" />
+                        <td className="py-3 px-3 min-w-0">
+                          <div className="font-mono text-neutral-800 dark:text-[#d4d4d4] text-[11px] flex items-center gap-1 min-w-0">
+                            <span className="truncate">{buyer.businessEmail}</span>
+                            <ShieldCheck className="w-3 h-3 text-[#10a37f] shrink-0" />
                           </div>
                           {buyer.publicBusinessPhone && (
-                            <div className="text-[10px] text-neutral-500 dark:text-[#8e8e8e] mt-0.5">
+                            <div className="text-[10px] text-neutral-500 dark:text-[#8e8e8e] mt-0.5 truncate">
                               {buyer.publicBusinessPhone}
                             </div>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-neutral-600 dark:text-[#b4b4b4] text-xs">
-                          {buyer.regionCity || buyer.country}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="text-xs font-medium text-neutral-900 dark:text-white">
+                        <td className="py-3 px-3 min-w-0">
+                          <div className="text-xs font-medium text-neutral-900 dark:text-white truncate">
                             {buyer.targetProductCategory || 'Agro-Commodities'}
                           </div>
-                          <div className="text-[10px] text-neutral-500 dark:text-[#8e8e8e] mt-0.5">
+                          <div className="text-[10px] text-neutral-500 dark:text-[#8e8e8e] mt-0.5 truncate">
                             MOQ: {buyer.minOrderQuantity || '1 x 20ft FCL'}
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-center">
-                          <span className="font-semibold text-[#10a37f] text-xs">{buyer.leadScore}/100</span>
+                        <td className="py-3 px-2 text-center">
+                          <span className="font-semibold text-[#10a37f] text-xs">{buyer.leadScore}</span>
                         </td>
-                        <td className="py-3 px-4 text-center">
+                        <td className="py-3 px-2 text-center">
                           <StatusBadge status={buyer.leadStatus} />
                         </td>
-                        <td className="py-3 px-4 text-right">
+                        <td className="py-3 px-3 text-right">
                           <button
                             onClick={() => handleGeneratePitchForBuyer(buyer)}
-                            className="px-2.5 py-1 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] hover:opacity-85 text-[11px] font-semibold transition-opacity whitespace-nowrap"
+                            className="px-2 py-1 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] hover:opacity-85 text-[11px] font-semibold transition-opacity"
                           >
-                            Send Pitch
+                            Write Email
                           </button>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Compact Stack */}
+              <div className="md:hidden divide-y divide-neutral-100 dark:divide-white/5">
+                {paginatedLeads.map((buyer, idx) => (
+                  <div key={buyer.id} className="p-3.5 space-y-2 min-w-0">
+                    <div className="flex items-start justify-between gap-2 min-w-0">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-neutral-900 dark:text-white text-xs truncate">
+                          #{(currentPage - 1) * (pageSize || 1) + idx + 1} • {buyer.companyName}
+                        </div>
+                        <div className="text-[11px] text-neutral-500 dark:text-[#9e9e9e] truncate">
+                          {buyer.contactFullName} • {buyer.regionCity || buyer.country}
+                        </div>
+                      </div>
+                      <StatusBadge status={buyer.leadStatus} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2 min-w-0">
+                      <span className="font-mono text-[11px] text-neutral-700 dark:text-[#d4d4d4] truncate min-w-0">
+                        {buyer.businessEmail}
+                      </span>
+                      <button
+                        onClick={() => handleGeneratePitchForBuyer(buyer)}
+                        className="px-2.5 py-1 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] text-[11px] font-semibold shrink-0"
+                      >
+                        Write Email
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -1135,9 +1161,9 @@ Email: ${settings.companyEmail}`;
                         </span>
                       </div>
 
-                      <div className="mt-2.5 flex items-center justify-between text-xs pt-2.5 border-t border-neutral-200 dark:border-white/10">
-                        <span className="text-neutral-700 dark:text-[#d4d4d4] font-mono text-xs">{buyer.businessEmail}</span>
-                        <span className="text-xs text-[#10a37f] font-semibold flex items-center gap-1">
+                      <div className="mt-2.5 flex items-center justify-between gap-2 text-xs pt-2.5 border-t border-neutral-200 dark:border-white/10 min-w-0">
+                        <span className="text-neutral-700 dark:text-[#d4d4d4] font-mono text-xs truncate min-w-0">{buyer.businessEmail}</span>
+                        <span className="text-xs text-[#10a37f] font-semibold flex items-center gap-1 shrink-0">
                           <ShieldCheck className="w-3.5 h-3.5" />
                           {buyer.emailVerificationStatus} ({buyer.emailConfidenceScore}%)
                         </span>
@@ -1167,7 +1193,7 @@ Email: ${settings.companyEmail}`;
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] text-xs font-semibold hover:opacity-85 transition-opacity"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
-                      <span>Write Pitch</span>
+                      <span>Write Email</span>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                   </div>

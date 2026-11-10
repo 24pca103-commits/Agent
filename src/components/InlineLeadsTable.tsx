@@ -162,7 +162,7 @@ export const InlineLeadsTable: React.FC<InlineLeadsTableProps> = ({
         <>
           {/* Filter & View Controls */}
           <div className="px-4 py-2.5 border-b border-neutral-200 dark:border-white/10 flex flex-wrap items-center justify-between gap-2 bg-neutral-50/50 dark:bg-[#171717]">
-            <div className="relative flex-1 min-w-[180px]">
+            <div className="relative w-full sm:w-auto sm:flex-1 min-w-0">
               <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
               <input
                 type="text"
@@ -219,130 +219,173 @@ export const InlineLeadsTable: React.FC<InlineLeadsTableProps> = ({
             </div>
           </div>
 
-          {/* Table View */}
+          {/* Table View (Zero Horizontal Scroll: fixed-layout table on md+, responsive cards on small screens) */}
           {viewMode === 'table' ? (
-            <div className="overflow-x-auto max-h-[440px] overflow-y-auto bg-white dark:bg-[#171717]">
-              <table className="w-full text-left text-xs min-w-[680px]">
-                <thead className="sticky top-0 z-10 bg-neutral-50 dark:bg-[#1e1e1e] border-b border-neutral-200 dark:border-white/10 text-neutral-500 dark:text-[#9e9e9e] text-[10px] uppercase tracking-wider">
-                  <tr>
-                    <th className="py-2.5 px-2.5 text-center w-9">#</th>
-                    <th className="py-2.5 px-3 font-semibold min-w-[150px]">Company</th>
-                    <th className="py-2.5 px-3 font-semibold min-w-[130px]">{isExport ? 'Procurement Lead' : 'Key Contact'}</th>
-                    <th className="py-2.5 px-3 font-semibold min-w-[170px]">Business Email</th>
-                    <th className="py-2.5 px-3 font-semibold min-w-[100px]">{isExport ? 'Port / City' : 'Location'}</th>
-                    <th className="py-2.5 px-3 font-semibold min-w-[140px]">{isExport ? 'Product / MOQ' : 'Service Fit'}</th>
-                    <th className="py-2.5 px-2 font-semibold text-center w-14">Score</th>
-                    <th className="py-2.5 px-3 font-semibold text-right w-20">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-100 dark:divide-white/5">
-                  {paginated.map((lead, idx) => (
-                    <tr
-                      key={lead.id}
-                      className="hover:bg-neutral-50 dark:hover:bg-[#212121] transition-colors"
-                    >
-                      <td className="py-2.5 px-2.5 text-center font-mono text-neutral-400 dark:text-[#8e8e8e] text-[11px]">
-                        {(safePage - 1) * (pageSize || 1) + idx + 1}
-                      </td>
-                      <td className="py-2.5 px-3">
-                        <div className="font-semibold text-neutral-900 dark:text-white text-xs flex items-center gap-1.5">
-                          <span className="truncate max-w-[155px]">{lead.companyName}</span>
-                          {lead.companyWebsite && (
-                            <a
-                              href={lead.companyWebsite}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-neutral-400 hover:text-neutral-700 dark:hover:text-white shrink-0"
-                            >
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                          )}
-                        </div>
-                        <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] truncate max-w-[155px]">
-                          {isExport ? (lead.buyerType?.toUpperCase() || 'IMPORTER') : lead.industry}
-                        </div>
-                      </td>
-                      <td className="py-2.5 px-3">
-                        <div className="font-medium text-neutral-800 dark:text-[#ececec] text-xs truncate max-w-[140px]">
-                          {lead.contactFullName}
-                        </div>
-                        <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] truncate max-w-[140px]">
-                          {lead.jobTitle}
-                        </div>
-                      </td>
-                      <td className="py-2.5 px-3">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono text-neutral-700 dark:text-[#d4d4d4] text-[11px] truncate max-w-[155px]">
-                            {lead.businessEmail}
-                          </span>
-                          <span title="Deliverable">
-                            <ShieldCheck className="w-3 h-3 text-[#10a37f] shrink-0" />
-                          </span>
-                          <button
-                            onClick={() => handleCopy(lead.businessEmail)}
-                            className="text-neutral-400 hover:text-neutral-800 dark:hover:text-white p-0.5 rounded transition-colors shrink-0"
-                            title="Copy email"
-                          >
-                            {copiedEmail === lead.businessEmail ? (
-                              <Check className="w-3 h-3 text-[#10a37f]" />
-                            ) : (
-                              <Copy className="w-3 h-3" />
-                            )}
-                          </button>
-                        </div>
-                      </td>
-                      <td className="py-2.5 px-3 text-neutral-600 dark:text-[#b4b4b4] text-[11px] truncate max-w-[115px]">
-                        {lead.regionCity || lead.country}
-                      </td>
-                      <td className="py-2.5 px-3">
-                        {isExport ? (
-                          <div>
-                            <div className="text-[11px] font-medium text-neutral-800 dark:text-[#ececec] truncate max-w-[140px]">
-                              {lead.targetProductCategory || 'Agro-Commodities'}
-                            </div>
-                            <div className="text-[10px] text-neutral-500 dark:text-[#8e8e8e]">
-                              MOQ: {lead.minOrderQuantity || '1 FCL'}
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-[11px] px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#d4d4d4] border border-neutral-200 dark:border-white/10 font-medium inline-block truncate max-w-[145px]">
-                            {lead.recommendedService || 'Data Cleaning'}
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-2.5 px-2 text-center">
-                        <span className="font-semibold text-[#10a37f] text-[11px]">
-                          {lead.leadScore}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-right">
-                        <button
-                          onClick={() => onPitchLead(lead)}
-                          className="px-2.5 py-1 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] hover:opacity-85 text-[11px] font-semibold transition-opacity whitespace-nowrap"
-                        >
-                          Pitch
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-
-                  {paginated.length === 0 && (
+            <>
+              <div className="hidden md:block overflow-y-auto overflow-x-hidden max-h-[440px] bg-white dark:bg-[#171717]">
+                <table className="w-full text-left text-xs table-fixed">
+                  <thead className="sticky top-0 z-10 bg-neutral-50 dark:bg-[#1e1e1e] border-b border-neutral-200 dark:border-white/10 text-neutral-500 dark:text-[#9e9e9e] text-[10px] uppercase tracking-wider">
                     <tr>
-                      <td colSpan={8} className="py-8 text-center text-xs text-neutral-500 dark:text-[#9e9e9e]">
-                        No results match your table search.
-                      </td>
+                      <th className="py-2.5 px-2 text-center w-[5%]">#</th>
+                      <th className="py-2.5 px-2.5 font-semibold w-[23%]">Company</th>
+                      <th className="py-2.5 px-2.5 font-semibold w-[18%]">{isExport ? 'Buyer Lead' : 'Contact'}</th>
+                      <th className="py-2.5 px-2.5 font-semibold w-[24%]">Business Email</th>
+                      <th className="py-2.5 px-2.5 font-semibold w-[14%]">{isExport ? 'Product / MOQ' : 'Service Fit'}</th>
+                      <th className="py-2.5 px-1.5 font-semibold text-center w-[6%]">Score</th>
+                      <th className="py-2.5 px-2.5 font-semibold text-right w-[10%]">Email</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-100 dark:divide-white/5">
+                    {paginated.map((lead, idx) => (
+                      <tr
+                        key={lead.id}
+                        className="hover:bg-neutral-50 dark:hover:bg-[#212121] transition-colors"
+                      >
+                        <td className="py-2.5 px-2 text-center font-mono text-neutral-400 dark:text-[#8e8e8e] text-[11px]">
+                          {(safePage - 1) * (pageSize || 1) + idx + 1}
+                        </td>
+                        <td className="py-2.5 px-2.5 min-w-0">
+                          <div className="font-semibold text-neutral-900 dark:text-white text-xs flex items-center gap-1 min-w-0">
+                            <span className="truncate">{lead.companyName}</span>
+                            {lead.companyWebsite && (
+                              <a
+                                href={lead.companyWebsite}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-neutral-400 hover:text-neutral-700 dark:hover:text-white shrink-0"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] truncate">
+                            {lead.regionCity || lead.country}
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-2.5 min-w-0">
+                          <div className="font-medium text-neutral-800 dark:text-[#ececec] text-xs truncate">
+                            {lead.contactFullName}
+                          </div>
+                          <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] truncate">
+                            {lead.jobTitle}
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-2.5 min-w-0">
+                          <div className="flex items-center gap-1 min-w-0">
+                            <span className="font-mono text-neutral-700 dark:text-[#d4d4d4] text-[11px] truncate">
+                              {lead.businessEmail}
+                            </span>
+                            <span title="Deliverable" className="shrink-0">
+                              <ShieldCheck className="w-3 h-3 text-[#10a37f]" />
+                            </span>
+                            <button
+                              onClick={() => handleCopy(lead.businessEmail)}
+                              className="text-neutral-400 hover:text-neutral-800 dark:hover:text-white p-0.5 rounded transition-colors shrink-0"
+                              title="Copy email"
+                            >
+                              {copiedEmail === lead.businessEmail ? (
+                                <Check className="w-3 h-3 text-[#10a37f]" />
+                              ) : (
+                                <Copy className="w-3 h-3" />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-2.5 min-w-0">
+                          {isExport ? (
+                            <div className="min-w-0">
+                              <div className="text-[11px] font-medium text-neutral-800 dark:text-[#ececec] truncate">
+                                {lead.targetProductCategory || 'Agro-Commodities'}
+                              </div>
+                              <div className="text-[10px] text-neutral-500 dark:text-[#8e8e8e] truncate">
+                                MOQ: {lead.minOrderQuantity || '1 FCL'}
+                              </div>
+                            </div>
+                          ) : (
+                            <span
+                              title={lead.recommendedService || 'Data Cleaning'}
+                              className="text-[10px] px-1.5 py-0.5 rounded-md bg-neutral-100 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#d4d4d4] border border-neutral-200 dark:border-white/10 font-medium block truncate"
+                            >
+                              {lead.recommendedService || 'Data Cleaning'}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-1.5 text-center">
+                          <span className="font-semibold text-[#10a37f] text-[11px]">
+                            {lead.leadScore}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-2.5 text-right">
+                          <button
+                            onClick={() => onPitchLead(lead)}
+                            title="Draft & Send Outreach Email (Pitch)"
+                            className="px-2 py-1 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] hover:opacity-85 text-[11px] font-semibold transition-opacity"
+                          >
+                            Write Email
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+
+                    {paginated.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="py-8 text-center text-xs text-neutral-500 dark:text-[#9e9e9e]">
+                          No results match your table search.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Compact Stack (Zero Horizontal Scroll) */}
+              <div className="md:hidden p-2.5 max-h-[440px] overflow-y-auto overflow-x-hidden space-y-2 bg-white dark:bg-[#171717]">
+                {paginated.map((lead, idx) => (
+                  <div
+                    key={lead.id}
+                    className="p-3 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 space-y-1.5 min-w-0"
+                  >
+                    <div className="flex items-start justify-between gap-2 min-w-0">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-neutral-900 dark:text-white text-xs truncate">
+                          #{(safePage - 1) * (pageSize || 1) + idx + 1} • {lead.companyName}
+                        </div>
+                        <div className="text-[11px] text-neutral-500 dark:text-[#9e9e9e] truncate">
+                          {lead.contactFullName} • {lead.regionCity || lead.country}
+                        </div>
+                      </div>
+                      <span className="font-semibold text-[#10a37f] text-[11px] shrink-0">
+                        {lead.leadScore}/100
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 pt-1 min-w-0">
+                      <span className="font-mono text-[11px] text-neutral-700 dark:text-[#d4d4d4] truncate min-w-0">
+                        {lead.businessEmail}
+                      </span>
+                      <button
+                        onClick={() => onPitchLead(lead)}
+                        className="px-2.5 py-1 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] text-[11px] font-semibold shrink-0"
+                      >
+                        Write Email
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {paginated.length === 0 && (
+                  <div className="py-8 text-center text-xs text-neutral-500 dark:text-[#9e9e9e]">
+                    No results match your table search.
+                  </div>
+                )}
+              </div>
+            </>
           ) : (
             /* Card View */
-            <div className="p-3 max-h-[440px] overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2.5 bg-white dark:bg-[#171717]">
+            <div className="p-3 max-h-[440px] overflow-y-auto overflow-x-hidden grid grid-cols-1 sm:grid-cols-2 gap-2.5 bg-white dark:bg-[#171717]">
               {paginated.map((lead) => (
                 <div
                   key={lead.id}
-                  className="p-3 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 flex flex-col justify-between gap-2"
+                  className="p-3 rounded-xl bg-neutral-50 dark:bg-[#212121] border border-neutral-200 dark:border-white/10 flex flex-col justify-between gap-2 min-w-0"
                 >
                   <div className="min-w-0">
                     <div className="flex items-start justify-between gap-2">
@@ -356,8 +399,8 @@ export const InlineLeadsTable: React.FC<InlineLeadsTableProps> = ({
                     <p className="text-[11px] text-neutral-600 dark:text-[#b4b4b4] mt-0.5 truncate">
                       {lead.contactFullName} • {lead.jobTitle}
                     </p>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <span className="font-mono text-[11px] text-neutral-700 dark:text-[#d4d4d4] truncate">
+                    <div className="flex items-center gap-1.5 mt-1 min-w-0">
+                      <span className="font-mono text-[11px] text-neutral-700 dark:text-[#d4d4d4] truncate min-w-0">
                         {lead.businessEmail}
                       </span>
                       <button
@@ -373,15 +416,15 @@ export const InlineLeadsTable: React.FC<InlineLeadsTableProps> = ({
                       </button>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between pt-2 border-t border-neutral-200 dark:border-white/10">
-                    <span className="text-[10px] text-neutral-500 dark:text-[#8e8e8e] truncate max-w-[180px]">
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-neutral-200 dark:border-white/10 min-w-0">
+                    <span className="text-[10px] text-neutral-500 dark:text-[#8e8e8e] truncate min-w-0">
                       {lead.regionCity || lead.country}
                     </span>
                     <button
                       onClick={() => onPitchLead(lead)}
-                      className="px-2.5 py-1 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] hover:opacity-85 text-[11px] font-semibold"
+                      className="px-2.5 py-1 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] hover:opacity-85 text-[11px] font-semibold shrink-0"
                     >
-                      Pitch
+                      Write Email
                     </button>
                   </div>
                 </div>

@@ -824,9 +824,9 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
         </div>
       )}
 
-      {/* Slim ChatGPT Sub-Navigation Pill Strip */}
-      <div className="flex items-center justify-between gap-2 pb-2 border-b border-neutral-200/80 dark:border-white/10 overflow-x-auto">
-        <div className="flex items-center gap-1 flex-nowrap">
+      {/* Slim ChatGPT Sub-Navigation Pill Strip (Zero Horizontal Scroll) */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-neutral-200/80 dark:border-white/10">
+        <div className="flex items-center gap-1 flex-wrap">
           {[
             { id: 'agent', label: 'AI Agent Chat', icon: Bot },
             { id: 'leads', label: `Saved Clients (${filteredLeads.length})`, icon: Building },
@@ -1177,77 +1177,78 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
             </div>
           </div>
 
-          {/* Table View */}
+          {/* Table View (Zero Horizontal Scroll) */}
           {viewMode === 'table' && filteredLeads.length > 0 && (
             <div className="chatgpt-card rounded-2xl overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              <div className="hidden md:block overflow-x-hidden">
+                <table className="w-full text-left text-xs table-fixed">
                   <thead>
                     <tr className="bg-neutral-50 dark:bg-[#1e1e1e] border-b border-neutral-200 dark:border-white/10 text-neutral-500 dark:text-[#9e9e9e] text-[10px] uppercase tracking-wider">
-                      <th className="py-3 px-3 text-center w-10">#</th>
-                      <th className="py-3 px-4 font-semibold min-w-[200px]">Company & Website</th>
-                      <th className="py-3 px-4 font-semibold min-w-[170px]">Decision Maker</th>
-                      <th className="py-3 px-4 font-semibold min-w-[210px]">Business Email / Phone</th>
-                      <th className="py-3 px-4 font-semibold min-w-[140px]">Location</th>
-                      <th className="py-3 px-4 font-semibold min-w-[190px]">Recommended Service</th>
-                      <th className="py-3 px-4 font-semibold text-center w-20">Score</th>
-                      <th className="py-3 px-4 font-semibold text-center w-28">Status</th>
-                      <th className="py-3 px-4 font-semibold text-right w-24">Outreach</th>
+                      <th className="py-3 px-2 text-center w-[4%]">#</th>
+                      <th className="py-3 px-3 font-semibold w-[22%]">Company & Location</th>
+                      <th className="py-3 px-3 font-semibold w-[16%]">Decision Maker</th>
+                      <th className="py-3 px-3 font-semibold w-[22%]">Business Email / Phone</th>
+                      <th className="py-3 px-3 font-semibold w-[15%]">Service Fit</th>
+                      <th className="py-3 px-2 font-semibold text-center w-[6%]">Score</th>
+                      <th className="py-3 px-2 font-semibold text-center w-[7%]">Status</th>
+                      <th className="py-3 px-3 font-semibold text-right w-[8%]">Email</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100 dark:divide-white/5">
                     {paginatedLeads.map((lead, idx) => (
                       <tr key={lead.id} className="hover:bg-neutral-50 dark:hover:bg-[#212121] transition-colors">
-                        <td className="py-3 px-3 text-center font-mono text-neutral-400 text-[11px]">
+                        <td className="py-3 px-2 text-center font-mono text-neutral-400 text-[11px]">
                           {(currentPage - 1) * (pageSize || 1) + idx + 1}
                         </td>
-                        <td className="py-3 px-4">
-                          <div className="font-semibold text-neutral-900 dark:text-white text-xs flex items-center gap-1.5">
-                            <span>{lead.companyName}</span>
+                        <td className="py-3 px-3 min-w-0">
+                          <div className="font-semibold text-neutral-900 dark:text-white text-xs flex items-center gap-1 min-w-0">
+                            <span className="truncate">{lead.companyName}</span>
                             <a
                               href={lead.companyWebsite}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
+                              className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white shrink-0"
                             >
                               <ExternalLink className="w-3 h-3" />
                             </a>
                           </div>
-                          <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] mt-0.5">{lead.industry}</div>
+                          <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] mt-0.5 truncate">
+                            {lead.industry} • {lead.regionCity || lead.country}
+                          </div>
                         </td>
-                        <td className="py-3 px-4">
-                          <div className="font-medium text-neutral-800 dark:text-[#ececec]">{lead.contactFullName}</div>
-                          <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e]">{lead.jobTitle}</div>
+                        <td className="py-3 px-3 min-w-0">
+                          <div className="font-medium text-neutral-800 dark:text-[#ececec] truncate">{lead.contactFullName}</div>
+                          <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] truncate">{lead.jobTitle}</div>
                         </td>
-                        <td className="py-3 px-4">
-                          <div className="font-mono text-neutral-800 dark:text-[#d4d4d4] text-xs flex items-center gap-1">
-                            <span>{lead.businessEmail}</span>
-                            <ShieldCheck className="w-3 h-3 text-[#10a37f]" />
+                        <td className="py-3 px-3 min-w-0">
+                          <div className="font-mono text-neutral-800 dark:text-[#d4d4d4] text-[11px] flex items-center gap-1 min-w-0">
+                            <span className="truncate">{lead.businessEmail}</span>
+                            <ShieldCheck className="w-3 h-3 text-[#10a37f] shrink-0" />
                           </div>
                           {lead.publicBusinessPhone && (
-                            <div className="text-[10px] text-neutral-500 dark:text-[#8e8e8e] mt-0.5">
+                            <div className="text-[10px] text-neutral-500 dark:text-[#8e8e8e] mt-0.5 truncate">
                               {lead.publicBusinessPhone}
                             </div>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-neutral-600 dark:text-[#b4b4b4] text-xs">
-                          {lead.regionCity || lead.country}
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="text-[11px] px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#d4d4d4] border border-neutral-200 dark:border-white/10 font-medium">
+                        <td className="py-3 px-3 min-w-0">
+                          <span
+                            title={lead.recommendedService || 'Data Cleaning & Formatting'}
+                            className="text-[10px] px-2 py-0.5 rounded-md bg-neutral-100 dark:bg-[#2f2f2f] text-neutral-700 dark:text-[#d4d4d4] border border-neutral-200 dark:border-white/10 font-medium block truncate"
+                          >
                             {lead.recommendedService || 'Data Cleaning & Formatting'}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-center">
-                          <span className="font-semibold text-[#10a37f] text-xs">{lead.leadScore}/100</span>
+                        <td className="py-3 px-2 text-center">
+                          <span className="font-semibold text-[#10a37f] text-xs">{lead.leadScore}</span>
                         </td>
-                        <td className="py-3 px-4 text-center">
+                        <td className="py-3 px-2 text-center">
                           <StatusBadge status={lead.leadStatus} />
                         </td>
-                        <td className="py-3 px-4 text-right">
+                        <td className="py-3 px-3 text-right">
                           <button
                             onClick={() => handleGeneratePitchForLead(lead)}
-                            className="px-2.5 py-1 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] hover:opacity-85 text-[11px] font-semibold transition-opacity whitespace-nowrap"
+                            className="px-2 py-1 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] hover:opacity-85 text-[11px] font-semibold transition-opacity"
                           >
                             Write Email
                           </button>
@@ -1256,6 +1257,39 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Card List (Zero Horizontal Scroll) */}
+              <div className="md:hidden divide-y divide-neutral-100 dark:divide-white/5">
+                {paginatedLeads.map((lead, idx) => (
+                  <div key={lead.id} className="p-3.5 space-y-2 min-w-0">
+                    <div className="flex items-start justify-between gap-2 min-w-0">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-neutral-900 dark:text-white text-xs truncate">
+                          #{(currentPage - 1) * (pageSize || 1) + idx + 1} • {lead.companyName}
+                        </div>
+                        <div className="text-[11px] text-neutral-500 dark:text-[#9e9e9e] truncate">
+                          {lead.contactFullName} ({lead.jobTitle})
+                        </div>
+                        <div className="text-[10px] text-neutral-500 dark:text-[#8e8e8e] truncate">
+                          {lead.regionCity || lead.country}
+                        </div>
+                      </div>
+                      <StatusBadge status={lead.leadStatus} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2 min-w-0">
+                      <span className="font-mono text-[11px] text-neutral-700 dark:text-[#d4d4d4] truncate min-w-0">
+                        {lead.businessEmail}
+                      </span>
+                      <button
+                        onClick={() => handleGeneratePitchForLead(lead)}
+                        className="px-2.5 py-1 rounded-lg bg-[#0d0d0d] dark:bg-white text-white dark:text-[#212121] text-[11px] font-semibold shrink-0"
+                      >
+                        Write Email
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -1298,9 +1332,9 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
                       </div>
                       <p className="text-xs text-neutral-500 dark:text-[#9e9e9e] mt-1">{lead.jobTitle}</p>
 
-                      <div className="mt-2.5 flex items-center justify-between text-xs pt-2.5 border-t border-neutral-200 dark:border-white/10">
-                        <span className="text-neutral-700 dark:text-[#d4d4d4] font-mono text-xs">{lead.businessEmail}</span>
-                        <span className="text-xs text-[#10a37f] font-semibold flex items-center gap-1">
+                      <div className="mt-2.5 flex items-center justify-between gap-2 text-xs pt-2.5 border-t border-neutral-200 dark:border-white/10 min-w-0">
+                        <span className="text-neutral-700 dark:text-[#d4d4d4] font-mono text-xs truncate min-w-0">{lead.businessEmail}</span>
+                        <span className="text-xs text-[#10a37f] font-semibold flex items-center gap-1 shrink-0">
                           <ShieldCheck className="w-3.5 h-3.5" />
                           {lead.emailVerificationStatus} ({lead.emailConfidenceScore}%)
                         </span>

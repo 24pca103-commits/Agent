@@ -278,7 +278,7 @@ ALTER TABLE public.suppression_records ENABLE ROW LEVEL SECURITY;
             <code className="font-mono">.env</code>.
           </p>
 
-          <pre className="p-3 bg-neutral-50 dark:bg-[#212121] rounded-xl border border-neutral-200 dark:border-white/10 font-mono text-[10px] text-neutral-700 dark:text-[#d4d4d4] max-h-64 overflow-y-auto overflow-x-auto min-w-0 max-w-full leading-relaxed whitespace-pre-wrap break-all">
+          <pre className="p-3 bg-neutral-50 dark:bg-[#212121] rounded-xl border border-neutral-200 dark:border-white/10 font-mono text-[10px] text-neutral-700 dark:text-[#d4d4d4] max-h-64 overflow-y-auto overflow-x-hidden min-w-0 max-w-full leading-relaxed whitespace-pre-wrap break-all">
             {supabaseSqlSchema}
           </pre>
         </div>

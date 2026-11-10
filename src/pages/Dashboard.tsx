@@ -232,7 +232,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </button>
             </div>
 
-            <div className="relative min-w-[200px]">
+            <div className="relative w-full sm:w-56 min-w-0">
               <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
               <input
                 type="text"
@@ -245,119 +245,161 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-[#1a1a1a]">
-          <table className="w-full text-left text-xs min-w-[680px]">
-            <thead className="bg-neutral-50 dark:bg-[#212121] text-neutral-500 dark:text-[#9e9e9e] text-[10px] uppercase tracking-wider border-b border-neutral-200 dark:border-white/10">
-              <tr>
-                <th className="py-2.5 px-3 text-center w-10">#</th>
-                <th className="py-2.5 px-3 font-semibold min-w-[150px]">Company Name</th>
-                <th className="py-2.5 px-3 font-semibold min-w-[130px]">Decision Maker</th>
-                <th className="py-2.5 px-3 font-semibold min-w-[160px]">Business Email</th>
-                <th className="py-2.5 px-3 font-semibold min-w-[180px]">Pitched Service / Subject</th>
-                <th className="py-2.5 px-3 font-semibold min-w-[110px]">Date Sent</th>
-                <th className="py-2.5 px-3 font-semibold text-center w-24">Status</th>
-                <th className="py-2.5 px-3 font-semibold text-right w-24">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100 dark:divide-white/5">
-              {filteredSentEmails.length > 0 ? (
-                filteredSentEmails.map((draft, idx) => (
-                  <tr key={draft.id} className="hover:bg-neutral-50 dark:hover:bg-[#212121] transition-colors">
-                    <td className="py-2.5 px-3 text-center font-mono text-neutral-400 text-[10px]">
-                      {idx + 1}
-                    </td>
+        <div className="rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-[#1a1a1a] overflow-hidden">
+          <div className="hidden md:block overflow-x-hidden">
+            <table className="w-full text-left text-xs table-fixed">
+              <thead className="bg-neutral-50 dark:bg-[#212121] text-neutral-500 dark:text-[#9e9e9e] text-[10px] uppercase tracking-wider border-b border-neutral-200 dark:border-white/10">
+                <tr>
+                  <th className="py-2.5 px-2 text-center w-[4%]">#</th>
+                  <th className="py-2.5 px-3 font-semibold w-[19%]">Company Name</th>
+                  <th className="py-2.5 px-3 font-semibold w-[15%]">Decision Maker</th>
+                  <th className="py-2.5 px-3 font-semibold w-[19%]">Business Email</th>
+                  <th className="py-2.5 px-3 font-semibold w-[19%]">Service / Subject</th>
+                  <th className="py-2.5 px-2 font-semibold w-[9%]">Date Sent</th>
+                  <th className="py-2.5 px-2 font-semibold text-center w-[7%]">Status</th>
+                  <th className="py-2.5 px-3 font-semibold text-right w-[8%]">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100 dark:divide-white/5">
+                {filteredSentEmails.length > 0 ? (
+                  filteredSentEmails.map((draft, idx) => (
+                    <tr key={draft.id} className="hover:bg-neutral-50 dark:hover:bg-[#212121] transition-colors">
+                      <td className="py-2.5 px-2 text-center font-mono text-neutral-400 text-[10px]">
+                        {idx + 1}
+                      </td>
 
-                    <td className="py-2.5 px-3">
-                      <div className="font-semibold text-neutral-900 dark:text-white text-xs flex items-center gap-1.5">
-                        <Building className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-                        <span className="truncate max-w-[140px]">{draft.companyName}</span>
-                      </div>
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-neutral-100 dark:bg-[#2f2f2f] text-neutral-600 dark:text-[#d4d4d4] font-medium mt-0.5 inline-block">
-                        {draft.leadMode === 'export_buyers' ? 'Mode B: Export' : 'Mode A: Service'}
-                      </span>
-                    </td>
-
-                    <td className="py-2.5 px-3">
-                      <div className="font-medium text-neutral-800 dark:text-[#ececec] text-xs truncate max-w-[130px]">
-                        {draft.recipientName}
-                      </div>
-                      <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] truncate max-w-[130px]">
-                        {draft.jobTitle}
-                      </div>
-                    </td>
-
-                    <td className="py-2.5 px-3">
-                      <div className="flex items-center gap-1">
-                        <span className="font-mono text-neutral-700 dark:text-[#d4d4d4] text-[11px] truncate max-w-[140px]">
-                          {draft.recipientEmail}
+                      <td className="py-2.5 px-3 min-w-0">
+                        <div className="font-semibold text-neutral-900 dark:text-white text-xs flex items-center gap-1.5 min-w-0">
+                          <Building className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                          <span className="truncate">{draft.companyName}</span>
+                        </div>
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-neutral-100 dark:bg-[#2f2f2f] text-neutral-600 dark:text-[#d4d4d4] font-medium mt-0.5 inline-block truncate max-w-full">
+                          {draft.leadMode === 'export_buyers' ? 'Mode B: Export' : 'Mode A: Service'}
                         </span>
+                      </td>
+
+                      <td className="py-2.5 px-3 min-w-0">
+                        <div className="font-medium text-neutral-800 dark:text-[#ececec] text-xs truncate">
+                          {draft.recipientName}
+                        </div>
+                        <div className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] truncate">
+                          {draft.jobTitle}
+                        </div>
+                      </td>
+
+                      <td className="py-2.5 px-3 min-w-0">
+                        <div className="flex items-center gap-1 min-w-0">
+                          <span className="font-mono text-neutral-700 dark:text-[#d4d4d4] text-[11px] truncate">
+                            {draft.recipientEmail}
+                          </span>
+                          <button
+                            onClick={() => handleCopy(draft.recipientEmail)}
+                            className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white p-0.5 rounded transition-colors shrink-0"
+                            title="Copy Email"
+                          >
+                            {copiedEmail === draft.recipientEmail ? (
+                              <Check className="w-3 h-3 text-[#10a37f]" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                          </button>
+                        </div>
+                      </td>
+
+                      <td className="py-2.5 px-3 min-w-0">
+                        <div className="font-medium text-neutral-900 dark:text-white text-xs truncate">
+                          {draft.subject}
+                        </div>
+                        <span className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] truncate block">
+                          {draft.recommendedService || 'Direct Outreach'}
+                        </span>
+                      </td>
+
+                      <td className="py-2.5 px-2 text-neutral-500 dark:text-[#9e9e9e] text-[11px] truncate">
+                        {draft.sentAt
+                          ? new Date(draft.sentAt).toLocaleDateString([], {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric'
+                            })
+                          : 'Recently Sent'}
+                      </td>
+
+                      <td className="py-2.5 px-2 text-center">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] border border-[#10a37f]/30 text-[10px] font-semibold">
+                          <CheckCircle2 className="w-3 h-3 shrink-0" />
+                          <span>Sent</span>
+                        </span>
+                      </td>
+
+                      <td className="py-2.5 px-3 text-right">
                         <button
-                          onClick={() => handleCopy(draft.recipientEmail)}
-                          className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white p-0.5 rounded transition-colors"
-                          title="Copy Email"
+                          onClick={() => setViewingDraft(draft)}
+                          className="px-2 py-1 rounded-lg bg-neutral-100 dark:bg-[#2f2f2f] hover:bg-neutral-200 dark:hover:bg-[#383838] text-neutral-800 dark:text-white text-[11px] font-semibold border border-neutral-200 dark:border-white/10 transition-colors"
                         >
-                          {copiedEmail === draft.recipientEmail ? (
-                            <Check className="w-3 h-3 text-[#10a37f]" />
-                          ) : (
-                            <Copy className="w-3 h-3" />
-                          )}
+                          View
                         </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center text-neutral-500 dark:text-[#9e9e9e]">
+                      <div className="max-w-sm mx-auto space-y-2">
+                        <Send className="w-8 h-8 text-neutral-400 mx-auto" />
+                        <p className="text-sm font-semibold text-neutral-800 dark:text-white">No Sent Emails Found</p>
+                        <p className="text-xs">
+                          {emailSearch
+                            ? 'No sent emails match your search query.'
+                            : 'Compose and approve emails in Mode A or Mode B to see them logged here.'}
+                        </p>
                       </div>
-                    </td>
-
-                    <td className="py-2.5 px-3">
-                      <div className="font-medium text-neutral-900 dark:text-white text-xs truncate max-w-[180px]">
-                        {draft.subject}
-                      </div>
-                      <span className="text-[10px] text-neutral-500 dark:text-[#9e9e9e] truncate block max-w-[180px]">
-                        {draft.recommendedService || 'Direct Outreach'}
-                      </span>
-                    </td>
-
-                    <td className="py-2.5 px-3 text-neutral-500 dark:text-[#9e9e9e] text-[11px] whitespace-nowrap">
-                      {draft.sentAt
-                        ? new Date(draft.sentAt).toLocaleDateString([], {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
-                          })
-                        : 'Recently Sent'}
-                    </td>
-
-                    <td className="py-2.5 px-3 text-center">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] border border-[#10a37f]/30 text-[10px] font-semibold">
-                        <CheckCircle2 className="w-3 h-3" />
-                        <span>Sent</span>
-                      </span>
-                    </td>
-
-                    <td className="py-2.5 px-3 text-right">
-                      <button
-                        onClick={() => setViewingDraft(draft)}
-                        className="px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-[#2f2f2f] hover:bg-neutral-200 dark:hover:bg-[#383838] text-neutral-800 dark:text-white text-[11px] font-semibold border border-neutral-200 dark:border-white/10 transition-colors whitespace-nowrap"
-                      >
-                        View Email
-                      </button>
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={8} className="py-12 text-center text-neutral-500 dark:text-[#9e9e9e]">
-                    <div className="max-w-sm mx-auto space-y-2">
-                      <Send className="w-8 h-8 text-neutral-400 mx-auto" />
-                      <p className="text-sm font-semibold text-neutral-800 dark:text-white">No Sent Emails Found</p>
-                      <p className="text-xs">
-                        {emailSearch
-                          ? 'No sent emails match your search query.'
-                          : 'Compose and approve emails in Mode A or Mode B to see them logged here.'}
-                      </p>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card Stack (Zero Horizontal Scroll) */}
+          <div className="md:hidden divide-y divide-neutral-100 dark:divide-white/5">
+            {filteredSentEmails.length > 0 ? (
+              filteredSentEmails.map((draft) => (
+                <div key={draft.id} className="p-3.5 space-y-2 min-w-0">
+                  <div className="flex items-start justify-between gap-2 min-w-0">
+                    <div className="min-w-0">
+                      <div className="font-semibold text-neutral-900 dark:text-white text-xs truncate">
+                        {draft.companyName}
+                      </div>
+                      <div className="text-[11px] text-neutral-500 dark:text-[#9e9e9e] truncate">
+                        {draft.recipientName} • {draft.recommendedService || 'Direct Outreach'}
+                      </div>
                     </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#10a37f]/15 text-[#0e906f] dark:text-[#34d399] text-[10px] font-semibold shrink-0">
+                      Sent
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 min-w-0">
+                    <span className="font-mono text-[11px] text-neutral-700 dark:text-[#d4d4d4] truncate min-w-0">
+                      {draft.recipientEmail}
+                    </span>
+                    <button
+                      onClick={() => setViewingDraft(draft)}
+                      className="px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-[#2f2f2f] text-neutral-800 dark:text-white text-[11px] font-semibold border border-neutral-200 dark:border-white/10 shrink-0"
+                    >
+                      View Email
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-10 px-4 text-center text-neutral-500 dark:text-[#9e9e9e] text-xs">
+                {emailSearch
+                  ? 'No sent emails match your search query.'
+                  : 'Compose and approve emails in Mode A or Mode B to see them logged here.'}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

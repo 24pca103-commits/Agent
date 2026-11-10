@@ -210,28 +210,30 @@ export const SendingApproval: React.FC<SendingApprovalProps> = ({
           </h3>
 
           <div className="galaxy-card rounded-2xl border border-slate-800 overflow-hidden">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-950/70 border-b border-slate-800 text-[10px] text-slate-400 uppercase">
-                <tr>
-                  <th className="py-2.5 px-4 font-semibold">Recipient</th>
-                  <th className="py-2.5 px-4 font-semibold">Company</th>
-                  <th className="py-2.5 px-4 font-semibold">Subject</th>
-                  <th className="py-2.5 px-4 font-semibold">Message ID</th>
-                  <th className="py-2.5 px-4 font-semibold text-right">Sent Time</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {completedDrafts.map((d) => (
-                  <tr key={d.id} className="hover:bg-slate-800/30">
-                    <td className="py-2.5 px-4 font-medium text-white">{d.recipientName} ({d.recipientEmail})</td>
-                    <td className="py-2.5 px-4 text-slate-300">{d.companyName}</td>
-                    <td className="py-2.5 px-4 text-slate-400 truncate max-w-[200px]">{d.subject}</td>
-                    <td className="py-2.5 px-4 font-mono text-[10px] text-indigo-400">{d.messageId || 'msg-authorized'}</td>
-                    <td className="py-2.5 px-4 text-right text-slate-400 text-[11px]">{new Date(d.sentAt || d.createdAt).toLocaleTimeString()}</td>
+            <div className="overflow-x-hidden">
+              <table className="w-full text-left text-xs table-fixed">
+                <thead className="bg-slate-950/70 border-b border-slate-800 text-[10px] text-slate-400 uppercase">
+                  <tr>
+                    <th className="py-2.5 px-3 font-semibold w-[24%]">Recipient</th>
+                    <th className="py-2.5 px-3 font-semibold w-[20%]">Company</th>
+                    <th className="py-2.5 px-3 font-semibold hidden md:table-cell w-[26%]">Subject</th>
+                    <th className="py-2.5 px-3 font-semibold hidden sm:table-cell w-[16%]">Message ID</th>
+                    <th className="py-2.5 px-3 font-semibold text-right w-[14%]">Sent Time</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {completedDrafts.map((d) => (
+                    <tr key={d.id} className="hover:bg-slate-800/30">
+                      <td className="py-2.5 px-3 font-medium text-white truncate">{d.recipientName} ({d.recipientEmail})</td>
+                      <td className="py-2.5 px-3 text-slate-300 truncate">{d.companyName}</td>
+                      <td className="py-2.5 px-3 text-slate-400 truncate hidden md:table-cell">{d.subject}</td>
+                      <td className="py-2.5 px-3 font-mono text-[10px] text-indigo-400 truncate hidden sm:table-cell">{d.messageId || 'msg-authorized'}</td>
+                      <td className="py-2.5 px-3 text-right text-slate-400 text-[11px] truncate">{new Date(d.sentAt || d.createdAt).toLocaleTimeString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

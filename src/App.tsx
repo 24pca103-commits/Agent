@@ -315,7 +315,7 @@ export function App() {
       {/* Main Content Area */}
       <div
         className={`flex-1 flex flex-col min-h-screen relative z-10 w-full min-w-0 max-w-full transition-all duration-200 ease-out overflow-x-hidden ${
-          isDesktopSidebarOpen ? 'lg:ml-[260px] lg:max-w-[calc(100vw-260px)]' : 'lg:ml-0 lg:max-w-full'
+          isDesktopSidebarOpen ? 'lg:ml-[260px] lg:w-[calc(100%-260px)] lg:max-w-[calc(100%-260px)]' : 'lg:ml-0 lg:w-full lg:max-w-full'
         }`}
       >
         <TopNavbar
@@ -348,7 +348,7 @@ export function App() {
           onNewChat={handleNewChat}
         />
 
-        <main className="flex-1 px-3 sm:px-6 py-4 max-w-6xl w-full mx-auto min-w-0 flex flex-col">
+        <main className="flex-1 px-3 sm:px-6 py-4 max-w-6xl w-full mx-auto min-w-0 max-w-full overflow-x-hidden flex flex-col">
           {activePage === 'dashboard' && (
             <Dashboard
               leads={leads}

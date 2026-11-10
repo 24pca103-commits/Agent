@@ -194,7 +194,7 @@ export const LeadDatabase: React.FC<LeadDatabaseProps> = ({
 
       {/* Filter and Search Bar */}
       <div className="galaxy-card p-4 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3 flex-1 min-w-[280px]">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:flex-1 min-w-0">
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -238,11 +238,11 @@ export const LeadDatabase: React.FC<LeadDatabaseProps> = ({
 
       {/* CRM Main Table */}
       <div className="galaxy-card rounded-2xl border border-slate-800 overflow-hidden min-w-0 max-w-full">
-        <div className="overflow-x-auto min-w-0 max-w-full">
-          <table className="w-full text-left text-xs">
+        <div className="overflow-x-hidden min-w-0 max-w-full">
+          <table className="w-full text-left text-xs table-fixed">
             <thead>
               <tr className="bg-slate-950/70 border-b border-slate-800 text-slate-400 text-[10px] uppercase tracking-wider">
-                <th className="py-3 px-4 w-10">
+                <th className="py-3 px-2 w-[4%]">
                   <button onClick={handleSelectAll} className="text-slate-400 hover:text-white">
                     {selectedLeadIds.length > 0 && selectedLeadIds.length === paginatedLeads.length ? (
                       <CheckSquare className="w-4 h-4 text-indigo-400" />
@@ -251,13 +251,13 @@ export const LeadDatabase: React.FC<LeadDatabaseProps> = ({
                     )}
                   </button>
                 </th>
-                <th className="py-3 px-4 font-semibold min-w-[180px]">Company & Domain</th>
-                <th className="py-3 px-4 font-semibold min-w-[180px]">Primary Contact</th>
-                <th className="py-3 px-4 font-semibold min-w-[140px]">Country</th>
-                <th className="py-3 px-4 font-semibold min-w-[210px] whitespace-nowrap">Service Fit</th>
-                <th className="py-3 px-4 font-semibold min-w-[140px]">Quality Score</th>
-                <th className="py-3 px-4 font-semibold min-w-[130px]">Status</th>
-                <th className="py-3 px-4 font-semibold text-right min-w-[110px]">Actions</th>
+                <th className="py-3 px-3 font-semibold w-[20%]">Company & Domain</th>
+                <th className="py-3 px-3 font-semibold w-[22%]">Primary Contact</th>
+                <th className="py-3 px-3 font-semibold hidden md:table-cell w-[13%]">Country</th>
+                <th className="py-3 px-3 font-semibold hidden lg:table-cell w-[16%]">Service Fit</th>
+                <th className="py-3 px-2 font-semibold w-[8%]">Score</th>
+                <th className="py-3 px-2 font-semibold hidden sm:table-cell w-[9%]">Status</th>
+                <th className="py-3 px-3 font-semibold text-right w-[10%]">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
@@ -280,64 +280,64 @@ export const LeadDatabase: React.FC<LeadDatabaseProps> = ({
                       </button>
                     </td>
 
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-white">{lead.companyName}</span>
+                    <td className="py-3 px-3 min-w-0">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="font-semibold text-white truncate">{lead.companyName}</span>
                         {isDuplicate && (
                           <span
                             title="Duplicate domain detected in database"
-                            className="p-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                            className="p-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0"
                           >
                             <AlertTriangle className="w-3 h-3" />
                           </span>
                         )}
                         {lead.isDoNotContact && (
-                          <span title="Do Not Contact Flagged" className="text-rose-400">
+                          <span title="Do Not Contact Flagged" className="text-rose-400 shrink-0">
                             <ShieldAlert className="w-3.5 h-3.5" />
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs text-slate-400 font-mono">{lead.companyDomain}</span>
+                      <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
+                        <span className="text-xs text-slate-400 font-mono truncate">{lead.companyDomain}</span>
                         <a
                           href={lead.companyWebsite}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-slate-500 hover:text-slate-300"
+                          className="text-slate-500 hover:text-slate-300 shrink-0"
                         >
                           <ExternalLink className="w-3 h-3" />
                         </a>
                       </div>
                     </td>
 
-                    <td className="py-3 px-4">
-                      <div className="font-medium text-slate-200 text-xs">{lead.contactFullName}</div>
-                      <div className="text-xs text-slate-400 mt-0.5">{lead.jobTitle}</div>
-                      <div className="text-xs text-slate-500 font-mono mt-0.5">{lead.businessEmail}</div>
+                    <td className="py-3 px-3 min-w-0">
+                      <div className="font-medium text-slate-200 text-xs truncate">{lead.contactFullName}</div>
+                      <div className="text-xs text-slate-400 mt-0.5 truncate">{lead.jobTitle}</div>
+                      <div className="text-xs text-slate-500 font-mono mt-0.5 truncate">{lead.businessEmail}</div>
                     </td>
 
-                    <td className="py-3 px-4">
-                      <span className="text-slate-300 text-xs">{lead.country}</span>
-                      <div className="text-xs text-slate-500 mt-0.5">{lead.regionCity}</div>
+                    <td className="py-3 px-3 hidden md:table-cell min-w-0">
+                      <span className="text-slate-300 text-xs truncate block">{lead.country}</span>
+                      <div className="text-xs text-slate-500 mt-0.5 truncate">{lead.regionCity}</div>
                     </td>
 
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/90 text-indigo-700 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-500/35 text-xs font-semibold tracking-normal shadow-sm whitespace-nowrap">
+                    <td className="py-3 px-3 hidden lg:table-cell min-w-0">
+                      <span className="inline-block max-w-full truncate px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/90 text-indigo-700 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-500/35 text-xs font-semibold tracking-normal shadow-sm">
                         {lead.recommendedService || 'Data Cleaning & Formatting'}
                       </span>
                     </td>
 
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-2 min-w-0">
                       <div className="flex items-baseline gap-1">
                         <span className="font-bold text-emerald-400 text-sm">{lead.leadScore}</span>
                         <span className="text-xs text-slate-500">/100</span>
                       </div>
-                      <span className="text-xs text-slate-400 block truncate max-w-[150px] mt-0.5" title={lead.leadScoreReason}>
+                      <span className="text-xs text-slate-400 block truncate mt-0.5" title={lead.leadScoreReason}>
                         {lead.leadScoreReason}
                       </span>
                     </td>
 
-                    <td className="py-3 px-4 whitespace-nowrap">
+                    <td className="py-3 px-2 hidden sm:table-cell">
                       <StatusBadge status={lead.leadStatus} />
                     </td>
 
