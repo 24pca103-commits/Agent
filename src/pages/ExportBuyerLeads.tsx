@@ -31,6 +31,7 @@ import { SettingsPage } from './SettingsPage';
 import { useCompanySettings } from '../utils/settingsStorage';
 import { InlineLeadsTable } from '../components/InlineLeadsTable';
 import { renderFormattedChatText } from '../utils/formatChatText';
+import { detectCountryFromPrompt, generateFallbackLeads } from '../utils/leadSourcingFallback';
 
 interface ExportBuyerLeadsProps {
   initialTab?: 'agent' | 'leads' | 'email' | 'followup' | 'products' | 'settings';
@@ -246,23 +247,54 @@ export const ExportBuyerLeads: React.FC<ExportBuyerLeadsProps> = ({
     setSourcingSuccess(null);
 
     try {
-      const response = await fetch('/api/leads/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: customPrompt,
-          filters: {
-            prompt: customPrompt,
-            requestedCount: targetCount,
-            leadMode: 'export_buyers',
-            country: countryToUse,
-            industry: 'Export & Import Trade',
-            targetProductCategory: categoryToUse
-          }
-        })
-      });
+      let data: {
+        success?: boolean;
+        leads?: Lead[];
+        country?: string;
+      } | null = null;
 
-      const data = await response.json();
+      try {
+        const response = await fetch('/api/leads/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: customPrompt,
+            filters: {
+              prompt: customPrompt,
+              requestedCount: targetCount,
+              leadMode: 'export_buyers',
+              country: countryToUse,
+              industry: 'Export & Import Trade',
+              targetProductCategory: categoryToUse
+            }
+          })
+        });
+
+        if (response.ok) {
+          const json = await response.json();
+          if (json?.success && Array.isArray(json.leads) && json.leads.length > 0) {
+            data = json;
+          }
+        }
+      } catch (apiErr) {
+        console.warn('Export buyer backend unreachable, falling back to local engine:', apiErr);
+      }
+
+      if (!data) {
+        const fallback = generateFallbackLeads({
+          prompt: customPrompt,
+          leadMode: 'export_buyers',
+          country: countryToUse,
+          targetProductCategory: categoryToUse,
+          requestedCount: targetCount
+        });
+        data = {
+          success: true,
+          leads: fallback.leads,
+          country: fallback.country
+        };
+      }
+
       if (data.success && data.leads && data.leads.length > 0) {
         if (onAddMultipleLeads) {
           onAddMultipleLeads(data.leads);
@@ -296,7 +328,7 @@ export const ExportBuyerLeads: React.FC<ExportBuyerLeadsProps> = ({
         {
           id: `msg-${Date.now()}`,
           sender: 'agent',
-          text: `Unable to reach the export buyer sourcing service right now. Please ensure the backend server is running.`,
+          text: `Could not source export buyers for "${customPrompt || 'your request'}". Please try specifying a product category and country (e.g. "50 UAE agro spice buyers").`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
@@ -322,26 +354,7 @@ export const ExportBuyerLeads: React.FC<ExportBuyerLeadsProps> = ({
       lower.includes('vandhucha');
 
     // Auto-detect Country
-    let detectedCountry: string | undefined;
-    if (lower.includes('uae') || lower.includes('dubai') || lower.includes('abu dhabi')) {
-      detectedCountry = 'United Arab Emirates (UAE)';
-    } else if (lower.includes('saudi') || lower.includes('riyadh') || lower.includes('jeddah')) {
-      detectedCountry = 'Saudi Arabia';
-    } else if (lower.includes('germany') || lower.includes('hamburg') || lower.includes('berlin')) {
-      detectedCountry = 'Germany';
-    } else if (lower.includes('uk') || lower.includes('united kingdom') || lower.includes('london')) {
-      detectedCountry = 'United Kingdom (UK)';
-    } else if (lower.includes('usa') || lower.includes('united states') || lower.includes('new york')) {
-      detectedCountry = 'United States (USA)';
-    } else if (lower.includes('canada') || lower.includes('toronto')) {
-      detectedCountry = 'Canada';
-    } else if (lower.includes('singapore')) {
-      detectedCountry = 'Singapore';
-    } else if (lower.includes('australia') || lower.includes('sydney')) {
-      detectedCountry = 'Australia';
-    } else if (lower.includes('sweden')) {
-      detectedCountry = 'Sweden';
-    }
+    const detectedCountry = detectCountryFromPrompt(query);
 
     if (detectedCountry) {
       setChatSelectedCountry(detectedCountry);
@@ -436,8 +449,16 @@ export const ExportBuyerLeads: React.FC<ExportBuyerLeadsProps> = ({
       lower.includes('search') ||
       lower.includes('source') ||
       lower.includes('find') ||
+      lower.includes('need') ||
+      lower.includes('get') ||
+      lower.includes('show') ||
+      lower.includes('list') ||
+      lower.includes('give') ||
       lower.includes('venum') ||
       lower.includes('kudu') ||
+      lower.includes('edunga') ||
+      lower.includes('eduthu') ||
+      /\b\d+\b/.test(lower) ||
       !!detectedCountry ||
       !!detectedCategory;
 

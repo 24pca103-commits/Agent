@@ -34,6 +34,11 @@ import { SettingsPage } from './SettingsPage';
 import { useCompanySettings } from '../utils/settingsStorage';
 import { InlineLeadsTable } from '../components/InlineLeadsTable';
 import { renderFormattedChatText } from '../utils/formatChatText';
+import {
+  detectCountryFromPrompt,
+  detectIndustryFromPrompt,
+  generateFallbackLeads
+} from '../utils/leadSourcingFallback';
 
 interface ServiceLeadsProps {
   initialTab?: 'agent' | 'leads' | 'email' | 'followup' | 'services' | 'settings';
@@ -280,23 +285,59 @@ export const ServiceLeads: React.FC<ServiceLeadsProps> = ({
     const industryToUse = overrideIndustry || (selectedIndustry !== 'All' ? selectedIndustry : undefined);
 
     try {
-      const response = await fetch('/api/leads/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: customPrompt,
-          filters: {
-            prompt: customPrompt,
-            requestedCount: targetCount,
-            leadMode: 'service_leads',
-            country: countryToUse,
-            industry: industryToUse,
-            businessServiceRequirements: selectedService !== 'All' ? [selectedService] : undefined
-          }
-        })
-      });
+      let data: {
+        success?: boolean;
+        leads?: Lead[];
+        industry?: string;
+        country?: string;
+        source?: string;
+      } | null = null;
 
-      const data = await response.json();
+      try {
+        const response = await fetch('/api/leads/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: customPrompt,
+            filters: {
+              prompt: customPrompt,
+              requestedCount: targetCount,
+              leadMode: 'service_leads',
+              country: countryToUse,
+              industry: industryToUse,
+              businessServiceRequirements: selectedService !== 'All' ? [selectedService] : undefined
+            }
+          })
+        });
+
+        if (response.ok) {
+          const json = await response.json();
+          if (json?.success && Array.isArray(json.leads) && json.leads.length > 0) {
+            data = json;
+          }
+        }
+      } catch (apiErr) {
+        console.warn('Backend /api/leads/search unreachable, falling back to local engine:', apiErr);
+      }
+
+      if (!data) {
+        const fallback = generateFallbackLeads({
+          prompt: customPrompt,
+          leadMode: 'service_leads',
+          country: countryToUse,
+          industry: industryToUse,
+          requestedCount: targetCount,
+          businessServiceRequirements: selectedService !== 'All' ? [selectedService] : undefined
+        });
+        data = {
+          success: true,
+          leads: fallback.leads,
+          industry: fallback.industry,
+          country: fallback.country,
+          source: fallback.source
+        };
+      }
+
       if (data.success && data.leads && data.leads.length > 0) {
         if (onAddMultipleLeads) {
           onAddMultipleLeads(data.leads);
@@ -340,7 +381,7 @@ export const ServiceLeads: React.FC<ServiceLeadsProps> = ({
         {
           id: `msg-${Date.now()}`,
           sender: 'agent',
-          text: `Unable to reach the lead sourcing server right now. Please ensure the backend service is running and try again.`,
+          text: `Could not source leads for "${customPrompt || 'your request'}". Please try specifying an industry and country (e.g. "50 UK Hospitals").`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
@@ -367,26 +408,7 @@ export const ServiceLeads: React.FC<ServiceLeadsProps> = ({
       lower.includes('vandhucha');
 
     // 1. Detect target country from prompt text if mentioned
-    let detectedCountry: string | undefined;
-    if (lower.includes('uk') || lower.includes('united kingdom') || lower.includes('england') || lower.includes('britain') || lower.includes('london')) {
-      detectedCountry = 'United Kingdom (UK)';
-    } else if (lower.includes('usa') || lower.includes('united states') || lower.includes('america') || lower.includes(' us ') || lower.endsWith(' us')) {
-      detectedCountry = 'United States (USA)';
-    } else if (lower.includes('canada') || lower.includes('toronto')) {
-      detectedCountry = 'Canada';
-    } else if (lower.includes('australia') || lower.includes('sydney')) {
-      detectedCountry = 'Australia';
-    } else if (lower.includes('germany') || lower.includes('berlin')) {
-      detectedCountry = 'Germany';
-    } else if (lower.includes('singapore')) {
-      detectedCountry = 'Singapore';
-    } else if (lower.includes('uae') || lower.includes('dubai')) {
-      detectedCountry = 'United Arab Emirates (UAE)';
-    } else if (lower.includes('saudi') || lower.includes('riyadh')) {
-      detectedCountry = 'Saudi Arabia';
-    } else if (lower.includes('india')) {
-      detectedCountry = 'India';
-    }
+    const detectedCountry = detectCountryFromPrompt(query);
 
     if (detectedCountry) {
       setChatSelectedCountry(detectedCountry);
@@ -394,38 +416,7 @@ export const ServiceLeads: React.FC<ServiceLeadsProps> = ({
     }
 
     // 2. Detect target industry from prompt text if mentioned
-    let detectedIndustry: string | undefined;
-    if (lower.includes('hospital') || lower.includes('clinic') || lower.includes('medical') || lower.includes('doctor') || lower.includes('health') || lower.includes('nursing') || lower.includes('patient') || lower.includes('healthcare')) {
-      detectedIndustry = 'Hospitals & Clinics';
-    } else if (lower.includes('law') || lower.includes('legal') || lower.includes('solicitor') || lower.includes('attorney') || lower.includes('barrister') || lower.includes('lawyer') || lower.includes('court')) {
-      detectedIndustry = 'Law Firms';
-    } else if (lower.includes('school') || lower.includes('universit') || lower.includes('college') || lower.includes('education') || lower.includes('academy') || lower.includes('student')) {
-      detectedIndustry = 'Schools & Universities';
-    } else if (lower.includes('real estate') || lower.includes('property') || lower.includes('realtor') || lower.includes('housing')) {
-      detectedIndustry = 'Real Estate Companies';
-    } else if (lower.includes('logistics') || lower.includes('shipping') || lower.includes('freight') || lower.includes('cargo') || lower.includes('warehouse') || lower.includes('manifest') || lower.includes('transport')) {
-      detectedIndustry = 'Logistics & Shipping Companies';
-    } else if (lower.includes('e-commerce') || lower.includes('ecommerce') || lower.includes('shopify') || lower.includes('retail') || lower.includes('store') || lower.includes('online store')) {
-      detectedIndustry = 'E-commerce Businesses';
-    } else if (lower.includes('software') || lower.includes('saas') || lower.includes(' it ') || lower.includes('tech') || lower.includes('app ') || lower.includes('cloud')) {
-      detectedIndustry = 'IT & Software Companies';
-    } else if (lower.includes('marketing') || lower.includes('digital agency') || lower.includes('advertising') || lower.includes('seo') || lower.includes('branding')) {
-      detectedIndustry = 'Digital Marketing Agencies';
-    } else if (lower.includes('recruitment') || lower.includes('staffing') || lower.includes('hiring') || lower.includes('headhunt')) {
-      detectedIndustry = 'Recruitment & Staffing Agencies';
-    } else if (lower.includes('finance') || lower.includes('banking') || lower.includes('fintech') || lower.includes('accounting') || lower.includes('wealth') || lower.includes('audit')) {
-      detectedIndustry = 'Financial Services Companies';
-    } else if (lower.includes('hotel') || lower.includes('hospitality') || lower.includes('resort') || lower.includes('tourism')) {
-      detectedIndustry = 'Hotels & Hospitality Businesses';
-    } else if (lower.includes('construction') || lower.includes('builder') || lower.includes('contractor') || lower.includes('architecture')) {
-      detectedIndustry = 'Construction Companies';
-    } else if (lower.includes('manufacturing') || lower.includes('factory') || lower.includes('industrial') || lower.includes('production')) {
-      detectedIndustry = 'Manufacturing Companies';
-    } else if (lower.includes('insurance')) {
-      detectedIndustry = 'Insurance Companies';
-    } else if (lower.includes('consulting') || lower.includes('advisory')) {
-      detectedIndustry = 'Consulting & Professional Services Firms';
-    }
+    const detectedIndustry = detectIndustryFromPrompt(query);
 
     if (detectedIndustry) {
       setSelectedIndustry(detectedIndustry);
@@ -496,15 +487,23 @@ export const ServiceLeads: React.FC<ServiceLeadsProps> = ({
     const isClientSearch =
       lower.includes('client') ||
       lower.includes('lead') ||
-      lower.includes('100') ||
-      lower.includes('50') ||
+      lower.includes('compan') ||
+      lower.includes('agency') ||
+      lower.includes('firm') ||
       lower.includes('search') ||
       lower.includes('find') ||
       lower.includes('source') ||
+      lower.includes('need') ||
+      lower.includes('get') ||
+      lower.includes('show') ||
+      lower.includes('list') ||
+      lower.includes('give') ||
       lower.includes('venum') ||
       lower.includes('kudu') ||
-      lower.includes('uk') ||
-      lower.includes('us') ||
+      lower.includes('edunga') ||
+      lower.includes('eduthu') ||
+      /\b\d+\b/.test(lower) ||
+      !!detectedCountry ||
       !!detectedIndustry;
 
     if (isClientSearch) {
@@ -746,6 +745,8 @@ ${settings.website || DATAGALACTIC_COMPANY.website}`;
             <option value="Singapore">🇸🇬 Singapore</option>
             <option value="United Arab Emirates (UAE)">🇦🇪 UAE</option>
             <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
+            <option value="India">🇮🇳 India</option>
+            <option value="Netherlands">🇳🇱 Netherlands</option>
           </select>
 
           {!centered && chatMessages.length > 0 && (

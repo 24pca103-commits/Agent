@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { ParsedSearchFilters, Lead } from '../types';
 import { TARGET_COUNTRIES, TARGET_CLIENT_INDUSTRIES } from '../data/catalog';
+import { generateFallbackLeads } from '../utils/leadSourcingFallback';
 
 interface AiLeadFinderProps {
   onSearchComplete: (leads: Lead[]) => void;
@@ -84,17 +85,38 @@ export const AiLeadFinder: React.FC<AiLeadFinderProps> = ({
     setIsSearching(true);
 
     try {
-      const response = await fetch('/api/leads/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filters: parsedFilters }),
-      });
-      const data = await response.json();
-      if (data.success && data.leads) {
-        onSearchComplete(data.leads);
+      let resolvedLeads: Lead[] | null = null;
+      try {
+        const response = await fetch('/api/leads/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, filters: parsedFilters }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data?.success && Array.isArray(data.leads) && data.leads.length > 0) {
+            resolvedLeads = data.leads;
+          }
+        }
+      } catch (e) {
+        console.warn('Backend lead search unreachable, using local fallback engine:', e);
       }
-    } catch (e) {
-      console.error('Lead search error:', e);
+
+      if (!resolvedLeads) {
+        const fallback = generateFallbackLeads({
+          prompt,
+          leadMode: parsedFilters.leadMode,
+          country: parsedFilters.country,
+          industry: parsedFilters.industry,
+          requestedCount: parsedFilters.requestedCount,
+          businessServiceRequirements: parsedFilters.businessServiceRequirements
+        });
+        resolvedLeads = fallback.leads;
+      }
+
+      if (resolvedLeads && resolvedLeads.length > 0) {
+        onSearchComplete(resolvedLeads);
+      }
     } finally {
       setIsSearching(false);
     }

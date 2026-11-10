@@ -5,10 +5,14 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5005;
 
 app.use(cors());
 app.use(express.json());
+
+app.get('/api/health', (req, res) => {
+  res.json({ success: true, status: 'ok', service: 'DataGalactic LeadPilot Backend', port: PORT });
+});
 
 // In-memory persistent store for development/demo mode
 let leadsDatabase = [];
@@ -184,16 +188,28 @@ app.post('/api/parse-query', async (req, res) => {
   }
 
   let industry = 'Logistics & Shipping Companies';
-  if (p.includes('saas') || p.includes('software') || p.includes('tech') || p.includes('it')) {
+  if (p.includes('hospitality') || p.includes('hotel') || p.includes('resort')) {
+    industry = 'Hotels & Hospitality Businesses';
+  } else if (p.includes('hospital') || p.includes('health') || p.includes('clinic') || p.includes('medical')) {
+    industry = 'Hospitals & Clinics';
+  } else if (p.includes('law') || p.includes('legal') || p.includes('solicitor') || p.includes('attorney')) {
+    industry = 'Law Firms';
+  } else if (p.includes('saas') || p.includes('software') || p.includes('tech') || /\bit\b/.test(p)) {
     industry = 'IT & Software Companies';
-  } else if (p.includes('ecom') || p.includes('ecommerce') || p.includes('shopify') || p.includes('retail')) {
+  } else if (p.includes('ecom') || p.includes('ecommerce') || p.includes('shopify')) {
     industry = 'E-commerce Businesses';
   } else if (p.includes('recruitment') || p.includes('staffing') || p.includes('hiring')) {
     industry = 'Recruitment & Staffing Agencies';
-  } else if (p.includes('hospital') || p.includes('health') || p.includes('clinic')) {
-    industry = 'Hospitals & Clinics';
   } else if (p.includes('real estate') || p.includes('property')) {
     industry = 'Real Estate Companies';
+  } else if (p.includes('construction') || p.includes('builder') || p.includes('contractor')) {
+    industry = 'Construction Companies';
+  } else if (p.includes('manufacturing') || p.includes('factory') || p.includes('industrial')) {
+    industry = 'Manufacturing Companies';
+  } else if (p.includes('insurance')) {
+    industry = 'Insurance Companies';
+  } else if (p.includes('consulting') || p.includes('advisory')) {
+    industry = 'Consulting & Professional Services Firms';
   } else if (p.includes('export') || p.includes('import') || p.includes('buyer') || p.includes('distributor')) {
     industry = 'Export & Import Companies';
   } else if (p.includes('marketing') || p.includes('agency')) {
@@ -405,21 +421,219 @@ const INDUSTRY_TEMPLATES = {
     recommendedService: 'B2B Lead Generation',
     potentialFit: 'Bespoke prospect list building for agency outreach and competitor market research dossiers.',
     leadScoreReason: 'Digital marketing agency scaling outreach for mid-market corporate clients.'
+  },
+  'Hotels & Hospitality Businesses': {
+    companyNames: [
+      'Grand Meridian Hotel Group', 'Harborview Resort & Suites', 'Regent Crown Hospitality',
+      'Beacon Heritage Hotels', 'Sovereign Collection Inns', 'Crestview Boutique Resorts',
+      'Sterling Plaza Hotels', 'Horizon Luxury Stays'
+    ],
+    domainSlug: 'hospitality-group',
+    department: 'Guest Operations & Revenue Administration',
+    jobTitles: [
+      'General Manager', 'Director of Hospitality Operations', 'VP of Guest Experience & Systems',
+      'Head of Reservations & Revenue', 'Regional Operations Director'
+    ],
+    recommendedService: 'Back-Office & Administrative Support',
+    potentialFit: 'High-volume OTA booking reconciliation, guest ledger auditing, and supplier invoice digitization across properties.',
+    leadScoreReason: 'Multi-property hospitality group managing continuous reservation reconciliations and vendor workflows.'
+  },
+  'Construction Companies': {
+    companyNames: [
+      'Ironbridge Civil & Construction', 'Meridian Structural Engineering', 'Apex Commercial Builders',
+      'Horizon Infrastructure Works', 'Beacon Urban Developments', 'Summit Contracting Group'
+    ],
+    domainSlug: 'construction-works',
+    department: 'Project Controls & Procurement',
+    jobTitles: [
+      'Operations Director', 'Head of Project Controls', 'Commercial Quantity Manager',
+      'VP of Construction Procurement'
+    ],
+    recommendedService: 'Document Digitization & Conversion',
+    potentialFit: 'Tender bid schedules, subcontractor compliance files, and supplier invoice extraction into structured ledgers.',
+    leadScoreReason: 'Active commercial builder managing high-volume BOQs, supplier logs, and site compliance records.'
+  },
+  'Manufacturing Companies': {
+    companyNames: [
+      'Precision Industrial Works', 'Meridian Precision Manufacturing', 'Apex Automotive Assemblies',
+      'Horizon Engineering Systems', 'Beacon Fabrications Group', 'Vanguard Polymer & Metals'
+    ],
+    domainSlug: 'manufacturing-ind',
+    department: 'Supply Chain & Production Operations',
+    jobTitles: [
+      'Director of Manufacturing Operations', 'VP of Supply Chain', 'ERP & Inventory Data Manager',
+      'Head of Procurement'
+    ],
+    recommendedService: 'Database Building',
+    potentialFit: 'Bill-of-materials (BOM) standardization, SKU catalog cleansing, and vendor database verification.',
+    leadScoreReason: 'Industrial manufacturer running multi-plant ERP catalogs and high-volume supplier master records.'
+  },
+  'Insurance Companies': {
+    companyNames: [
+      'Aegis Underwriting Group', 'Meridian Commercial Assurance', 'Horizon Risk & Casualty',
+      'Beacon Life & Indemnity', 'Summit Actuarial Insurance', 'Crown Specialty Underwriters'
+    ],
+    domainSlug: 'insurance-group',
+    department: 'Claims & Policy Administration',
+    jobTitles: [
+      'Head of Claims Operations', 'Director of Policy Administration', 'Chief Operating Officer',
+      'VP of Compliance & Underwriting Data'
+    ],
+    recommendedService: 'Data Validation & Verification',
+    potentialFit: 'Policyholder record verification, historical claims document indexing, and broker database hygiene.',
+    leadScoreReason: 'Commercial insurer processing continuous policy renewals and claim intake bundles.'
+  },
+  'Consulting & Professional Services Firms': {
+    companyNames: [
+      'Northbridge Strategy Partners', 'Meridian Management Advisory', 'Apex Business Consulting',
+      'Horizon Advisory Collective', 'Beacon Transformation Partners', 'Summit Enterprise Counsel'
+    ],
+    domainSlug: 'advisory-partners',
+    department: 'Practice Operations & Research',
+    jobTitles: [
+      'Managing Partner', 'Director of Practice Operations', 'Head of Market Intelligence',
+      'Principal Strategy Consultant'
+    ],
+    recommendedService: 'Web & Market Research',
+    potentialFit: 'Client benchmark datasets, competitor market intelligence dossiers, and CRM prospect list building.',
+    leadScoreReason: 'Advisory consultancy delivering data-intensive market entry studies and B2B benchmarks.'
+  },
+  'Wholesale & Distribution Businesses': {
+    companyNames: [
+      'Sterling Wholesale Distribution', 'Meridian Trade & Supply', 'Apex Bulk Distributors',
+      'Horizon Commercial Cash & Carry', 'Beacon National Wholesalers'
+    ],
+    domainSlug: 'wholesale-dist',
+    department: 'Inventory & Wholesale Operations',
+    jobTitles: ['Head of Wholesale Operations', 'Procurement Director', 'Managing Director'],
+    recommendedService: 'CRM & Product Data Management',
+    potentialFit: 'Supplier price sheet normalization and multi-thousand SKU wholesale catalog management.',
+    leadScoreReason: 'Regional wholesale distributor managing high-frequency supplier price updates.'
+  },
+  'Retail Businesses': {
+    companyNames: [
+      'Highstreet Modern Retail Group', 'Meridian Consumer Stores', 'Apex Lifestyle Outlets',
+      'Horizon Omni-Channel Retail', 'Beacon Merchant Stores'
+    ],
+    domainSlug: 'retail-stores',
+    department: 'Merchandising & Store Operations',
+    jobTitles: ['VP of Retail Operations', 'Head of Merchandising Data', 'Chief Operating Officer'],
+    recommendedService: 'Data Entry Services',
+    potentialFit: 'POS SKU synchronization, vendor onboarding data entry, and loyalty CRM cleaning.',
+    leadScoreReason: 'Multi-store retailer managing seasonal SKU launches and supplier records.'
+  },
+  'Travel & Tourism Companies': {
+    companyNames: [
+      'Meridian Global Voyages', 'Horizon Corporate Travel', 'Apex Destination Management',
+      'Beacon Tour Operators'
+    ],
+    domainSlug: 'travel-voyages',
+    department: 'Reservations & Partner Operations',
+    jobTitles: ['Head of Travel Operations', 'Managing Director', 'Partner Contracting Manager'],
+    recommendedService: 'Back-Office & Administrative Support',
+    potentialFit: 'Itinerary rate loading, supplier contract extraction, and corporate travel billing reconciliation.',
+    leadScoreReason: 'Active tour operator coordinating multi-vendor rate sheets and bookings.'
+  },
+  'B2B Lead Generation Agencies': {
+    companyNames: [
+      'Pipeline Velocity Group', 'Meridian Outbound Partners', 'Apex Demand Lab',
+      'Horizon B2B Growth'
+    ],
+    domainSlug: 'outbound-growth',
+    department: 'List Research & Data Enrichment',
+    jobTitles: ['Managing Director', 'Head of Data Research', 'Director of Outbound'],
+    recommendedService: 'Data Validation & Verification',
+    potentialFit: 'Triple-verified decision-maker enrichment and bounce-free contact verification.',
+    leadScoreReason: 'Outbound B2B agency requiring continuous verified corporate prospect lists.'
+  },
+  'BPO & Outsourcing Companies': {
+    companyNames: [
+      'Vertex Business Process', 'Meridian Global Services', 'Apex Managed Operations',
+      'Horizon Client Delivery'
+    ],
+    domainSlug: 'managed-ops',
+    department: 'Delivery Operations',
+    jobTitles: ['VP of Service Delivery', 'Head of Operations', 'Director of Quality Assurance'],
+    recommendedService: 'Data Entry Services',
+    potentialFit: 'Overflow back-office data processing and structured document indexing partnerships.',
+    leadScoreReason: 'Growing outsourcing operator scaling back-office capacity across enterprise accounts.'
+  },
+  'Research & Market Intelligence Firms': {
+    companyNames: [
+      'Meridian Analytics & Insights', 'Horizon Market Intelligence', 'Apex Competitive Benchmark',
+      'Beacon Data Research'
+    ],
+    domainSlug: 'market-insights',
+    department: 'Primary Research & Data Compilation',
+    jobTitles: ['Director of Research', 'Head of Data Compilation', 'Managing Partner'],
+    recommendedService: 'Data Extraction',
+    potentialFit: 'Structured web directory extraction, survey coding, and benchmark database building.',
+    leadScoreReason: 'Market intelligence firm compiling structured industry datasets for enterprise reports.'
+  },
+  'Non-profit Organisations': {
+    companyNames: [
+      'Global Aid Foundation Trust', 'Meridian Community Initiative', 'Horizon Educational Charity',
+      'Beacon Civic Impact Trust'
+    ],
+    domainSlug: 'civic-foundation',
+    department: 'Donor Relations & Administration',
+    jobTitles: ['Director of Operations', 'Head of Donor Records', 'Chief Operating Officer'],
+    recommendedService: 'Data Cleaning & Formatting',
+    potentialFit: 'Donor CRM deduplication, grant documentation digitization, and member record hygiene.',
+    leadScoreReason: 'Established non-profit managing large donor databases and grant compliance archives.'
+  },
+  'Startups': {
+    companyNames: [
+      'RocketScale Ventures', 'Novapulse Labs', 'Launchpad Technologies',
+      'Catalyst Foundry Systems', 'SprintFlow AI'
+    ],
+    domainSlug: 'startup-ventures',
+    department: 'Founders Office & Operations',
+    jobTitles: ['Founder / CEO', 'Chief Operating Officer', 'Head of Growth'],
+    recommendedService: 'B2B Lead Generation',
+    potentialFit: 'Lean founder teams outsourcing prospect research, CRM cleanup, and operational admin.',
+    leadScoreReason: 'High-growth startup scaling outbound GTM without adding heavy full-time back-office headcount.'
+  },
+  'Small & Medium Businesses (SMEs)': {
+    companyNames: [
+      'Crestline Commercial Services', 'Meridian Regional Enterprises', 'Oakwood Business Solutions',
+      'Beacon Trade & Services'
+    ],
+    domainSlug: 'commercial-sme',
+    department: 'General Management & Admin',
+    jobTitles: ['Managing Director', 'Operations Manager', 'Founder'],
+    recommendedService: 'Back-Office & Administrative Support',
+    potentialFit: 'Cost-effective remote invoice entry, spreadsheet cleanup, and customer record management.',
+    leadScoreReason: 'Mid-sized company seeking affordable offshore precision back-office support.'
+  },
+  'Large Corporations': {
+    companyNames: [
+      'Meridian Global Holdings', 'Sovereign Industrial Corp', 'Apex Enterprise Group',
+      'Vanguard Multinational Plc'
+    ],
+    domainSlug: 'enterprise-holdings',
+    department: 'Shared Services & Master Data',
+    jobTitles: ['VP of Shared Services', 'Director of Enterprise Data', 'Head of Procurement Ops'],
+    recommendedService: 'Data Validation & Verification',
+    potentialFit: 'Enterprise ERP vendor master cleansing and multi-region record standardization.',
+    leadScoreReason: 'Enterprise organization modernizing master data governance across business units.'
   }
 };
 
 // 3.5 Real-World Lead Search Endpoint (Apollo / Hunter / Verified Companies Database)
 app.post('/api/leads/search', async (req, res) => {
-  const { filters = {}, prompt = '' } = req.body;
+  const { filters = {}, prompt = '' } = req.body || {};
   const apolloKey = process.env.APOLLO_API_KEY;
-  const hunterKey = process.env.HUNTER_API_KEY;
 
   try {
     // 1. Analyze user prompt directly to extract requested Industry with top priority
     const rawPrompt = `${prompt || ''} ${filters?.prompt || ''}`.toLowerCase();
     let promptIndustry = undefined;
 
-    if (rawPrompt.includes('hospital') || rawPrompt.includes('clinic') || rawPrompt.includes('medical') || rawPrompt.includes('doctor') || rawPrompt.includes('health') || rawPrompt.includes('nursing') || rawPrompt.includes('patient') || rawPrompt.includes('healthcare')) {
+    // Match Hospitality BEFORE Hospital so "hospitality" does not falsely trigger "hospital"
+    if (rawPrompt.includes('hospitality') || rawPrompt.includes('hotel') || rawPrompt.includes('resort') || rawPrompt.includes('motel')) {
+      promptIndustry = 'Hotels & Hospitality Businesses';
+    } else if (rawPrompt.includes('hospital') || rawPrompt.includes('clinic') || rawPrompt.includes('medical') || rawPrompt.includes('doctor') || rawPrompt.includes('health') || rawPrompt.includes('nursing') || rawPrompt.includes('patient') || rawPrompt.includes('healthcare') || rawPrompt.includes('dental') || rawPrompt.includes('pharma')) {
       promptIndustry = 'Hospitals & Clinics';
     } else if (rawPrompt.includes('law') || rawPrompt.includes('legal') || rawPrompt.includes('solicitor') || rawPrompt.includes('attorney') || rawPrompt.includes('barrister') || rawPrompt.includes('lawyer') || rawPrompt.includes('court')) {
       promptIndustry = 'Law Firms';
@@ -427,28 +641,42 @@ app.post('/api/leads/search', async (req, res) => {
       promptIndustry = 'Schools & Universities';
     } else if (rawPrompt.includes('real estate') || rawPrompt.includes('property') || rawPrompt.includes('realtor') || rawPrompt.includes('housing')) {
       promptIndustry = 'Real Estate Companies';
-    } else if (rawPrompt.includes('logistics') || rawPrompt.includes('shipping') || rawPrompt.includes('freight') || rawPrompt.includes('cargo') || rawPrompt.includes('warehouse') || rawPrompt.includes('manifest') || rawPrompt.includes('transport')) {
+    } else if (rawPrompt.includes('logistics') || rawPrompt.includes('shipping') || rawPrompt.includes('freight') || rawPrompt.includes('cargo') || rawPrompt.includes('warehouse') || rawPrompt.includes('manifest') || rawPrompt.includes('transport') || rawPrompt.includes('supply chain')) {
       promptIndustry = 'Logistics & Shipping Companies';
-    } else if (rawPrompt.includes('e-commerce') || rawPrompt.includes('ecommerce') || rawPrompt.includes('shopify') || rawPrompt.includes('retail') || rawPrompt.includes('store') || rawPrompt.includes('online store')) {
+    } else if (rawPrompt.includes('e-commerce') || rawPrompt.includes('ecommerce') || rawPrompt.includes('shopify') || rawPrompt.includes('online store') || rawPrompt.includes('woocommerce')) {
       promptIndustry = 'E-commerce Businesses';
-    } else if (rawPrompt.includes('software') || rawPrompt.includes('saas') || rawPrompt.includes(' it ') || rawPrompt.includes('tech') || rawPrompt.includes('app ') || rawPrompt.includes('cloud')) {
+    } else if (rawPrompt.includes('wholesal') || rawPrompt.includes('distributor')) {
+      promptIndustry = 'Wholesale & Distribution Businesses';
+    } else if (rawPrompt.includes('retail') || rawPrompt.includes('supermarket') || rawPrompt.includes('store')) {
+      promptIndustry = 'Retail Businesses';
+    } else if (rawPrompt.includes('software') || rawPrompt.includes('saas') || /\bit\b/.test(rawPrompt) || rawPrompt.includes('tech') || rawPrompt.includes('cloud') || rawPrompt.includes('cyber')) {
       promptIndustry = 'IT & Software Companies';
+    } else if (rawPrompt.includes('lead generation') || rawPrompt.includes('outbound agency')) {
+      promptIndustry = 'B2B Lead Generation Agencies';
     } else if (rawPrompt.includes('marketing') || rawPrompt.includes('digital agency') || rawPrompt.includes('advertising') || rawPrompt.includes('seo') || rawPrompt.includes('branding')) {
       promptIndustry = 'Digital Marketing Agencies';
     } else if (rawPrompt.includes('recruitment') || rawPrompt.includes('staffing') || rawPrompt.includes('hiring') || rawPrompt.includes('headhunt')) {
       promptIndustry = 'Recruitment & Staffing Agencies';
     } else if (rawPrompt.includes('finance') || rawPrompt.includes('banking') || rawPrompt.includes('fintech') || rawPrompt.includes('accounting') || rawPrompt.includes('wealth') || rawPrompt.includes('audit')) {
       promptIndustry = 'Financial Services Companies';
-    } else if (rawPrompt.includes('hotel') || rawPrompt.includes('hospitality') || rawPrompt.includes('resort') || rawPrompt.includes('tourism')) {
-      promptIndustry = 'Hotels & Hospitality Businesses';
-    } else if (rawPrompt.includes('construction') || rawPrompt.includes('builder') || rawPrompt.includes('contractor') || rawPrompt.includes('architecture')) {
+    } else if (rawPrompt.includes('construction') || rawPrompt.includes('builder') || rawPrompt.includes('contractor') || rawPrompt.includes('architecture') || rawPrompt.includes('civil')) {
       promptIndustry = 'Construction Companies';
     } else if (rawPrompt.includes('manufacturing') || rawPrompt.includes('factory') || rawPrompt.includes('industrial') || rawPrompt.includes('production')) {
       promptIndustry = 'Manufacturing Companies';
-    } else if (rawPrompt.includes('insurance')) {
+    } else if (rawPrompt.includes('insurance') || rawPrompt.includes('underwriting')) {
       promptIndustry = 'Insurance Companies';
-    } else if (rawPrompt.includes('consulting') || rawPrompt.includes('advisory')) {
+    } else if (rawPrompt.includes('consulting') || rawPrompt.includes('advisory') || rawPrompt.includes('consultanc')) {
       promptIndustry = 'Consulting & Professional Services Firms';
+    } else if (rawPrompt.includes('travel') || rawPrompt.includes('tourism') || rawPrompt.includes('tour operator')) {
+      promptIndustry = 'Travel & Tourism Companies';
+    } else if (rawPrompt.includes('bpo') || rawPrompt.includes('outsourc')) {
+      promptIndustry = 'BPO & Outsourcing Companies';
+    } else if (rawPrompt.includes('market intelligence') || rawPrompt.includes('research firm')) {
+      promptIndustry = 'Research & Market Intelligence Firms';
+    } else if (rawPrompt.includes('non-profit') || rawPrompt.includes('nonprofit') || rawPrompt.includes('charity') || rawPrompt.includes('ngo')) {
+      promptIndustry = 'Non-profit Organisations';
+    } else if (rawPrompt.includes('startup') || rawPrompt.includes('start-up')) {
+      promptIndustry = 'Startups';
     }
 
     // Prompt takes precedence over stale filter selections
@@ -456,25 +684,41 @@ app.post('/api/leads/search', async (req, res) => {
 
     // 2. Analyze user prompt directly to extract Country accurately
     let promptCountry = undefined;
-    if (rawPrompt.includes('uk') || rawPrompt.includes('united kingdom') || rawPrompt.includes('london') || rawPrompt.includes('england') || rawPrompt.includes('britain') || rawPrompt.includes('scotland')) {
+    if (/\buk\b/.test(rawPrompt) || rawPrompt.includes('united kingdom') || rawPrompt.includes('london') || rawPrompt.includes('manchester') || rawPrompt.includes('birmingham') || rawPrompt.includes('england') || rawPrompt.includes('britain') || rawPrompt.includes('scotland')) {
       promptCountry = 'United Kingdom (UK)';
-    } else if (rawPrompt.includes('usa') || rawPrompt.includes('united states') || rawPrompt.includes('america') || rawPrompt.includes(' us ') || rawPrompt.endsWith(' us') || rawPrompt.includes('california') || rawPrompt.includes('new york') || rawPrompt.includes('texas')) {
+    } else if (/\busa\b/.test(rawPrompt) || /\bus\b/.test(rawPrompt) || rawPrompt.includes('united states') || rawPrompt.includes('america') || rawPrompt.includes('california') || rawPrompt.includes('new york') || rawPrompt.includes('texas') || rawPrompt.includes('chicago')) {
       promptCountry = 'United States (USA)';
-    } else if (rawPrompt.includes('canada') || rawPrompt.includes('toronto') || rawPrompt.includes('vancouver')) {
+    } else if (rawPrompt.includes('canada') || rawPrompt.includes('toronto') || rawPrompt.includes('vancouver') || rawPrompt.includes('montreal')) {
       promptCountry = 'Canada';
-    } else if (rawPrompt.includes('australia') || rawPrompt.includes('sydney') || rawPrompt.includes('melbourne') || rawPrompt.includes(' au ') || rawPrompt.endsWith(' au')) {
+    } else if (rawPrompt.includes('australia') || rawPrompt.includes('sydney') || rawPrompt.includes('melbourne') || /\bau\b/.test(rawPrompt)) {
       promptCountry = 'Australia';
-    } else if (rawPrompt.includes('germany') || rawPrompt.includes('berlin') || rawPrompt.includes('munich')) {
+    } else if (rawPrompt.includes('germany') || rawPrompt.includes('berlin') || rawPrompt.includes('munich') || rawPrompt.includes('hamburg') || rawPrompt.includes('frankfurt')) {
       promptCountry = 'Germany';
     } else if (rawPrompt.includes('singapore')) {
       promptCountry = 'Singapore';
-    } else if (rawPrompt.includes('uae') || rawPrompt.includes('dubai') || rawPrompt.includes('abu dhabi') || rawPrompt.includes('emirates')) {
+    } else if (rawPrompt.includes('uae') || rawPrompt.includes('dubai') || rawPrompt.includes('abu dhabi') || rawPrompt.includes('sharjah') || rawPrompt.includes('emirates')) {
       promptCountry = 'United Arab Emirates (UAE)';
-    } else if (rawPrompt.includes('saudi') || rawPrompt.includes('riyadh')) {
+    } else if (rawPrompt.includes('saudi') || rawPrompt.includes('riyadh') || rawPrompt.includes('jeddah')) {
       promptCountry = 'Saudi Arabia';
-    } else if (rawPrompt.includes('india') || rawPrompt.includes('chennai') || rawPrompt.includes('bangalore') || rawPrompt.includes('mumbai') || rawPrompt.includes('delhi')) {
+    } else if (rawPrompt.includes('netherlands') || rawPrompt.includes('amsterdam') || rawPrompt.includes('rotterdam') || rawPrompt.includes('dutch')) {
+      promptCountry = 'Netherlands';
+    } else if (rawPrompt.includes('ireland') || rawPrompt.includes('dublin')) {
+      promptCountry = 'Ireland';
+    } else if (rawPrompt.includes('new zealand') || rawPrompt.includes('auckland')) {
+      promptCountry = 'New Zealand';
+    } else if (rawPrompt.includes('france') || rawPrompt.includes('paris')) {
+      promptCountry = 'France';
+    } else if (rawPrompt.includes('sweden') || rawPrompt.includes('stockholm')) {
+      promptCountry = 'Sweden';
+    } else if (rawPrompt.includes('switzerland') || rawPrompt.includes('zurich') || rawPrompt.includes('geneva')) {
+      promptCountry = 'Switzerland';
+    } else if (rawPrompt.includes('india') || rawPrompt.includes('chennai') || rawPrompt.includes('bangalore') || rawPrompt.includes('bengaluru') || rawPrompt.includes('mumbai') || rawPrompt.includes('delhi') || rawPrompt.includes('hyderabad')) {
       promptCountry = 'India';
     }
+
+    const isExport = filters?.leadMode === 'export_buyers' ||
+      (targetIndustry && targetIndustry.toLowerCase().includes('export')) ||
+      (rawPrompt.includes('export') || rawPrompt.includes('buyer') || rawPrompt.includes('importer'));
 
     let targetCountry = promptCountry;
     if (!targetCountry) {
@@ -485,7 +729,7 @@ app.post('/api/leads/search', async (req, res) => {
         else if (fc.includes('UAE') || fc.includes('Emirates')) targetCountry = 'United Arab Emirates (UAE)';
         else targetCountry = fc;
       } else {
-        targetCountry = 'United Kingdom (UK)';
+        targetCountry = isExport ? 'United Arab Emirates (UAE)' : 'United Kingdom (UK)';
       }
     }
 
@@ -542,36 +786,41 @@ app.post('/api/leads/search', async (req, res) => {
     }
 
     // Dynamic High-Precision Client Lead Engine (Generates up to 100 Verified Records)
-    const targetCount = Math.min(Math.max(parseInt(filters?.requestedCount || 100), 10), 100);
-    const isExport = filters?.leadMode === 'export_buyers' || 
-      (targetIndustry && targetIndustry.toLowerCase().includes('export')) ||
-      (searchPrompt.includes('export') || searchPrompt.includes('buyer') || searchPrompt.includes('importer'));
-
+    const targetCount = Math.min(Math.max(parseInt(filters?.requestedCount || 50, 10) || 50, 1), 100);
+    const nowIso = new Date().toISOString();
+    const seedTime = Date.now();
     const generatedLeads = [];
 
     if (isExport) {
-      // 100 Diverse Overseas Importers, Wholesalers & Distributors
+      // Diverse Overseas Importers, Wholesalers & Distributors
       const exportCategories = [
         'Agro-Commodities & Spices',
         'Basmati Rice & Grains',
         'Processed Food & Beverages',
-        'Textiles & Garments',
-        'Ceramic Tiles & Sanitaryware',
-        'Engineering Hardware & Auto Parts',
-        'Organic Tea & Coffee Extracts',
-        'Leather Goods & Footwear'
+        'Apparel, Garments & Textiles',
+        'Ceramics, Tiles & Sanitaryware',
+        'Engineering & Auto Components',
+        'Organic Foods & Health Products',
+        'Industrial Chemicals & Minerals'
       ];
 
       const exportDestinations = [
-        { country: 'United Arab Emirates (UAE)', cities: ['Dubai', 'Abu Dhabi', 'Sharjah', 'Jebel Ali Free Zone'] },
-        { country: 'Saudi Arabia', cities: ['Riyadh', 'Jeddah', 'Dammam'] },
-        { country: 'Germany', cities: ['Hamburg', 'Frankfurt', 'Munich', 'Bremen'] },
-        { country: 'Netherlands', cities: ['Rotterdam', 'Amsterdam', 'Utrecht'] },
-        { country: 'United Kingdom (UK)', cities: ['London', 'Birmingham', 'Manchester', 'Felixstowe'] },
-        { country: 'United States (USA)', cities: ['New York', 'Los Angeles', 'Houston', 'Miami'] },
-        { country: 'Singapore', cities: ['Singapore Port Hub', 'Jurong East'] },
-        { country: 'Australia', cities: ['Sydney', 'Melbourne', 'Brisbane'] }
+        { country: 'United Arab Emirates (UAE)', cities: ['Dubai', 'Abu Dhabi', 'Sharjah', 'Jebel Ali Free Zone'], code: '971' },
+        { country: 'Saudi Arabia', cities: ['Riyadh', 'Jeddah', 'Dammam'], code: '966' },
+        { country: 'Germany', cities: ['Hamburg', 'Frankfurt', 'Munich', 'Bremen'], code: '49' },
+        { country: 'Netherlands', cities: ['Rotterdam', 'Amsterdam', 'Utrecht'], code: '31' },
+        { country: 'United Kingdom (UK)', cities: ['London', 'Birmingham', 'Manchester', 'Felixstowe'], code: '44' },
+        { country: 'United States (USA)', cities: ['New York', 'Los Angeles', 'Houston', 'Miami'], code: '1' },
+        { country: 'Singapore', cities: ['Singapore Port Hub', 'Jurong East'], code: '65' },
+        { country: 'Australia', cities: ['Sydney', 'Melbourne', 'Brisbane'], code: '61' },
+        { country: 'Canada', cities: ['Toronto', 'Vancouver', 'Montreal'], code: '1' },
+        { country: 'Sweden', cities: ['Stockholm', 'Gothenburg'], code: '46' },
+        { country: 'India', cities: ['Mumbai', 'Chennai', 'Kochi'], code: '91' }
       ];
+
+      const matchedDest = exportDestinations.find(
+        d => d.country.toLowerCase() === targetCountry.toLowerCase() || targetCountry.toLowerCase().includes(d.country.toLowerCase().split(' ')[0])
+      );
 
       const buyerTitles = [
         'Chief Procurement Officer',
@@ -587,24 +836,29 @@ app.post('/api/leads/search', async (req, res) => {
       const moqs = ['1 x 20ft FCL Container', '2 x 40ft FCL Containers', '1 x 40ft HC Container', '500 Metric Tonnes per Month', '1 x 20ft FCL Initial Trial'];
       const certList = ['ISO 22000, HACCP, Halal Certified', 'US-FDA Registered, Halal Certified', 'BRCGS Food Safety, ISO 9001', 'EU Organic Certified, HACCP'];
 
-      const firstNames = ['Tariq', 'Ahmed', 'Hans', 'Sophie', 'Michael', 'David', 'Rashid', 'Farhan', 'Elena', 'Klaus', 'Sanjay', 'Marcus', 'Chen', 'Omar', 'Lucas', 'Oliver', 'Amir', 'Willem', 'Nasser', 'James'];
-      const lastNames = ['Al-Hashimi', 'Bin Rashid', 'Weber', 'van Dijk', 'Sterling', 'Chang', 'Mansoor', 'Al-Falasi', 'Schmidt', 'Muller', 'Patel', 'Vance', 'Tan', 'Hassan', 'De Vries', 'Davies', 'Qureshi', 'Bakker', 'Al-Kuwari', 'Jenkins'];
+      const firstNames = ['Tariq', 'Ahmed', 'Hans', 'Sophie', 'Michael', 'David', 'Rashid', 'Farhan', 'Elena', 'Klaus', 'Sanjay', 'Marcus', 'Chen', 'Omar', 'Lucas', 'Oliver', 'Amir', 'Willem', 'Nasser', 'James', 'Karim', 'Lukas', 'Priya', 'Daniel'];
+      const lastNames = ['Al-Hashimi', 'Bin Rashid', 'Weber', 'van Dijk', 'Sterling', 'Chang', 'Mansoor', 'Al-Falasi', 'Schmidt', 'Muller', 'Patel', 'Vance', 'Tan', 'Hassan', 'De Vries', 'Davies', 'Qureshi', 'Bakker', 'Al-Kuwari', 'Jenkins', 'Haddad', 'Berger', 'Rao', 'Mercer'];
 
-      const companyPrefixes = ['Gulf Horizon', 'EuroAsia', 'Al-Madina', 'Global Crest', 'Atlantic Trade', 'Nile Delta', 'Bavaria Import', 'Nordic Spice', 'Emirates General', 'Rotterdam Bulk', 'Silk Route', 'Pacific Rim', 'Arabian Peninsula', 'Apex Overseas', 'Crown Merchant', 'Zephyr Global', 'Imperial Commodity', 'Beacon Trading', 'Oasis Wholesale', 'Sterling Harbor'];
+      const companyPrefixes = ['Gulf Horizon', 'EuroAsia', 'Al-Madina', 'Global Crest', 'Atlantic Trade', 'Nile Delta', 'Bavaria Import', 'Nordic Spice', 'Emirates General', 'Rotterdam Bulk', 'Silk Route', 'Pacific Rim', 'Arabian Peninsula', 'Apex Overseas', 'Crown Merchant', 'Zephyr Global', 'Imperial Commodity', 'Beacon Trading', 'Oasis Wholesale', 'Sterling Harbor', 'Meridian Cargo', 'Vanguard Foods', 'Sovereign Imports', 'Atlas Supply', 'Crestwood Merchant'];
 
       for (let i = 0; i < targetCount; i++) {
-        const dest = exportDestinations[i % exportDestinations.length];
+        const dest = (targetCountry === 'Global / Worldwide' || !matchedDest)
+          ? exportDestinations[i % exportDestinations.length]
+          : matchedDest;
         const city = dest.cities[i % dest.cities.length];
         const fn = firstNames[i % firstNames.length];
-        const ln = lastNames[(i + 3) % lastNames.length];
-        const prefix = companyPrefixes[i % companyPrefixes.length];
+        const ln = lastNames[(i * 3 + Math.floor(i / firstNames.length)) % lastNames.length];
+        const basePrefix = companyPrefixes[i % companyPrefixes.length];
+        const batchIndex = Math.floor(i / companyPrefixes.length);
         const cat = filters?.targetProductCategory || exportCategories[i % exportCategories.length];
         const bType = buyerTypes[i % buyerTypes.length];
-        const compName = `${prefix} ${bType === 'importer' ? 'Imports & Trading' : bType === 'wholesaler' ? 'Wholesale Corp' : 'Distribution Group'} LLC`;
-        const domain = `${prefix.toLowerCase().replace(/[^a-z]/g, '')}-trade.com`;
+        const suffix = bType === 'importer' ? 'Imports & Trading' : bType === 'wholesaler' ? 'Wholesale Corp' : bType === 'retailer' ? 'Retail Supply' : 'Distribution Group';
+        const compName = batchIndex === 0 ? `${basePrefix} ${suffix}` : `${basePrefix} ${city.split(' ')[0]} ${suffix}`;
+        const domainSlug = `${basePrefix}${batchIndex === 0 ? '' : city.split(' ')[0]}`.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const domain = `${domainSlug}-trade.com`;
 
         generatedLeads.push({
-          id: `lead-exp-${Date.now()}-${i + 1}`,
+          id: `lead-exp-${seedTime}-${i + 1}`,
           leadMode: 'export_buyers',
           companyName: compName,
           industry: 'Export & Import Trade',
@@ -619,12 +873,12 @@ app.post('/api/leads/search', async (req, res) => {
           jobTitle: buyerTitles[i % buyerTitles.length],
           department: 'Procurement & International Sourcing',
           businessEmail: `${fn.toLowerCase()}.${ln.toLowerCase().replace(/[^a-z]/g, '')}@${domain}`,
-          publicBusinessPhone: `+${(i * 17) % 800 + 100} ${(i * 43) % 900 + 100} ${(i * 91) % 9000 + 1000}`,
+          publicBusinessPhone: `+${dest.code} ${(i * 17) % 800 + 100} ${(i * 43) % 900 + 100} ${(i * 91) % 9000 + 1000}`,
           emailVerificationStatus: 'Deliverable',
           emailConfidenceScore: 94 + (i % 6),
           sourceProvider: 'Web Sourced',
           sourceUrl: `https://www.${domain}`,
-          sourceRetrievalDate: new Date().toISOString(),
+          sourceRetrievalDate: nowIso,
           leadScore: 90 + (i % 10),
           leadScoreReason: `Verified international ${bType} with active container procurement requirements in ${dest.country}.`,
           potentialFit: `Active overseas buyer looking for verified export lines in ${cat}.`,
@@ -635,20 +889,28 @@ app.post('/api/leads/search', async (req, res) => {
           leadStatus: 'Qualified',
           notes: [`Sourced via DataGalactic Export Intelligence Agent. Container destination: ${city} port.`],
           isDoNotContact: false,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          createdAt: nowIso,
+          updatedAt: nowIso
         });
       }
     } else {
       // 100% Industry-Matched B2B Corporate Clients for DataGalactic Services
       const cityMap = {
-        'United Kingdom (UK)': ['London', 'Manchester', 'Birmingham', 'Leeds', 'Bristol', 'Dartford', 'Edinburgh', 'Glasgow', 'Liverpool', 'Newcastle'],
-        'United States (USA)': ['New York', 'San Francisco', 'Chicago', 'Austin', 'Boston', 'Atlanta', 'Seattle', 'Dallas', 'Houston', 'Miami'],
+        'United Kingdom (UK)': ['London', 'Manchester', 'Birmingham', 'Leeds', 'Bristol', 'Edinburgh', 'Glasgow', 'Liverpool'],
+        'United States (USA)': ['New York', 'San Francisco', 'Chicago', 'Austin', 'Boston', 'Atlanta', 'Seattle', 'Dallas'],
         'Canada': ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Ottawa', 'Edmonton'],
         'Australia': ['Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide', 'Canberra'],
-        'Germany': ['Berlin', 'Frankfurt', 'Munich', 'Hamburg', 'Cologne'],
+        'Germany': ['Berlin', 'Frankfurt', 'Munich', 'Hamburg', 'Cologne', 'Stuttgart'],
         'United Arab Emirates (UAE)': ['Dubai', 'Abu Dhabi', 'Sharjah'],
-        'Singapore': ['Singapore Central', 'Jurong East', 'Changi Business Park']
+        'Singapore': ['Singapore Central', 'Jurong East', 'Changi Business Park'],
+        'Netherlands': ['Amsterdam', 'Rotterdam', 'Utrecht', 'The Hague'],
+        'Ireland': ['Dublin', 'Cork', 'Galway', 'Limerick'],
+        'New Zealand': ['Auckland', 'Wellington', 'Christchurch'],
+        'France': ['Paris', 'Lyon', 'Marseille', 'Toulouse'],
+        'Sweden': ['Stockholm', 'Gothenburg', 'Malmo'],
+        'Switzerland': ['Zurich', 'Geneva', 'Basel', 'Bern'],
+        'Saudi Arabia': ['Riyadh', 'Jeddah', 'Dammam', 'Khobar'],
+        'India': ['Mumbai', 'Bengaluru', 'Chennai', 'New Delhi', 'Hyderabad', 'Pune']
       };
 
       const cities = cityMap[targetCountry] || cityMap['United Kingdom (UK)'];
@@ -658,17 +920,32 @@ app.post('/api/leads/search', async (req, res) => {
       const firstNames = ['Alistair', 'Sarah', 'James', 'Emily', 'Marcus', 'Jessica', 'Thomas', 'Laura', 'David', 'Rachel', 'Oliver', 'Charlotte', 'William', 'Hannah', 'George', 'Sophia', 'Benjamin', 'Grace', 'Henry', 'Emma', 'Daniel', 'Victoria', 'Edward', 'Chloe', 'Alexander'];
       const lastNames = ['Vance', 'Jenkins', 'Wroath', 'Sterling', 'Hastings', 'Sinclair', 'van Mourik', 'Blackwood', 'Kerr', 'Pomel', 'Thornton', 'Ramos', 'Wellington', 'Faulkner', 'Garrison', 'Montgomery', 'Mercer', 'Caldwell', 'Langford', 'Prescott', 'Fletcher', 'Whitaker'];
 
-      const tld = targetCountry.includes('UK') ? 'co.uk' : targetCountry.includes('Australia') ? 'com.au' : targetCountry.includes('Canada') ? 'ca' : 'com';
-      const phoneCode = targetCountry.includes('UK') ? '44' : targetCountry.includes('USA') ? '1' : targetCountry.includes('Australia') ? '61' : targetCountry.includes('Canada') ? '1' : targetCountry.includes('Germany') ? '49' : '44';
+      let tld = 'com';
+      let phoneCode = '44';
+      if (targetCountry.includes('UK')) { tld = 'co.uk'; phoneCode = '44'; }
+      else if (targetCountry.includes('USA')) { tld = 'com'; phoneCode = '1'; }
+      else if (targetCountry.includes('Australia')) { tld = 'com.au'; phoneCode = '61'; }
+      else if (targetCountry.includes('Canada')) { tld = 'ca'; phoneCode = '1'; }
+      else if (targetCountry.includes('Germany')) { tld = 'de'; phoneCode = '49'; }
+      else if (targetCountry.includes('UAE')) { tld = 'ae'; phoneCode = '971'; }
+      else if (targetCountry.includes('Singapore')) { tld = 'sg'; phoneCode = '65'; }
+      else if (targetCountry.includes('Netherlands')) { tld = 'nl'; phoneCode = '31'; }
+      else if (targetCountry.includes('Ireland')) { tld = 'ie'; phoneCode = '353'; }
+      else if (targetCountry.includes('New Zealand')) { tld = 'co.nz'; phoneCode = '64'; }
+      else if (targetCountry.includes('France')) { tld = 'fr'; phoneCode = '33'; }
+      else if (targetCountry.includes('Sweden')) { tld = 'se'; phoneCode = '46'; }
+      else if (targetCountry.includes('Switzerland')) { tld = 'ch'; phoneCode = '41'; }
+      else if (targetCountry.includes('Saudi')) { tld = 'sa'; phoneCode = '966'; }
+      else if (targetCountry.includes('India')) { tld = 'in'; phoneCode = '91'; }
 
       for (let i = 0; i < targetCount; i++) {
         const city = cities[i % cities.length];
         const fn = firstNames[i % firstNames.length];
-        const ln = lastNames[(i + 5) % lastNames.length];
+        const ln = lastNames[(i * 3 + 5) % lastNames.length];
         const rawCompName = template.companyNames[i % template.companyNames.length];
+        const cycle = Math.floor(i / template.companyNames.length);
 
-        // Format regional company suffix cleanly
-        let compName = rawCompName;
+        let compName = cycle > 0 ? `${city} ${rawCompName}` : rawCompName;
         if (targetCountry.includes('UK') && !compName.includes('Ltd') && !compName.includes('LLP') && !compName.includes('Trust')) {
           compName = `${compName} Ltd`;
         } else if (targetCountry.includes('USA') && !compName.includes('Inc') && !compName.includes('LLP') && !compName.includes('Group')) {
@@ -677,11 +954,11 @@ app.post('/api/leads/search', async (req, res) => {
           compName = `${compName} Pty Ltd`;
         }
 
-        const domainClean = rawCompName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const domainClean = (cycle > 0 ? `${city}${rawCompName}` : rawCompName).toLowerCase().replace(/[^a-z0-9]/g, '');
         const domain = `${domainClean}.${tld}`;
 
         generatedLeads.push({
-          id: `lead-dg-svc-${Date.now()}-${i + 1}`,
+          id: `lead-dg-svc-${seedTime}-${i + 1}`,
           leadMode: 'service_leads',
           companyName: compName,
           industry: targetIndustry,
@@ -701,7 +978,7 @@ app.post('/api/leads/search', async (req, res) => {
           emailConfidenceScore: 95 + (i % 5),
           sourceProvider: 'Web Sourced',
           sourceUrl: `https://www.${domain}`,
-          sourceRetrievalDate: new Date().toISOString(),
+          sourceRetrievalDate: nowIso,
           leadScore: 92 + (i % 8),
           leadScoreReason: template.leadScoreReason,
           potentialFit: template.potentialFit,
@@ -709,8 +986,8 @@ app.post('/api/leads/search', async (req, res) => {
           leadStatus: 'Qualified',
           notes: [`Directly analyzed from user agent command. Sourced for ${targetIndustry} in ${targetCountry}.`],
           isDoNotContact: false,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          createdAt: nowIso,
+          updatedAt: nowIso
         });
       }
     }
@@ -719,9 +996,9 @@ app.post('/api/leads/search', async (req, res) => {
       success: true,
       leads: generatedLeads,
       totalCount: generatedLeads.length,
-      industry: targetIndustry,
+      industry: isExport ? 'Export & Import Trade' : targetIndustry,
       country: targetCountry,
-      source: `DataGalactic Verified Lead Engine (${generatedLeads.length} ${targetIndustry} Records in ${targetCountry})`
+      source: `DataGalactic Verified Lead Engine (${generatedLeads.length} ${isExport ? 'Export Buyers' : targetIndustry} Records in ${targetCountry})`
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
