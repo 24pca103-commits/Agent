@@ -56,12 +56,17 @@ async function sendOtpEmail(email, code) {
 
   if (hasSmtp) {
     try {
+      const gmailUser = process.env.GMAIL_USER ? String(process.env.GMAIL_USER).trim() : null;
+      const gmailPass = (process.env.GMAIL_APP_PASS || process.env.GMAIL_PASS)
+        ? String(process.env.GMAIL_APP_PASS || process.env.GMAIL_PASS).replace(/\s+/g, '').trim()
+        : null;
+
       const transporter = nodemailer.createTransport(
-        process.env.GMAIL_USER ? {
+        gmailUser && gmailPass ? {
           service: 'gmail',
           auth: {
-            user: process.env.GMAIL_USER,
-            pass: process.env.GMAIL_APP_PASS || process.env.GMAIL_PASS
+            user: gmailUser,
+            pass: gmailPass
           }
         } : {
           host: process.env.SMTP_HOST,
@@ -101,8 +106,12 @@ async function sendOtpEmail(email, code) {
         </div>
       `;
 
+      const senderFrom = gmailUser
+        ? `"LeadPilot AI" <${gmailUser}>`
+        : (process.env.EMAIL_FROM || '"LeadPilot AI" <no-reply@datagalactic.com>');
+
       await transporter.sendMail({
-        from: process.env.EMAIL_FROM || '"LeadPilot AI" <no-reply@datagalactic.com>',
+        from: senderFrom,
         to: email,
         subject: `🔐 ${code} is your LeadPilot AI verification code`,
         text: `Your LeadPilot AI verification code is: ${code}. Valid for 10 minutes.`,
