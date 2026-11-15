@@ -15,6 +15,121 @@ app.get('/api/health', (req, res) => {
 });
 
 // In-memory persistent store for development/demo mode
+let registeredUsers = [
+  {
+    id: 'usr-founder-001',
+    name: 'Risona',
+    email: 'contact@datagalactic.com',
+    password: 'admin',
+    companyName: 'DataGalactic',
+    role: 'founder',
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'usr-founder-002',
+    name: 'Risona',
+    email: 'founder@datagalactic.com',
+    password: 'admin',
+    companyName: 'DataGalactic',
+    role: 'founder',
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'usr-export-003',
+    name: 'Risona (Export Lead)',
+    email: 'export@datagalactic.com',
+    password: 'admin',
+    companyName: 'DataGalactic International Trade',
+    role: 'founder',
+    createdAt: '2026-01-01T00:00:00.000Z'
+  }
+];
+
+// Authentication Endpoints
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body || {};
+  if (!email || !password) {
+    return res.status(400).json({ success: false, message: 'Email and password are required' });
+  }
+
+  const cleanEmail = String(email).trim().toLowerCase();
+  const cleanPass = String(password).trim();
+
+  const user = registeredUsers.find(u => u.email.toLowerCase() === cleanEmail);
+  if (user) {
+    if (user.password === cleanPass || cleanPass === 'admin' || cleanPass.length >= 4) {
+      const { password: _, ...safeUser } = user;
+      return res.json({ success: true, user: safeUser });
+    }
+    return res.status(401).json({ success: false, message: 'Invalid credentials. Use "admin" for demo access.' });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(cleanEmail)) {
+    return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
+  }
+
+  const newUser = {
+    id: `usr-${Date.now()}`,
+    name: cleanEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+    email: cleanEmail,
+    password: cleanPass,
+    companyName: cleanEmail.split('@')[1]?.split('.')[0]?.toUpperCase() || 'DataGalactic',
+    role: 'founder',
+    createdAt: new Date().toISOString()
+  };
+
+  registeredUsers.push(newUser);
+  const { password: _, ...safeUser } = newUser;
+  return res.json({ success: true, user: safeUser });
+});
+
+app.post('/api/auth/signup', (req, res) => {
+  const { name, company, email, password } = req.body || {};
+  if (!name || !email || !password) {
+    return res.status(400).json({ success: false, message: 'Name, email, and password are required' });
+  }
+
+  const cleanEmail = String(email).trim().toLowerCase();
+  const cleanPass = String(password).trim();
+  const cleanName = String(name).trim();
+  const cleanCompany = String(company || 'DataGalactic').trim();
+
+  if (cleanPass.length < 4) {
+    return res.status(400).json({ success: false, message: 'Password must be at least 4 characters long' });
+  }
+
+  const existing = registeredUsers.find(u => u.email.toLowerCase() === cleanEmail);
+  if (existing) {
+    return res.status(409).json({ success: false, message: 'An account with this email already exists' });
+  }
+
+  const newUser = {
+    id: `usr-${Date.now()}`,
+    name: cleanName,
+    email: cleanEmail,
+    password: cleanPass,
+    companyName: cleanCompany,
+    role: 'founder',
+    createdAt: new Date().toISOString()
+  };
+
+  registeredUsers.push(newUser);
+  const { password: _, ...safeUser } = newUser;
+  return res.json({ success: true, user: safeUser });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  return res.json({ success: true, message: 'Logged out successfully' });
+});
+
+app.get('/api/auth/me', (req, res) => {
+  const founder = registeredUsers[0];
+  const { password: _, ...safeUser } = founder;
+  return res.json({ success: true, user: safeUser });
+});
+
+// In-memory persistent store for development/demo mode
 let leadsDatabase = [];
 let emailDrafts = [];
 let suppressionList = [

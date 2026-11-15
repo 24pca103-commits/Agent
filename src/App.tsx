@@ -3,7 +3,9 @@ import { Sidebar, NavPage } from './components/Sidebar';
 import { TopNavbar } from './components/TopNavbar';
 import { GalaxyBackground } from './components/GalaxyBackground';
 import { INITIAL_MOCK_LEADS, INITIAL_MOCK_DRAFTS, INITIAL_MOCK_CLIENT_REPLIES } from './data/mockLeads';
-import { Lead, EmailDraft, ClientReply, ClientReplyStatus, ChatMessage, ChatSession } from './types';
+import { Lead, EmailDraft, ClientReply, ClientReplyStatus, ChatMessage, ChatSession, AuthUser } from './types';
+import { LoginPage } from './pages/LoginPage';
+import { getStoredUser, logoutUser } from './utils/authStorage';
 
 // Pages
 import { Dashboard } from './pages/Dashboard';
@@ -19,6 +21,9 @@ import { PrivacyControls } from './pages/PrivacyControls';
 import { SettingsPage } from './pages/SettingsPage';
 
 export function App() {
+  // Authentication State with persistent session
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => getStoredUser());
+
   // Open directly into ChatGPT Agent Chat interface on Mode A
   const [activePage, setActivePage] = useState<NavPage>('service_leads');
   const [leads, setLeads] = useState<Lead[]>(INITIAL_MOCK_LEADS);
@@ -281,8 +286,25 @@ export function App() {
     }
   };
 
+  const handleLogout = () => {
+    logoutUser();
+    setCurrentUser(null);
+    setIsMobileSidebarOpen(false);
+  };
+
   const activeModeASession = chatSessions.find(s => s.id === activeModeASessionId);
   const activeModeBSession = chatSessions.find(s => s.id === activeModeBSessionId);
+
+  // Authentication Gate: Render ChatGPT-styled Login & Register Screen if not signed in
+  if (!currentUser) {
+    return (
+      <LoginPage
+        onLoginSuccess={(user) => setCurrentUser(user)}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+      />
+    );
+  }
 
   return (
     <div className="flex min-h-screen min-h-[100dvh] bg-white dark:bg-[#212121] text-neutral-900 dark:text-[#ececec] font-sans relative selection:bg-[#10a37f]/25 w-full max-w-full overflow-x-hidden">
@@ -310,6 +332,8 @@ export function App() {
         activeChatSessionId={activeChatSessionId}
         onSelectChatSession={handleSelectChatSession}
         onDeleteChatSession={handleDeleteChatSession}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
 
       {/* Main Content Area */}

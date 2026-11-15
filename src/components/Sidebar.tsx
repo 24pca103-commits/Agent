@@ -18,7 +18,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { DATAGALACTIC_COMPANY } from '../data/catalog';
-import { ChatSession } from '../types';
+import { ChatSession, AuthUser } from '../types';
 import { useCompanySettings } from '../utils/settingsStorage';
 
 export type NavPage =
@@ -54,6 +54,7 @@ interface SidebarProps {
   onSelectChatSession?: (session: ChatSession) => void;
   onDeleteChatSession?: (sessionId: string) => void;
   onLogout?: () => void;
+  currentUser?: AuthUser | null;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -71,7 +72,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeChatSessionId,
   onSelectChatSession,
   onDeleteChatSession,
-  onLogout
+  onLogout,
+  currentUser
 }) => {
   const isModeB = activePage === 'export_buyer_leads';
   const activeMode: 'mode_a' | 'mode_b' = isModeB ? 'mode_b' : 'mode_a';
@@ -335,14 +337,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="p-2 rounded-xl hover:bg-neutral-200/60 dark:hover:bg-[#212121] flex items-center justify-between gap-2 transition-colors">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-full bg-[#10a37f] flex items-center justify-center text-white font-semibold text-xs shrink-0">
-                {(settings.founder || DATAGALACTIC_COMPANY.founder || 'R').charAt(0).toUpperCase()}
+                {(currentUser?.name || settings.founder || DATAGALACTIC_COMPANY.founder || 'R').charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0">
                 <p className="font-semibold text-neutral-900 dark:text-[#ececec] text-xs truncate">
-                  {settings.founder || DATAGALACTIC_COMPANY.founder}
+                  {currentUser?.name || settings.founder || DATAGALACTIC_COMPANY.founder}
                 </p>
                 <p className="text-[10px] text-neutral-500 dark:text-[#8e8e8e] truncate">
-                  {settings.companyEmail}
+                  {currentUser?.email || settings.companyEmail}
                 </p>
               </div>
             </div>
@@ -353,6 +355,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 else alert('Session safely signed out. You can sign in anytime.');
               }}
               title="Sign Out"
+              aria-label="Sign Out"
               className="p-1.5 rounded-lg text-neutral-500 dark:text-[#9e9e9e] hover:text-rose-500 hover:bg-neutral-200/70 dark:hover:bg-[#2f2f2f] transition-colors shrink-0"
             >
               <LogOut className="w-4 h-4" />

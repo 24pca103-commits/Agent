@@ -167,3 +167,13 @@ export interface ChatSession {
   messages: ChatMessage[];
   updatedAt: string;
 }
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  companyName: string;
+  role: 'founder' | 'admin' | 'member';
+  avatarUrl?: string;
+  createdAt: string;
+}
