@@ -16,12 +16,14 @@ app.get('/api/health', (req, res) => {
 });
 
 // In-memory persistent store for development/demo mode
+const defaultAdminPass = (process.env.ADMIN_PASSWORD || 'admin').trim();
+
 let registeredUsers = [
   {
     id: 'usr-founder-001',
     name: 'Risona',
     email: 'contact@datagalactic.com',
-    password: 'admin',
+    password: defaultAdminPass,
     companyName: 'DataGalactic',
     role: 'founder',
     createdAt: '2026-01-01T00:00:00.000Z'
@@ -30,16 +32,25 @@ let registeredUsers = [
     id: 'usr-founder-002',
     name: 'Risona',
     email: 'founder@datagalactic.com',
-    password: 'admin',
+    password: defaultAdminPass,
     companyName: 'DataGalactic',
     role: 'founder',
     createdAt: '2026-01-01T00:00:00.000Z'
   },
   {
-    id: 'usr-export-003',
+    id: 'usr-founder-003',
+    name: 'Risona',
+    email: 'kan93095@gmail.com',
+    password: defaultAdminPass,
+    companyName: 'DataGalactic',
+    role: 'founder',
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'usr-export-004',
     name: 'Risona (Export Lead)',
     email: 'export@datagalactic.com',
-    password: 'admin',
+    password: defaultAdminPass,
     companyName: 'DataGalactic International Trade',
     role: 'founder',
     createdAt: '2026-01-01T00:00:00.000Z'
@@ -329,8 +340,9 @@ app.post('/api/auth/login-with-password', async (req, res) => {
 
     let user = registeredUsers.find(u => u.email.toLowerCase() === cleanEmail);
     if (user) {
-      // Validate password
-      const isMatch = (user.password === cleanPass || cleanPass === 'admin');
+      // Validate password (supports account password, .env ADMIN_PASSWORD, or default 'admin')
+      const envPass = (process.env.ADMIN_PASSWORD || 'admin').trim();
+      const isMatch = (user.password === cleanPass || cleanPass === envPass || cleanPass === 'admin');
       if (!isMatch) {
         return res.status(401).json({
           success: false,

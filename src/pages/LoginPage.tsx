@@ -517,14 +517,34 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <p className="text-[10px] text-neutral-400 dark:text-[#8e8e8e] mt-1">
-                  Default founder demo password: <span className="font-mono text-neutral-600 dark:text-[#a3a3a3]">admin</span>
-                </p>
+                {/* Default Password Helper Pill */}
+                <div className="mt-2 p-2 rounded-xl bg-neutral-100 dark:bg-[#262626] border border-neutral-200 dark:border-white/10 text-xs flex items-center justify-between">
+                  <span className="text-neutral-600 dark:text-[#d4d4d4] text-[11px]">
+                    🔑 Default Password: <strong className="font-mono text-[#10a37f] font-bold">admin</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setPassword('admin')}
+                    className="px-2 py-0.5 rounded-md bg-[#10a37f]/10 text-[#10a37f] hover:bg-[#10a37f]/20 font-semibold text-[11px] transition-colors"
+                  >
+                    Auto-fill 'admin'
+                  </button>
+                </div>
               </div>
 
               {/* Quick autofill buttons for testing */}
               <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                 <span className="text-[10px] text-neutral-400 dark:text-[#8e8e8e]">Quick access:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail('kan93095@gmail.com');
+                    setPassword('admin');
+                  }}
+                  className="text-[10px] px-2 py-0.5 rounded-lg bg-neutral-100 dark:bg-[#262626] text-neutral-600 dark:text-[#a3a3a3] hover:text-[#10a37f] hover:bg-[#10a37f]/10 border border-neutral-200 dark:border-white/5 transition-colors"
+                >
+                  kan93095@gmail.com
+                </button>
                 <button
                   type="button"
                   onClick={() => {
